@@ -1,0 +1,36 @@
+{
+    "name": "rubikalib/rubikalib",
+    "description": "A library for working with rubika API from PHP source",
+    "version": "v1.0.0",
+    "keywords": [
+        "rubika",
+        "rubikalib",
+        "rubika-lib"
+    ],
+    "homepage": "https://github.com/AmirrezaFiroz/RubikaLib",
+    "readme": "https://github.com/AmirrezaFiroz/RubikaLib/blob/main/README",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "RubikaLib\\": "bin/"
+        }
+    },
+    "authors": [
+        {
+            "name": "amirreza",
+            "email": "amirreza.firoz13@gmail.com",
+            "homepage": "https://amirrezafiroz.github.io/",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/AmirrezaFiroz/RubikaLib/issues"
+    },
+    "require": {
+        "phpseclib/phpseclib": "^3.0",
+        "php": ">= 8.1.0",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ratchet/pawl": "^0.4.1"
+    }
+}

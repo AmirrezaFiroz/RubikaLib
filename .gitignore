@@ -1,0 +1,6 @@
+vendor/
+composer.lock
+update.json
+lib/
+file.php
+TODO.txt
