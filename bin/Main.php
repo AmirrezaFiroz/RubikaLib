@@ -598,6 +598,70 @@ final class Main
     }
 
     /**
+     * set account username
+     *
+     * @param string $username example: @rubika_lib
+     * @return array API result
+     */
+    public function changeUsername(string $username): array
+    {
+        $d = $this->req->making_request('updateUsername', [
+            'username' => str_replace('@', '', $username)
+        ], $this->session)['data'];
+
+        if ($d['status'] == 'OK') {
+            $this->session->changeData('user', $d['user']);
+        }
+
+        return $d;
+    }
+
+    /**
+     * edit account info
+     *
+     * @param string $first_name
+     * @param string $last_name
+     * @param string $bio
+     * @return array API result
+     */
+    public function editAccount(string $first_name = '', string $last_name = '', string $bio = ''): array
+    {
+        $d = [];
+        if ($first_name != '') {
+            $d['first_name'] = $first_name;
+        }
+        if ($last_name != '') {
+            $d['last_name'] = $last_name;
+        }
+        if ($bio != '') {
+            $d['bio'] = $bio;
+        }
+        $d['updated_parameters'] = [
+            "first_name",
+            "last_name",
+            "bio"
+        ];
+
+        $d = $this->req->making_request('updateProfile', $d, $this->session)['data'];
+
+        if (isset($d['chat_update'])) {
+            $this->session->changeData('user', $d['user']);
+        }
+
+        return $d;
+    }
+
+    /**
+     * request delete account
+     *
+     * @return array API result
+     */
+    public function requestDeleteAccount(): array
+    {
+        return $this->req->making_request('requestDeleteAccount', [], $this->session)['data'];
+    }
+
+    /**
      * set runner class for getting updates
      *
      * @param runner $class runner Object
