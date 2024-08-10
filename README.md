@@ -20,7 +20,7 @@ use RubikaLib\Main;
 
 3. now you can send messages
 ```php
-$bot = new Bot(9123456789);
+$bot = new Main(9123456789);
 $bot->sendMessage('u0FFeu...', 'سلام');
 ```
 
