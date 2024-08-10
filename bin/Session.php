@@ -97,7 +97,7 @@ final class Session
     {
         if (file_exists("lib/{$this->hash}.rub")) {
             $this->data = json_decode(Cryption::decode(file_get_contents("lib/{$this->hash}.rub"), $this->hash), true);
-            $this->auth = isset($this->data['tmp_session']) ? $this->data['tmp_session'] : $this->data['auth'];
+            $this->auth = $this->data['tmp_session'] ?? $this->data['auth'];
         } else {
             $this->data = array(
                 'phone-number' => $this->phone_number,

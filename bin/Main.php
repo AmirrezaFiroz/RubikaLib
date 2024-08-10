@@ -18,7 +18,7 @@ final class Main
     private ?int $phone_number;
     private ?Requests $req;
     private ?Session $session;
-    public static $VERSION = '1.0.0';
+    public static $VERSION = '1.1.0';
     private ?Cryption $crypto;
 
     public function __construct(
@@ -66,14 +66,18 @@ final class Main
                 ->changeData('auth', $auth)
                 ->changeData('user', $signIn['user'])
                 ->changeData('private_key', $private_key)
-                ->changeData('useragent', $this->req->useragent);
-            $this->session->user = $signIn['user'];
+                ->changeData('useragent', $this->req->useragent)
+                ->auth = $auth;
             $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent);
 
             $this->registerDevice($app_name);
         } else {
             $this->session = new Session($phone_number);
-            $this->req = new Requests(auth: $this->session->auth, private_key: $this->session->data['private_key'] ?? '', useragent: $this->session->data['useragent']);
+            $this->req = new Requests(
+                auth: $this->session->auth,
+                private_key: $this->session->data['private_key'] ?? '',
+                // useragent: $this->session->data['useragent'] // TODO
+            );
 
             switch ($this->session->data['step']) {
                 case 'getCode':
@@ -95,7 +99,6 @@ final class Main
                         ->changeData('user', $signIn['user'])
                         ->changeData('private_key', $private_key)
                         ->auth = $auth;
-                    $this->session->user = $signIn['user'];
                     $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent);
 
                     $this->registerDevice($app_name);
@@ -259,7 +262,7 @@ final class Main
      * @param int $message_id
      * @return array API result
      */
-    public function editMessage(string $guid, string $text, int $message_id): array
+    public function editMessage(string $guid, string $text, string $message_id): array
     {
         return $this->req->making_request('editMessage', [
             'object_guid' => $guid,
@@ -324,7 +327,7 @@ final class Main
      * @param string $start_id
      * @return array API result
      */
-    public function getChats(string $start_id): array
+    public function getChats(string $start_id = '0'): array
     {
         return $this->req->making_request('getChats', [
             'start_id' => $start_id
@@ -406,19 +409,6 @@ final class Main
     {
         return $this->req->making_request('getChatsUpdates', [
             'state' => $state
-        ], $this->session)['data'];
-    }
-
-    /**
-     * get user info
-     *
-     * @param string $user_guid
-     * @return array API result
-     */
-    public function getUserInfo(string $user_guid): array
-    {
-        return $this->req->making_request('getUserInfo', [
-            'user_guid' => $user_guid
         ], $this->session)['data'];
     }
 
@@ -556,6 +546,32 @@ final class Main
     }
 
     /**
+     * get chat info with guid
+     *
+     * @param string $guid
+     * @return array API result
+     */
+    public function getChatInfo(string $guid): array
+    {
+        return $this->req->making_request('get' . Tools::ChatType_guid($guid) . 'Info', [
+            strtolower(Tools::ChatType_guid($guid)) . '_guid' => $guid
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get chat info with username
+     *
+     * @param string $username example: @rubika_lib
+     * @return array API result
+     */
+    public function getChatInfoByUsername(string $username): array
+    {
+        return $this->req->making_request('getObjectInfoByUsername', [
+            'username' => str_replace('@', '', $username)
+        ], $this->session)['data'];
+    }
+
+    /**
      * set runner class for getting updates
      *
      * @param runner $class runner Object
@@ -574,6 +590,8 @@ final class Main
      */
     public function run(): void
     {
+        $this->getChatsUpdates();
+
         $loop = Loop::get();
 
         $default_sockets = $this->req->links['default_sockets'];

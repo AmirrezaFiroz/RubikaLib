@@ -138,4 +138,12 @@ final class Tools
             return false;
         }
     }
+
+    /**
+     * get metadatas from text
+     *
+     * @param string $text text with metadatas
+     * @return array|false array of metadatas or false if no metadata found
+     */
+    public static function loadMetaData(string $text) {}
 }

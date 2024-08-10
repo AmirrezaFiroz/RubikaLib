@@ -11,7 +11,7 @@ composer require rubikalib/rubikalib
 
 1. create a new php file in current directory
 
-2. require vendor and **Bot** class in file
+2. require vendor and **Main** class in file
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 
