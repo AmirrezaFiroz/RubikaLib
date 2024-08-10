@@ -1,0 +1,60 @@
+{
+    "message_update": {
+        "message_id": "1076241332015685",
+        "action": "New",
+        "message": {
+            "message_id": "1076241332015685",
+            "time": "1723305906",
+            "is_edited": false,
+            "type": "ContactMessage",
+            "author_type": "User",
+            "author_object_guid": "u0HMRZI...",
+            "contact_message": {
+                "phone_number": "9899363...",
+                "first_name": "\u0639\u0644\u06cc",
+                "last_name": "",
+                "user_guid": "u0F32Xx0..."
+            },
+            "allow_transcription": false
+        },
+        "updated_parameters": [],
+        "timestamp": "1723305906",
+        "prev_message_id": "1076240331171685",
+        "object_guid": "u0F32Xx0...",
+        "type": "User",
+        "state": "1723305846"
+    },
+    "status": "OK",
+    "chat_update": {
+        "object_guid": "u0F32Xx0...",
+        "action": "Edit",
+        "chat": {
+            "time_string": "172330590600001076241332015685",
+            "last_message": {
+                "message_id": "1076241332015685",
+                "type": "Other",
+                "text": "Mr. johnny",
+                "author_object_guid": "u0HMRZI...",
+                "is_mine": true,
+                "author_title": "\u0634\u0645\u0627",
+                "author_type": "User"
+            },
+            "last_seen_my_mid": "1076241332015685",
+            "last_seen_peer_mid": "1075369912233685",
+            "status": "Active",
+            "time": 1723305906,
+            "last_message_id": "1076241332015685"
+        },
+        "updated_parameters": [
+            "last_message_id",
+            "last_message",
+            "status",
+            "time_string",
+            "last_seen_my_mid",
+            "last_seen_peer_mid",
+            "time"
+        ],
+        "timestamp": "1723305906",
+        "type": "User"
+    }
+}

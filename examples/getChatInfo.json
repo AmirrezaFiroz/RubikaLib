@@ -1,0 +1,74 @@
+{
+    "user": {
+        "user_guid": "u0F32Xx0...",
+        "first_name": "...",
+        "last_name": "...",
+        "phone": "9899187..",
+        "username": "...",
+        "avatar_thumbnail": {
+            "file_id": "46857876146322",
+            "mime": "jpg",
+            "dc_id": "787",
+            "access_hash_rec": "9391699312742104362565998208242024071723"
+        },
+        "last_online": 1723305715,
+        "bio": "...",
+        "is_deleted": false,
+        "is_verified": false,
+        "online_time": {
+            "type": "Exact",
+            "exact_time": 1723305715
+        }
+    },
+    "chat": {
+        "object_guid": "u0F32Xx0...",
+        "access": [
+            "ViewInfo",
+            "ViewMessages",
+            "DeleteLocalMessages",
+            "EditMyMessages",
+            "DeleteGlobalMyMessages",
+            "SendMessages",
+            "PinMessages"
+        ],
+        "count_unseen": 0,
+        "is_mute": false,
+        "is_pinned": false,
+        "time_string": "172330590600001076241332015685",
+        "last_message": {
+            "message_id": "1076241332015685",
+            "type": "Other",
+            "text": "...",
+            "author_object_guid": "u0HMRZ...",
+            "is_mine": true,
+            "author_title": "...",
+            "author_type": "User"
+        },
+        "last_seen_my_mid": "1076241332015685",
+        "last_seen_peer_mid": "1075369912233685",
+        "status": "Active",
+        "time": 1723305906,
+        "abs_object": {
+            "object_guid": "u0F32Xx0...",
+            "type": "User",
+            "first_name": "...",
+            "last_name": "...",
+            "avatar_thumbnail": {
+                "file_id": "46857876146322",
+                "mime": "jpg",
+                "dc_id": "787",
+                "access_hash_rec": "9391699312742104362565998208242024071723"
+            },
+            "is_verified": false,
+            "is_deleted": false
+        },
+        "is_blocked": false,
+        "last_message_id": "1076241332015685",
+        "last_deleted_mid": "0",
+        "show_ask_spam": false
+    },
+    "timestamp": "1723306402",
+    "count_common_groups": 1,
+    "can_receive_call": true,
+    "can_video_call": true
+}

@@ -1,0 +1,16 @@
+{
+    "user": {
+        "user_guid": "u0ClAXD092053ac3aab35c42b3072a01",
+        "first_name": ".....",
+        "phone": "989146639480",
+        "username": "dkndidkdoek",
+        "last_online": 1723267623,
+        "is_deleted": false,
+        "is_verified": false,
+        "online_time": {
+            "type": "Exact",
+            "exact_time": 1723267623
+        }
+    },
+    "timestamp": "1723305205"
+}

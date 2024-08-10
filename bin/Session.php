@@ -16,12 +16,11 @@ final class Session
 {
     public ?string $hash;
     public array $data = [];
-    public array $user = [];
 
     /**
      * construct the object
      *
-     * @param integer $phone_number
+     * @param integer $phone_number 989123456789
      * @param string $auth
      */
     public function __construct(
@@ -69,7 +68,7 @@ final class Session
     /**
      * generate hash for phone number
      *
-     * @param integer $phone_number
+     * @param integer $phone_number 989123456789
      * @return string phone hash
      */
     public static function generatePhoneHash(int $phone_number): string
@@ -97,7 +96,7 @@ final class Session
     {
         if (file_exists("lib/{$this->hash}.rub")) {
             $this->data = json_decode(Cryption::decode(file_get_contents("lib/{$this->hash}.rub"), $this->hash), true);
-            $this->auth = isset($this->data['tmp_session']) ? $this->data['tmp_session'] : $this->data['auth'];
+            $this->auth = $this->data['tmp_session'] ?? $this->data['auth'];
         } else {
             $this->data = array(
                 'phone-number' => $this->phone_number,

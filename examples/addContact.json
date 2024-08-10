@@ -1,0 +1,20 @@
+{
+    "user": {
+        "user_guid": "u0ClAXD...",
+        "first_name": "ahmad",
+        "last_name": "",
+        "phone": "9891243...",
+        "username": "...",
+        "last_online": 1723267623,
+        "is_deleted": false,
+        "is_verified": false,
+        "online_time": {
+            "type": "Exact",
+            "exact_time": 1723267623
+        }
+    },
+    "user_exist": true,
+    "timestamp": "1723305075",
+    "can_receive_call": true,
+    "can_video_call": true
+}

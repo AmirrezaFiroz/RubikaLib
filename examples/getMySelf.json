@@ -1,0 +1,13 @@
+{
+    "user_guid": "u0H...",
+    "first_name": "Amir",
+    "phone": "98921...",
+    "username": "",
+    "last_online": 1723291788,
+    "is_deleted": false,
+    "is_verified": false,
+    "online_time": {
+        "type": "Exact",
+        "exact_time": 1723291788
+    }
+}
