@@ -14,19 +14,15 @@ final class Requests
 {
     private string $getdcmessURL = 'https://getdcmess.iranlms.ir/';
     public ?array $links;
-    public ?string $auth;
     private ?Cryption $crypto;
-    public ?string $useragent;
     private ?string $re_auth;
 
     public function __construct(
-        string $useragent = '',
-        string $auth = '',
+        public string $useragent,
+        public string $auth,
         string $private_key = ''
     ) {
-        $this->auth = $auth == '' ? Cryption::azRand() : $auth;
         $this->crypto = new Cryption($this->auth, $private_key);
-        $this->useragent = $useragent == '' ? userAgent::generate() : $useragent;
         $this->re_auth = $auth != '' ? cryption::re_auth($this->auth) : '';
 
         if (file_exists("lib/api-links.json")) {
@@ -79,7 +75,7 @@ final class Requests
 
                 return $res['data'];
             } else {
-                throw new Logger('there is an error in getting URLs: ' . json_encode($res, JSON_PRETTY_PRINT));
+                throw new Logger('there is an error in getting DC URLs', data: $res);
             }
         }
     }
@@ -155,7 +151,12 @@ final class Requests
                 if (in_array($res['status_det'], ['NOT_REGISTERED'])) {
                     $session->terminate();
                 }
-                throw new Logger('there is an error in result: ' . json_encode(['status' => $res['status'], 'method' => $method, $data, 'status_det' => @$res['status_det']]));
+
+                if (isset($res['client_show_message'])) {
+                    throw new Logger('there is an error in result: ' . json_encode(['status' => $res['status'], 'method' => $method, 'message' => $res['client_show_message']['link']['alert_data']['message'], 'status_det' => @$res['status_det']]), data: $res);
+                }
+
+                throw new Logger('there is an error in result: ' . json_encode(['status' => $res['status'], 'method' => $method, 'status_det' => @$res['status_det']]), data: $res);
             }
         }
     }

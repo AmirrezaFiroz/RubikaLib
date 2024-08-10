@@ -1,0 +1,60 @@
+{
+    "message_updates": [
+        {
+            "message_id": "1076133344279385",
+            "action": "New",
+            "message": {
+                "message_id": "1076133344279385",
+                "text": "hello",
+                "time": "1723295308",
+                "is_edited": false,
+                "forwarded_from": {
+                    "type_from": "User",
+                    "message_id": "1076126339027385",
+                    "object_guid": "u0HMRZI03..."
+                },
+                "type": "Text",
+                "author_type": "User",
+                "author_object_guid": "u0HMRZI03...",
+                "allow_transcription": false
+            },
+            "updated_parameters": [],
+            "timestamp": "1723295308",
+            "prev_message_id": "1076130340888385",
+            "object_guid": "u0HMRZI03...",
+            "type": "User",
+            "state": "1723295248"
+        }
+    ],
+    "status": "OK",
+    "chat_update": {
+        "object_guid": "u0HMRZI03...",
+        "action": "Edit",
+        "chat": {
+            "time_string": "172329530800001076133344279385",
+            "last_message": {
+                "message_id": "1076133344279385",
+                "type": "Text",
+                "text": "hello",
+                "author_object_guid": "u0HMRZI03...",
+                "is_mine": true,
+                "author_title": "\u0634\u0645\u0627",
+                "author_type": "User"
+            },
+            "last_seen_my_mid": "1076133344279385",
+            "status": "Active",
+            "time": 1723295308,
+            "last_message_id": "1076133344279385"
+        },
+        "updated_parameters": [
+            "last_message_id",
+            "last_message",
+            "status",
+            "time_string",
+            "last_seen_my_mid",
+            "time"
+        ],
+        "timestamp": "1723295308",
+        "type": "User"
+    }
+}

@@ -1,0 +1,90 @@
+{
+    "sticker_sets": [
+        {
+            "sticker_set_id": "63bda6edbf4ace3581eaab90",
+            "title": "\u0631\u0645\u0636\u0627\u0646",
+            "count_stickers": 13,
+            "set_image": {
+                "file_id": "598590181961",
+                "mime": "jpg",
+                "dc_id": "32",
+                "access_hash_rec": "1727639014625073005263952025092023011021",
+                "cdn_tag": "PR3"
+            },
+            "top_stickers": [
+                {
+                    "emoji_character": "\ud83d\ude0b",
+                    "w_h_ratio": "1.0",
+                    "sticker_id": "63bda72c4f2bf88f038313ad",
+                    "file": {
+                        "file_id": "598592296709",
+                        "mime": "png",
+                        "dc_id": "32",
+                        "access_hash_rec": "6259584272122900613444164743322023011021",
+                        "file_name": "sticker.png",
+                        "cdn_tag": "PR3"
+                    },
+                    "sticker_set_id": "63bda6edbf4ace3581eaab90"
+                },
+                {
+                    "emoji_character": "\ud83c\udf39",
+                    "w_h_ratio": "1.0",
+                    "sticker_id": "63bda73898419c49b0ef3cb3",
+                    "file": {
+                        "file_id": "598590112064",
+                        "mime": "png",
+                        "dc_id": "32",
+                        "access_hash_rec": "3913400392626971695304259255322023011021",
+                        "file_name": "sticker.png",
+                        "cdn_tag": "PR3"
+                    },
+                    "sticker_set_id": "63bda6edbf4ace3581eaab90"
+                },
+                {
+                    "emoji_character": "\ud83d\ude04",
+                    "w_h_ratio": "1.0",
+                    "sticker_id": "63bda7474f2bf88f038313ae",
+                    "file": {
+                        "file_id": "598590084102",
+                        "mime": "png",
+                        "dc_id": "32",
+                        "access_hash_rec": "9499427083409190119618979055142023011021",
+                        "file_name": "sticker.png",
+                        "cdn_tag": "PR3"
+                    },
+                    "sticker_set_id": "63bda6edbf4ace3581eaab90"
+                },
+                {
+                    "emoji_character": "\ud83d\ude0b",
+                    "w_h_ratio": "1.0",
+                    "sticker_id": "63bda78ebf4ace3581eaac75",
+                    "file": {
+                        "file_id": "598589847136",
+                        "mime": "png",
+                        "dc_id": "32",
+                        "access_hash_rec": "9305288026173860686152521585852023011021",
+                        "file_name": "sticker.png",
+                        "cdn_tag": "PR3"
+                    },
+                    "sticker_set_id": "63bda6edbf4ace3581eaab90"
+                },
+                {
+                    "emoji_character": "\ud83d\ude4f",
+                    "w_h_ratio": "1.0",
+                    "sticker_id": "63bda80014737a7dbd8a7251",
+                    "file": {
+                        "file_id": "599591327833",
+                        "mime": "png",
+                        "dc_id": "32",
+                        "access_hash_rec": "6762514396405389492857977613192023011021",
+                        "file_name": "sticker.png",
+                        "cdn_tag": "PR3"
+                    },
+                    "sticker_set_id": "63bda6edbf4ace3581eaab90"
+                }
+            ],
+            "share_string": "https:\/\/rubika.ir\/sticker\/ramezan3",
+            "update_time": 1673373706
+        }
+    ]
+}

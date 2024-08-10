@@ -6,10 +6,15 @@ namespace RubikaLib;
 
 use Ratchet\Client\WebSocket;
 use React\EventLoop\Loop;
-use RubikaLib\enums\chatActivities;
-use RubikaLib\enums\deleteType;
-use RubikaLib\enums\Sort;
-use RubikaLib\interfaces\Runner;
+use RubikaLib\enums\{
+    chatActivities,
+    deleteType,
+    Sort
+};
+use RubikaLib\interfaces\{
+    MainSettings,
+    Runner
+};
 use RubikaLib\Utils\Tools;
 
 final class Main
@@ -23,17 +28,18 @@ final class Main
 
     public function __construct(
         int $phone_number,
-        string $app_name = ''
+        string $app_name = '',
+        private MainSettings $settings = (new MainSettings)
     ) {
         $this->phone_number = Tools::phoneNumberParse($phone_number);
 
-        if (!Session::is_session($phone_number)) {
-            $this->req = new Requests();
-            $this->session = new Session($phone_number);
+        if (!Session::is_session($this->phone_number)) {
+            $this->req = new Requests($settings->userAgent, $settings->auth);
+            $this->session = new Session($this->phone_number);
             $send_code = $this->sendCode();
 
             if ($send_code['status'] == 'SendPassKey') {
-                while (1) {
+                while (true) {
                     $pass_key = readline("enter your passkey ({$send_code['hint_pass_key']}) : ");
                     $send_code = $this->sendCode($pass_key);
 
@@ -50,7 +56,7 @@ final class Main
                 ->changeData('useragent', $this->req->useragent);
 
             list($signIn, $private_key) = [[], ''];
-            while (1) {
+            while (true) {
                 $code = (int)readline("enter code ({$send_code['code_digits_count']}-digits) : ");
 
                 if (strlen((string)$code) == $send_code['code_digits_count']) {
@@ -60,7 +66,7 @@ final class Main
             }
 
             $auth = Cryption::decrypt_RSA_by_key($private_key, $signIn['auth']);
-            unset($signIn['online_time']);
+            unset($signIn['user']['online_time']);
             $this->session->regenerate_session();
             $this->session
                 ->changeData('auth', $auth)
@@ -72,11 +78,11 @@ final class Main
 
             $this->registerDevice($app_name);
         } else {
-            $this->session = new Session($phone_number);
+            $this->session = new Session($this->phone_number);
             $this->req = new Requests(
                 auth: $this->session->auth,
                 private_key: $this->session->data['private_key'] ?? '',
-                // useragent: $this->session->data['useragent'] // TODO
+                useragent: $this->session->data['useragent']
             );
 
             switch ($this->session->data['step']) {
@@ -198,6 +204,7 @@ final class Main
      */
     public function logout(): array
     {
+        $this->session->terminate();
         return $this->req->making_request('logout', array(), $this->session)['data'];
     }
 
@@ -294,10 +301,10 @@ final class Main
      *
      * @param string $object_guid
      * @param array $message_ids
-     * @param deleteType $type
+     * @param deleteType $type local or global
      * @return array
      */
-    public function deleteMessages(string $object_guid, array $message_ids, deleteType $type): array
+    public function deleteMessages(string $object_guid, array $message_ids, deleteType $type = deleteType::Local): array
     {
         return $this->req->making_request('deleteMessages', [
             'object_guid' => $object_guid,
@@ -324,10 +331,10 @@ final class Main
     /**
      * get chats list
      *
-     * @param string $start_id
+     * @param int $start_id
      * @return array API result
      */
-    public function getChats(string $start_id = '0'): array
+    public function getChats(int $start_id = 0): array
     {
         return $this->req->making_request('getChats', [
             'start_id' => $start_id
@@ -353,8 +360,9 @@ final class Main
         } else {
             $method = 'joinChannelAction';
         }
+        $t = explode('/', $enterKey);
         return $this->req->making_request($method, filter_var($enterKey, FILTER_VALIDATE_URL) ? [
-            'hash_link' => explode('/', $enterKey)[-1]
+            'hash_link' => $t[count($t) - 1]
         ] : [
             'channel_guid' => $enterKey,
             'action' => 'Join'
@@ -369,14 +377,27 @@ final class Main
      */
     public function leaveChat(string $guid): array
     {
-        $chatType = (string)Tools::ChatType_guid($guid);
+        $chatType = strtolower((string)Tools::ChatType_guid($guid));
         $d = [
             "{$chatType}_guid" => $guid
         ];
         if ($chatType == 'Channel') {
             $d['action'] = 'Leave';
         }
-        return $this->req->making_request($chatType == 'Group' ? 'leaveGroup' : 'joinChannelAction', $d, $this->session)['data'];
+        return $this->req->making_request($chatType == 'group' ? 'leaveGroup' : 'joinChannelAction', $d, $this->session)['data'];
+    }
+
+    /**
+     * delete group for all users
+     *
+     * @param string $group_guid
+     * @return array API result
+     */
+    public function deleteGroup(string $group_guid): array
+    {
+        return $this->req->making_request('removeGroup', [
+            'group_guid' => $group_guid
+        ], $this->session)['data'];
     }
 
     /**
@@ -428,21 +449,21 @@ final class Main
     }
 
     /**
-     * get all chat messages (recommanded use it in async mode)
+     * get all messages from chat (recommanded use it in async mode)
      *
      * @param string $guid
      * @param integer $message_id max_id or min_id
      * @param Sort $sort
      * @return array API result
      */
-    public function getMessages(string $guid, int $message_id, Sort $sort = Sort::FromMax): array
-    {
-        return $this->req->making_request('getMessages', [
-            'object_guid' => $guid,
-            'sort' => $sort->value,
-            str_replace('from', '', strtolower($sort->value)) . '_id' => $message_id
-        ], $this->session)['data'];
-    }
+    // public function getMessages(string $guid, int $message_id, Sort $sort = Sort::FromMax): array
+    // {
+    //     return $this->req->making_request('getMessages', [
+    //         'object_guid' => $guid,
+    //         'sort' => $sort->value,
+    //         str_replace('from', '', strtolower($sort->value)) . '_id' => $message_id
+    //     ], $this->session)['data'];
+    // }
 
     /**
      * get groups onlines count
@@ -476,14 +497,17 @@ final class Main
     /**
      * seend chats
      *
-     * @param string $start_id
+     * @param string $start_id next user_guid u0HMRYa...
      * @return array API result
      */
-    public function getContacts(string $start_id = '0'): array
+    public function getContacts(string $start_id = ''): array
     {
-        return $this->req->making_request('getContacts', [
-            'start_id' => $start_id
-        ], $this->session)['data'];
+        if ($start_id != '') {
+            return $this->req->making_request('getContacts', [
+                'start_id' => $start_id
+            ], $this->session)['data'];
+        }
+        return $this->req->making_request('getContacts', [], $this->session)['data'];
     }
 
     /**
@@ -497,7 +521,7 @@ final class Main
     public function addContact(int $phone_number, string $first_name, string $last_name = ''): array
     {
         return $this->req->making_request('addAddressBook', [
-            'phone_number' => Tools::phoneNumberParse($phone_number),
+            'phone' => '+' . Tools::phoneNumberParse($phone_number),
             'first_name' => $first_name,
             'last_name' => $last_name
         ], $this->session)['data'];
@@ -519,15 +543,15 @@ final class Main
     /**
      * send contact
      *
-     * @param string $guid
-     * @param string $first_name
-     * @param string $contact_guid
-     * @param integer $phone_number 9123456789
+     * @param string $guidchat guid
+     * @param string $first_name contact first name
+     * @param string $contact_guid contact guid (if exists)
+     * @param integer $phone_number 9123456789 contact number
      * @param string $last_name
      * @param string $reply_to_message_id
      * @return array API result
      */
-    public function sendContact(string $guid, string $first_name, string $contact_guid, int $phone_number, string $last_name = '', string $reply_to_message_id = '0'): array
+    public function sendContact(string $guid, string $first_name, int $phone_number, string $contact_guid = '', string $last_name = '', string $reply_to_message_id = '0'): array
     {
         $d = [
             'object_guid' => $guid,
@@ -535,14 +559,16 @@ final class Main
             'message_contact' => [
                 'first_name' => $first_name,
                 'last_name' => $last_name,
-                'phone_number' => Tools::phoneNumberParse($phone_number),
-                'user_guid' => $contact_guid
+                'phone_number' => Tools::phoneNumberParse($phone_number)
             ]
         ];
+        if ($contact_guid != '') {
+            $d['message_contact']['user_guid'] = $contact_guid;
+        }
         if ($reply_to_message_id != '0') {
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
-        return $this->req->making_request('sendContact', $d, $this->session)['data'];
+        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
     }
 
     /**

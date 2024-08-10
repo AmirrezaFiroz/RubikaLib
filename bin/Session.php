@@ -16,12 +16,11 @@ final class Session
 {
     public ?string $hash;
     public array $data = [];
-    public array $user = [];
 
     /**
      * construct the object
      *
-     * @param integer $phone_number
+     * @param integer $phone_number 989123456789
      * @param string $auth
      */
     public function __construct(
@@ -69,7 +68,7 @@ final class Session
     /**
      * generate hash for phone number
      *
-     * @param integer $phone_number
+     * @param integer $phone_number 989123456789
      * @return string phone hash
      */
     public static function generatePhoneHash(int $phone_number): string

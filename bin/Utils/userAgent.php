@@ -17,7 +17,7 @@ final class userAgent
      * 
      * @var array $windows_os
      */
-    private static $windows_os = [
+    public static $windows_os = [
         '[Windows; |Windows; U; |]Windows NT 6.:number0-3:;[ Win64; x64| WOW64| x64|]',
         '[Windows; |Windows; U; |]Windows NT 10.:number0-5:;[ Win64; x64| WOW64| x64|]',
     ];
@@ -27,7 +27,7 @@ final class userAgent
      * 
      * @var array $linux_os
      */
-    private static $linux_os = [
+    public static $linux_os = [
         '[Linux; |][U; |]Linux x86_64',
         '[Linux; |][U; |]Linux i:number5-6::number4-8::number0-6: [x86_64|]'
     ];
@@ -37,7 +37,7 @@ final class userAgent
      * 
      * @var array $mac_os
      */
-    private static $mac_os = [
+    public static $mac_os = [
         'Macintosh; [U; |]Intel Mac OS X :number7-9:_:number0-9:_:number0-9:',
         'Macintosh; [U; |]Intel Mac OS X 10_:number0-12:_:number0-9:'
     ];
@@ -47,7 +47,7 @@ final class userAgent
      * 
      * @var array $androidVersions
      */
-    private static $androidVersions = [
+    public static $androidVersions = [
         '4.3.1',
         '4.4',
         '4.4.1',
@@ -69,14 +69,14 @@ final class userAgent
      * 
      * @property string $androidVersion
      */
-    private static $androidVersion;
+    public static $androidVersion;
 
     /**
      * Android devices and for specific android versions
      * 
      * @var array $androidDevices
      */
-    private static $androidDevices = [
+    public static $androidDevices = [
         '4.3' => [
             'GT-I9:number2-5:00 Build/JDQ39',
             'Nokia 3:number1-3:[10|15] Build/IMM76D',
@@ -175,10 +175,9 @@ final class userAgent
      * 
      * @var array $android_os
      */
-    private static $android_os = [
+    public static $android_os = [
         'Linux; Android :androidVersion:; :androidDevice:',
-        //TODO: Add a $windowsDevices variable that does the same as androidDevice
-        //'Windows Phone 10.0; Android :androidVersion:; :windowsDevice:',
+        'Windows Phone 10.0; Android :androidVersion:; :windowsDevice:',
         'Linux; U; Android :androidVersion:; :androidDevice:',
         'Android; Android :androidVersion:; :androidDevice:',
     ];
@@ -188,7 +187,7 @@ final class userAgent
      * 
      * @var array $mobile_ios
      */
-    private static $mobile_ios = [
+    public static $mobile_ios = [
         'iphone' => 'iPhone; CPU iPhone OS :number7-11:_:number0-9:_:number0-9:; like Mac OS X;',
         'ipad' => 'iPad; CPU iPad OS :number7-11:_:number0-9:_:number0-9: like Mac OS X;',
         'ipod' => 'iPod; CPU iPod OS :number7-11:_:number0-9:_:number0-9:; like Mac OS X;',
@@ -200,23 +199,20 @@ final class userAgent
      * @param null|string $os
      * @return string *
      */
-    public static function getOS($os = NULL)
+    public static function getOS($os = NULL): string
     {
         $_os = [];
         if ($os === NULL || in_array($os, ['chrome', 'firefox', 'explorer'])) {
             $_os = $os === 'explorer' ? self::$windows_os : array_merge(self::$windows_os, self::$linux_os, self::$mac_os);
         } else {
-            $_os += constant('self::$' . $os . '_os');
+            $_os += self::${$os . '_os'};
         }
-        // randomly select on operating system
         $selected_os = rtrim($_os[random_int(0, count($_os) - 1)], ';');
 
-        // check for spin syntax
         if (strpos($selected_os, '[') !== FALSE) {
             $selected_os = self::processSpinSyntax($selected_os);
         }
 
-        // check for random number syntax
         if (strpos($selected_os, ':number') !== FALSE) {
             $selected_os = self::processRandomNumbers($selected_os);
         }
@@ -249,7 +245,6 @@ final class userAgent
             default:
                 $_os = array_merge(self::$android_os, array_values(self::$mobile_ios));
         }
-        // select random mobile os
         $selected_os = rtrim($_os[random_int(0, count($_os) - 1)], ';');
         if (strpos($selected_os, ':androidVersion:') !== FALSE) {
             $selected_os = self::processAndroidVersion($selected_os);
@@ -329,7 +324,7 @@ final class userAgent
      */
     public static function chromeVersion(array $version): string
     {
-        return random_int($version['min'], $version['max']) . '.0.' . random_int(1000, 4000) . '.' . random_int(100, 400);
+        return (string)random_int($version['min'], $version['max']) . '.0.' . (string)random_int(1000, 4000) . '.' . (string)random_int(100, 400);
     }
 
     /**
@@ -340,7 +335,7 @@ final class userAgent
      */
     public static function firefoxVersion(array $version): string
     {
-        return random_int($version['min'], $version['max']) . '.' . random_int(0, 9);
+        return (string)random_int($version['min'], $version['max']) . '.' . (string)random_int(0, 9);
     }
 
     /**
@@ -351,7 +346,7 @@ final class userAgent
      */
     public static function windows(array $version): string
     {
-        return random_int($version['min'], $version['max']) . '.' . random_int(0, 9);
+        return (string)random_int($version['min'], $version['max']) . '.' . (string)random_int(0, 9);
     }
 
     /**
@@ -360,7 +355,7 @@ final class userAgent
      * @param device|null $userAgent You can specify either firefox, chrome, mobile, windows, mac, iphone, ipad, ipod, and android.
      * @return string useragent
      */
-    public static function generate(devices|null $userAgent = NULL)
+    public static function generate(devices|null $userAgent = NULL): string
     {
         $userAgent = $userAgent == null ? null : $userAgent->value;
 

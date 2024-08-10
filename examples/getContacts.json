@@ -1,0 +1,36 @@
+{
+    "users": [
+        {
+            "user_guid": "u0HMRYa...",
+            "first_name": "Pp",
+            "last_name": "",
+            "phone": "989365199010",
+            "username": "Yebsusu",
+            "last_online": 1723235400,
+            "is_deleted": false,
+            "is_verified": false,
+            "online_time": {
+                "type": "Approximate",
+                "approximate_period": "Recently"
+            }
+        },
+        {
+            "user_guid": "u0FBgyB...",
+            "first_name": "\u0627\u0645\u06cc\u0631\u0639\u0644\u06cc",
+            "last_name": "",
+            "phone": "989330519369",
+            "username": "Aamirralliie",
+            "last_online": 1722874130,
+            "is_deleted": false,
+            "is_verified": false,
+            "online_time": {
+                "type": "Exact",
+                "exact_time": 1722874130
+            }
+        }
+    ],
+    "next_start_id": "u0HMRYa...",
+    "has_continue": false,
+    "state": 1723304602,
+    "timestamp": "1723304663"
+}

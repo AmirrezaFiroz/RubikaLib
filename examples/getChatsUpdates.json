@@ -1,0 +1,135 @@
+{
+    "chats": [
+        {
+            "object_guid": "g0E1ikT03...",
+            "access": [
+                "ViewMembers",
+                "SendMessages",
+                "AddMember",
+                "ViewInfo",
+                "ViewMessages",
+                "DeleteLocalMessages",
+                "EditMyMessages",
+                "DeleteGlobalMyMessages"
+            ],
+            "count_unseen": 1,
+            "is_mute": false,
+            "is_pinned": false,
+            "time_string": "172330248000001076209126860853",
+            "last_message": {
+                "message_id": "1076209126860853",
+                "type": "Text",
+                "text": "\u0634\u06a9\u0631",
+                "author_object_guid": "u0CfPq100...",
+                "is_mine": false,
+                "author_title": "esilip",
+                "author_type": "User"
+            },
+            "last_seen_my_mid": "1076130083772853",
+            "last_seen_peer_mid": "1076130083772853",
+            "status": "Active",
+            "time": 1723302480,
+            "abs_object": {
+                "object_guid": "g0E1ikT03...",
+                "type": "Group",
+                "title": "...\ud835\udcee\ud835\udcfb",
+                "avatar_thumbnail": {
+                    "file_id": "38674679572829",
+                    "mime": "jpg",
+                    "dc_id": "874",
+                    "access_hash_rec": "5135621039987128432253499022602024041123"
+                },
+                "is_verified": false,
+                "is_deleted": false
+            },
+            "is_blocked": false,
+            "last_message_id": "1076209126860853",
+            "last_deleted_mid": "0"
+        },
+        {
+            "object_guid": "u0HMRYa0b1e...",
+            "access": [
+                "ViewInfo",
+                "ViewMessages",
+                "DeleteLocalMessages",
+                "EditMyMessages",
+                "DeleteGlobalMyMessages",
+                "SendMessages",
+                "PinMessages"
+            ],
+            "count_unseen": 0,
+            "is_mute": false,
+            "is_pinned": false,
+            "time_string": "172329775700001076162618880414",
+            "last_message": {
+                "message_id": "1076162618880414",
+                "type": "Text",
+                "text": "hello dear",
+                "author_object_guid": "u0HMRZI0...",
+                "is_mine": true,
+                "author_title": "\u0634\u0645\u0627",
+                "author_type": "User"
+            },
+            "last_seen_my_mid": "1076162618880414",
+            "last_seen_peer_mid": "1076162618880414",
+            "status": "Active",
+            "time": 1723297757,
+            "abs_object": {
+                "object_guid": "u0HMRYa0b1e...",
+                "type": "User",
+                "first_name": "Amirreza",
+                "is_verified": false,
+                "is_deleted": false
+            },
+            "is_blocked": false,
+            "last_message_id": "1076162618880414",
+            "last_deleted_mid": "1069759630217414",
+            "show_ask_spam": false
+        },
+        {
+            "object_guid": "u0HMRZI0...",
+            "access": [
+                "ViewInfo",
+                "ViewMessages",
+                "DeleteLocalMessages",
+                "EditMyMessages",
+                "DeleteGlobalMyMessages",
+                "SendMessages",
+                "PinMessages"
+            ],
+            "count_unseen": 0,
+            "is_mute": false,
+            "is_pinned": false,
+            "time_string": "172329530800001076133344279385",
+            "last_message": {
+                "message_id": "1076133344279385",
+                "type": "Text",
+                "text": "hello",
+                "author_object_guid": "u0HMRZI0...",
+                "is_mine": true,
+                "author_title": "\u0634\u0645\u0627",
+                "author_type": "User"
+            },
+            "last_seen_my_mid": "1076133344279385",
+            "last_seen_peer_mid": "0",
+            "status": "Active",
+            "time": 1723295308,
+            "abs_object": {
+                "object_guid": "u0HMRZI0...",
+                "type": "User",
+                "first_name": "Amir",
+                "is_verified": false,
+                "is_deleted": false
+            },
+            "is_blocked": false,
+            "last_message_id": "1076133344279385",
+            "last_deleted_mid": "0"
+        }
+    ],
+    "deleted_chats": [
+        "g0Ew7i60c..."
+    ],
+    "new_state": 1723302833,
+    "status": "OK",
+    "timestamp": "1723302893"
+}

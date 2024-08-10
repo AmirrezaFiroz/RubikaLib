@@ -1,0 +1,13 @@
+{
+    "message_updates": [
+        {
+            "message_id": "1076126339027385",
+            "action": "Delete",
+            "updated_parameters": [],
+            "timestamp": "1723295701",
+            "object_guid": "u0HMRZI0337c90c2202126d33091f199",
+            "type": "User",
+            "state": "1723295641"
+        }
+    ]
+}

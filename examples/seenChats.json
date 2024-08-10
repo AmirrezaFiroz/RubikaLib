@@ -1,0 +1,18 @@
+{
+    "chat_updates": [
+        {
+            "object_guid": "u0HMRYa0b1e6fe648e9d99eb53ebf406",
+            "action": "Edit",
+            "chat": {
+                "count_unseen": 0,
+                "last_seen_my_mid": "1076223652866414"
+            },
+            "updated_parameters": [
+                "last_seen_my_mid",
+                "count_unseen"
+            ],
+            "timestamp": "1723304172",
+            "type": "User"
+        }
+    ]
+}

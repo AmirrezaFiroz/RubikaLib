@@ -47,10 +47,10 @@ final class Tools
     /**
      * this will use to hash phone number sessions
      *
-     * @param integer $int
+     * @param integer $phoneNumber 989123456789
      * @return string
      */
-    public static function phoneToString(int $int): string
+    public static function phoneToString(int $phoneNumber): string
     {
         $array = [
             '0' => 'q',
@@ -66,7 +66,7 @@ final class Tools
         ];
         $res = '';
 
-        foreach (str_split((string)$int) as $char) {
+        foreach (str_split((string)$phoneNumber) as $char) {
             $res .= $array[$char];
         }
 

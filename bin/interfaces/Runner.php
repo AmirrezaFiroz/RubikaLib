@@ -32,9 +32,9 @@ interface runner
      * when a chat activitie send
      *
      * @param chatActivities $activitie
-     * @param string $giud
-     * @param string $from
+     * @param string $guid this chat which update is from (group, chat, ...)
+     * @param string $from the activitie maker person (user)
      * @return void
      */
-    public function onAction(chatActivities $activitie, string $giud, string $from, Main $class): void;
+    public function onAction(chatActivities $activitie, string $guid, string $from, Main $class): void;
 }

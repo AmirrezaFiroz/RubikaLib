@@ -1,0 +1,38 @@
+{
+    "active_session": {
+        "key": "own",
+        "ip": "0.0.0.0",
+        "device": "Rubika-lib(this-app) 1.1.0",
+        "login_time": 1723293720,
+        "app_type": "Web",
+        "app_version": "4.4.15",
+        "terminatable": false,
+        "app_brand": "Rubika",
+        "last_access": 1723293721
+    },
+    "other_sessions": [
+        {
+            "key": "Yxp52m3180ykVLiDJf44H...",
+            "ip": "0.0.0.0",
+            "device": "Rubika-lib(other-app) 1.1.0",
+            "login_time": 1723292157,
+            "app_type": "Web",
+            "app_version": "4.4.15",
+            "terminatable": true,
+            "app_brand": "Rubika",
+            "last_access": 1723293402
+        },
+        {
+            "key": "",
+            "ip": "0.0.0.0",
+            "device": "samsungSM-A315F",
+            "login_time": 1721464656,
+            "app_type": "Android",
+            "app_version": "3.7.5",
+            "terminatable": false,
+            "app_brand": "Rubika",
+            "last_access": 1723291807
+        }
+    ],
+    "can_remove_all": false
+}
