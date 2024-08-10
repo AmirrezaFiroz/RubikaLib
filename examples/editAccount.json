@@ -1,0 +1,36 @@
+{
+    "user": {
+        "user_guid": "u0HMRZI...",
+        "first_name": "new fisrt name",
+        "last_name": "new last name",
+        "phone": "9892...",
+        "username": "...",
+        "last_online": 1723309235,
+        "is_deleted": false,
+        "is_verified": false,
+        "online_time": {
+            "type": "Exact",
+            "exact_time": 1723309235
+        }
+    },
+    "chat_update": {
+        "object_guid": "u0HMRZI...",
+        "action": "Edit",
+        "chat": {
+            "abs_object": {
+                "object_guid": "u0HMRZI...",
+                "type": "User",
+                "first_name": "new fisrt name",
+                "last_name": "new last name",
+                "is_verified": false,
+                "is_deleted": false
+            }
+        },
+        "updated_parameters": [
+            "abs_object"
+        ],
+        "timestamp": "1723309405",
+        "type": "User"
+    },
+    "timestamp": "1723309405"
+}
