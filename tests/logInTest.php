@@ -12,13 +12,18 @@ final class logInTest extends TestCase
 {
     public function testLogin(): void
     {
-        $app = new Main(9365199010, 'app-name');
+        $app = new Main(9123456789, 'app-name');
 
         $this->assertIsArray($app->getMySelf());
     }
 
     public function testCheckIsSessionCreated(): void
     {
-        $this->assertTrue(Session::is_session(989365199010));
+        $this->assertTrue(Session::is_session(989123456789));
+    }
+
+    public function testLogOut(): void
+    {
+        $this->assertIsArray((new Main(9123456789))->logout());
     }
 }
