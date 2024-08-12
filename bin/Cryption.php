@@ -18,11 +18,11 @@ final class Cryption
     public ?AsymmetricKey $digital_key;
 
     public function __construct(
-        public string $key,
+        public string $auth,
         public string $private_key = ''
     ) {
-        $this->key = $this->createSecretPassphrase($this->key);
-        $this->key = $this->utf8ToBytes($this->key);
+        $this->auth = $this->createSecretPassphrase($this->auth);
+        $this->auth = $this->utf8ToBytes($this->auth);
 
         if ($private_key != '') {
             $this->digital_key = PublicKeyLoader::load($private_key);
@@ -95,7 +95,7 @@ final class Cryption
             throw new Logger("an error in data decodation !");
         }
         $iv = str_repeat("\0", 16);
-        $r = openssl_decrypt($data_enc, 'AES-256-CBC', $this->key, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $iv);
+        $r = openssl_decrypt($data_enc, 'AES-256-CBC', $this->auth, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING, $iv);
         if ($r === false) {
             throw new Logger("an error in data decodation !");
         }
@@ -246,7 +246,7 @@ final class Cryption
     public function enc(string $data): string
     {
         $iv = str_repeat("\0", 16);
-        $encrypted = openssl_encrypt($data, 'AES-256-CBC', $this->key, OPENSSL_RAW_DATA, $iv);
+        $encrypted = openssl_encrypt($data, 'AES-256-CBC', $this->auth, OPENSSL_RAW_DATA, $iv);
         if ($encrypted === false) {
             throw new Logger("an error in data encodation !");
         }

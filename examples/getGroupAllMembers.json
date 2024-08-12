@@ -1,0 +1,54 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "in_chat_members": [
+            {
+                "member_type": "User",
+                "member_guid": "u0HMRZI...",
+                "first_name": "...",
+                "last_name": "...",
+                "avatar_thumbnail": {
+                    "file_id": "487597...",
+                    "mime": "jpg",
+                    "dc_id": "878",
+                    "access_hash_rec": "7433639220..."
+                },
+                "is_verified": false,
+                "is_deleted": false,
+                "last_online": 1723321800,
+                "promoted_by_object_guid": "u0HMRYa...",
+                "promoted_by_object_type": "User",
+                "join_type": "Admin",
+                "username": "...",
+                "online_time": {
+                    "type": "Approximate",
+                    "approximate_period": "Recently"
+                }
+            },
+            {
+                "member_type": "User",
+                "member_guid": "u0HMRYa0b1...",
+                "first_name": "Amirreza",
+                "avatar_thumbnail": {
+                    "file_id": "487597...",
+                    "mime": "jpg",
+                    "dc_id": "878",
+                    "access_hash_rec": "03444590412..."
+                },
+                "is_verified": false,
+                "is_deleted": false,
+                "last_online": 1723383447,
+                "join_type": "Creator",
+                "username": "...",
+                "online_time": {
+                    "type": "Exact",
+                    "exact_time": 1723383447
+                }
+            }
+        ],
+        "next_start_id": "66b8a194d1f19de2035104e6",
+        "has_continue": false,
+        "timestamp": "1723383579"
+    }
+}

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
+use Generator;
 use RubikaLib\Logger;
-use RubikaLib\Utils\userAgent;
 
 /**
  * special Exception class
@@ -157,6 +157,83 @@ final class Requests
                 }
 
                 throw new Logger('there is an error in result: ' . json_encode(['status' => $res['status'], 'method' => $method, 'status_det' => @$res['status_det']]), data: $res);
+            }
+        }
+    }
+
+    public function downloadFile(string $access_hash_rec, string $file_id, int $DC): Generator
+    {
+        $storage_url = $this->links['storages'][(string)$DC];
+        $start_index = 0;
+        $last_index = 262144;
+
+        $ch = curl_init($storage_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, '');
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "auth: {$this->crypto->auth}",
+            "access-hash-rec: $access_hash_rec",
+            "file-id: $file_id",
+            'Host: ' . parse_url($storage_url, PHP_URL_HOST),
+            "User-Agent: {$this->useragent}",
+            "start-index: $start_index",
+            "last-index: $last_index",
+        ]);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
+
+        $res = curl_exec($ch);
+        curl_close($ch);
+
+        if (curl_error($ch)) {
+            throw new Logger('connection error: ' . curl_error($ch));
+        } else {
+            $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+            $headers = substr($res, 0, $header_size);
+            foreach (explode("\n", $headers) as $header) {
+                if (explode(" ", $header)[0] == 'total_length:') {
+                    $total_length = (int)explode(" ", $header)[1];
+                    break;
+                }
+            }
+            $res = substr($res, $header_size);
+            yield $res;
+            $t = strlen($res);
+            $i = $t / $total_length;
+
+            while (strlen($res) < $total_length) {
+                echo (string)(((float)substr((string)$i, 0, 6)) * 100) . '%' . PHP_EOL;
+
+                $start_index += $last_index + 1;
+                $last_index += 262144;
+
+                $ch = curl_init($storage_url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, '');
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+                curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    "auth: {$this->crypto->auth}",
+                    "access-hash-rec: $access_hash_rec",
+                    "file-id: $file_id",
+                    'Host: ' . parse_url($storage_url, PHP_URL_HOST),
+                    "User-Agent: {$this->useragent}",
+                    "start-index: $start_index",
+                    "last-index: $last_index",
+                ]);
+                $res = curl_exec($ch);
+                curl_close($ch);
+                if (curl_error($ch)) {
+                    throw new Logger('connection error: ' . curl_error($ch));
+                    break;
+                }
+                if (($t + strlen($res)) == $t) break;
+                $t += strlen($res);
+                $i = $t / $total_length;
+                yield $res;
             }
         }
     }

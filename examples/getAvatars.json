@@ -1,0 +1,24 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "avatars": [
+            {
+                "avatar_id": "66b7c5dadfeba7a...",
+                "thumbnail": {
+                    "file_id": "487597...",
+                    "mime": "jpg",
+                    "dc_id": "878",
+                    "access_hash_rec": "74336392208..."
+                },
+                "main": {
+                    "file_id": "487597...",
+                    "mime": "jpg",
+                    "dc_id": "784",
+                    "access_hash_rec": "4918509411..."
+                },
+                "create_time": 1723319770
+            }
+        ]
+    }
+}
