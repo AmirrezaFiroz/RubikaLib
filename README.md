@@ -161,6 +161,8 @@ try {
 |                                                            changeUsername(string $username)                                                            |                                    change username                                     |        [changeUsername.json](examples/changeUsername.json)        |
 |                                     editAccount(string $first_name = '', string $last_name = '', string $bio = '')                                     |                               change account parameters                                |           [editAccount.json](examples/editAccount.json)           |
 |                                                                  requestDeleteAccount                                                                  |                          send request to delete this account                           |                        not researched yet                         |
+|                                                            getAvatars(string $object_guid)                                                             |                                    get guid avatars                                    |            [getAvatars.json](examples/getAvatars.json)            |
+|                                   getGroupAllMembers(string $group_guid, string $search_for = '', int $start_id = 0)                                   |                                 get group members list                                 |    [getGroupAllMembers.json](examples/getGroupAllMembers.json)    |
 
 # Example
 

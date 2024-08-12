@@ -23,7 +23,7 @@ final class Main
     private ?int $phone_number;
     private ?Requests $req;
     private ?Session $session;
-    public static $VERSION = '1.1.0';
+    public static $VERSION = '1.2.0';
     private ?Cryption $crypto;
 
     public function __construct(
@@ -659,6 +659,41 @@ final class Main
     public function requestDeleteAccount(): array
     {
         return $this->req->making_request('requestDeleteAccount', [], $this->session)['data'];
+    }
+
+    /**
+     * get chat avatar with guid
+     *
+     * @param string $object_guid
+     * @return array API result
+     */
+    public function getAvatars(string $object_guid): array
+    {
+        return $this->req->making_request('getAvatars', [
+            'object_guid' => $object_guid
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get group members list
+     *
+     * @param string $group_guid
+     * @param string $search_for searh for name
+     * @param integer $start_id section
+     * @return array API result
+     */
+    public function getGroupAllMembers(string $group_guid, string $search_for = '', int $start_id = 0): array
+    {
+        $d = [
+            'group_guid' => $group_guid
+        ];
+        if ($search_for != '') {
+            $d['search_text'] = $search_for;
+        }
+        if ($start_id != 0) {
+            $d['start$start_id'] = $start_id;
+        }
+        return $this->req->making_request('getGroupAllMembers', $d, $this->session)['data'];
     }
 
     /**
