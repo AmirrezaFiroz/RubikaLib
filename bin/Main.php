@@ -15,7 +15,10 @@ use RubikaLib\interfaces\{
     MainSettings,
     Runner
 };
-use RubikaLib\Utils\Tools;
+use RubikaLib\Utils\{
+    Optimal,
+    Tools
+};
 
 final class Main
 {
@@ -34,7 +37,7 @@ final class Main
         $this->phone_number = Tools::phoneNumberParse($phone_number);
 
         if (!Session::is_session($this->phone_number)) {
-            $this->req = new Requests($settings->userAgent, $settings->auth);
+            $this->req = new Requests($settings->userAgent, $settings->auth, mainSettings: $settings);
             $this->session = new Session($this->phone_number);
             $send_code = $this->sendCode();
 
@@ -74,7 +77,7 @@ final class Main
                 ->changeData('private_key', $private_key)
                 ->changeData('useragent', $this->req->useragent)
                 ->auth = $auth;
-            $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent);
+            $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, mainSettings: $settings);
 
             $this->registerDevice($app_name);
         } else {
@@ -82,7 +85,8 @@ final class Main
             $this->req = new Requests(
                 auth: $this->session->auth,
                 private_key: $this->session->data['private_key'] ?? '',
-                useragent: $this->session->data['useragent']
+                useragent: $this->session->data['useragent'],
+                mainSettings: $settings
             );
 
             switch ($this->session->data['step']) {
@@ -105,7 +109,7 @@ final class Main
                         ->changeData('user', $signIn['user'])
                         ->changeData('private_key', $private_key)
                         ->auth = $auth;
-                    $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent);
+                    $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, mainSettings: $settings);
 
                     $this->registerDevice($app_name);
                     break;
@@ -694,6 +698,84 @@ final class Main
             $d['start$start_id'] = $start_id;
         }
         return $this->req->making_request('getGroupAllMembers', $d, $this->session)['data'];
+    }
+
+    /**
+     * download a file
+     *
+     * @param string $access_hash_rec
+     * @param string $file_id
+     * @param string $to_path the path to file tath will be writen
+     * @param integer $DC
+     * @return boolean false if file not found on server or true if file has saved
+     */
+    public function downloadFile(string $access_hash_rec, string $file_id, string $to_path, int $DC): bool
+    {
+        if ($this->settings->Optimal) {
+            $f = fopen('app.pdf', 'a');
+            foreach ($this->req->downloadFile($access_hash_rec, $file_id, $DC) as $data) {
+                if ($data === false) {
+                    fclose($f);
+                    return false;
+                }
+                fwrite($to_path, $data);
+            }
+            fclose($f);
+            return true;
+        } else {
+            $r = $this->req->downloadFile($access_hash_rec, $file_id, $DC);
+            if ($r === false) {
+                return false;
+            }
+            file_put_contents($to_path, $r);
+            return true;
+        }
+    }
+
+    /**
+     * upload file to API
+     *
+     * @param string $path file path or link
+     * @param boolean $isLink if $path is a link
+     * @return array API result
+     */
+    private function sendFileToAPI(string $path, bool $isLink = false): array
+    {
+        $fn = basename($path);
+        if ($isLink) {
+            if (!$this->settings->Optimal) {
+                file_put_contents("lib/$fn", file_get_contents($path));
+            } else {
+                $f = fopen("lib/$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                    fwrite($f, $part);
+                }
+                fclose($f);
+            }
+
+            $path = "lib/$fn";
+        }
+        $ex = explode('.', $fn);
+        $data = $this->requestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
+
+        return $this->req->uploadFile($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data'];
+    }
+
+    /**
+     * it will use to upload file
+     *
+     * @param string $file_name
+     * @param integer $size
+     * @param string $mime
+     * @return array API result
+     */
+    private function requestSendFile(string $file_name, int $size, string $mime): array
+    {
+        return $this->req->making_request('requestSendFile', [
+            'file_name' => $file_name,
+            'size' => $size,
+            'mime' => $mime
+        ], $this->session)['data'];
     }
 
     /**

@@ -18,7 +18,18 @@ final class MainSettings
      * @var string|null
      */
     public ?string $userAgent;
+    /**
+     * auth for sign up (it will be changes with API)
+     *
+     * @var string|null
+     */
     public ?string $auth;
+    /**
+     * use optimal mode
+     *
+     * @var boolean
+     */
+    public bool $Optimal = true;
 
     public function __construct()
     {
@@ -52,6 +63,19 @@ final class MainSettings
     public function setAuth(string $auth): self
     {
         $this->auth = $auth;
+
+        return $this;
+    }
+
+    /**
+     * set optimal mode
+     *
+     * @param boolean $Optimal
+     * @return self
+     */
+    public function setOptimal(bool $Optimal): self
+    {
+        $this->Optimal = $Optimal;
 
         return $this;
     }

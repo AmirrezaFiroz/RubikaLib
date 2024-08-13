@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use Generator;
+use RubikaLib\interfaces\MainSettings;
 use RubikaLib\Logger;
 
 /**
@@ -20,6 +21,7 @@ final class Requests
     public function __construct(
         public string $useragent,
         public string $auth,
+        private MainSettings $mainSettings,
         string $private_key = ''
     ) {
         $this->crypto = new Cryption($this->auth, $private_key);
@@ -161,11 +163,21 @@ final class Requests
         }
     }
 
-    public function downloadFile(string $access_hash_rec, string $file_id, int $DC): Generator
+    /**
+     * download a file from CND
+     *
+     * @param string $access_hash_rec
+     * @param string $file_id
+     * @param integer $DC
+     * @return string|Generator|false false if file not found, string if (MainSettings)->optimal is false or Generator if it is true
+     */
+    public function downloadFile(string $access_hash_rec, string $file_id, int $DC): string|Generator|false
     {
         $storage_url = $this->links['storages'][(string)$DC];
         $start_index = 0;
-        $last_index = 262144;
+        $chunk_size = 262144;
+        $buffer = '';
+        $total_length = 0;
 
         $ch = curl_init($storage_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -173,6 +185,7 @@ final class Requests
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             "auth: {$this->crypto->auth}",
             "access-hash-rec: $access_hash_rec",
@@ -180,60 +193,112 @@ final class Requests
             'Host: ' . parse_url($storage_url, PHP_URL_HOST),
             "User-Agent: {$this->useragent}",
             "start-index: $start_index",
-            "last-index: $last_index",
+            "last-index: " . ($start_index + $chunk_size - 1),
         ]);
-        curl_setopt($ch, CURLOPT_HEADER, 1);
 
         $res = curl_exec($ch);
         curl_close($ch);
-
         if (curl_error($ch)) {
             throw new Logger('connection error: ' . curl_error($ch));
-        } else {
-            $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            $headers = substr($res, 0, $header_size);
-            foreach (explode("\n", $headers) as $header) {
-                if (explode(" ", $header)[0] == 'total_length:') {
-                    $total_length = (int)explode(" ", $header)[1];
-                    break;
-                }
-            }
-            $res = substr($res, $header_size);
-            yield $res;
-            $t = strlen($res);
-            $i = $t / $total_length;
+        }
 
-            while (strlen($res) < $total_length) {
-                echo (string)(((float)substr((string)$i, 0, 6)) * 100) . '%' . PHP_EOL;
+        $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+        $headers = substr($res, 0, $header_size);
 
-                $start_index += $last_index + 1;
-                $last_index += 262144;
+        if (strpos($headers, 'total_length:') !== false) {
+            preg_match('/total_length: (\d+)/', $headers, $matches);
+            $total_length = (int)$matches[1];
+        }
 
-                $ch = curl_init($storage_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, '');
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-                curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    "auth: {$this->crypto->auth}",
-                    "access-hash-rec: $access_hash_rec",
-                    "file-id: $file_id",
-                    'Host: ' . parse_url($storage_url, PHP_URL_HOST),
-                    "User-Agent: {$this->useragent}",
-                    "start-index: $start_index",
-                    "last-index: $last_index",
-                ]);
-                $res = curl_exec($ch);
+        while (strlen($buffer) < $total_length) {
+            $ch = curl_init($storage_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, '');
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
+            curl_setopt($ch, CURLOPT_HEADER, 1);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "auth: {$this->crypto->auth}",
+                "access-hash-rec: $access_hash_rec",
+                "file-id: $file_id",
+                'Host: ' . parse_url($storage_url, PHP_URL_HOST),
+                "User-Agent: {$this->useragent}",
+                "start-index: $start_index",
+                "last-index: " . ($start_index + $chunk_size - 1),
+            ]);
+
+            $res = curl_exec($ch);
+            if (curl_error($ch)) {
                 curl_close($ch);
-                if (curl_error($ch)) {
-                    throw new Logger('connection error: ' . curl_error($ch));
-                    break;
-                }
-                if (($t + strlen($res)) == $t) break;
-                $t += strlen($res);
-                $i = $t / $total_length;
-                yield $res;
+                throw new Logger('connection error: ' . curl_error($ch));
+            }
+
+            $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+            $body = substr($res, $header_size);
+            curl_close($ch);
+
+            if ($body == 'error') {
+                return false;
+                break;
+            }
+            if ($this->mainSettings->Optimal) {
+                yield $body;
+            }
+
+            $buffer .= $body;
+            $start_index += $chunk_size;
+        }
+
+        if (!$this->mainSettings->Optimal) {
+            return $buffer;
+        }
+    }
+
+    /**
+     * upload a file to server
+     *
+     * @param string $path file path in directorry
+     * @param string $file_id
+     * @param string $access_hash_send
+     * @param string $url
+     * @return array API result
+     */
+    public function uploadFile(string $path, string $file_id, string $access_hash_send, string $url): array
+    {
+        $fileContent = file_get_contents($path);
+        $total_parts = ceil(strlen($fileContent) / 131072);
+
+        for ($part = 1; $part <= $total_parts; $part++) {
+            echo "$part/$total_parts\n";
+            $start_index = ($part - 1) * 131072;
+            $last_index = min($start_index + 131072, strlen($fileContent));
+            $chunk_data = substr($fileContent, $start_index, $last_index - $start_index);
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $chunk_data);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "auth: {$this->auth}",
+                "access-hash-send: $access_hash_send",
+                "file-id: $file_id",
+                'chunk-size: ' . strlen($chunk_data),
+                "part-number: $part",
+                "total-part: $total_parts"
+            ]);
+
+            $res = curl_exec($ch);
+            curl_close($ch);
+
+            if (curl_error($ch)) {
+                throw new Logger('connection error: ' . curl_error($ch));
+            }
+
+            if ($part == $total_parts) {
+                return json_decode($res, true);
             }
         }
     }

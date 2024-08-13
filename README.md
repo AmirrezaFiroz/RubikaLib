@@ -163,6 +163,7 @@ try {
 |                                                                  requestDeleteAccount                                                                  |                          send request to delete this account                           |                        not researched yet                         |
 |                                                            getAvatars(string $object_guid)                                                             |                                    get guid avatars                                    |            [getAvatars.json](examples/getAvatars.json)            |
 |                                   getGroupAllMembers(string $group_guid, string $search_for = '', int $start_id = 0)                                   |                                 get group members list                                 |    [getGroupAllMembers.json](examples/getGroupAllMembers.json)    |
+|                                       downloadFile(string $access_hash_rec, string $file_id, string $path, int $DC)                                        |                                    download a file                                     |           `true` or `false` (depended on API file finding)            |
 
 # Example
 
