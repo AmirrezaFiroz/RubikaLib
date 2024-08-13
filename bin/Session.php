@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-date_default_timezone_set('Asia/Tehran');
-
 use RubikaLib\Cryption;
 use RubikaLib\Utils\Tools;
 
@@ -14,6 +12,11 @@ use RubikaLib\Utils\Tools;
  */
 final class Session
 {
+    /**
+     * session hash that created with Tools::generate_phone_hash()
+     *
+     * @var string|null
+     */
     public ?string $hash;
     public array $data = [];
 
@@ -39,6 +42,8 @@ final class Session
      */
     public function regenerate_session(): void
     {
+        date_default_timezone_set('Asia/Tehran');
+
         $this->data = array(
             'phone-number' => $this->phone_number,
             'date' => [
@@ -73,7 +78,7 @@ final class Session
      */
     public static function generatePhoneHash(int $phone_number): string
     {
-        return md5(Tools::phoneToString($phone_number));
+        return md5(Tools::generate_phone_hash($phone_number));
     }
 
     /**
@@ -98,6 +103,8 @@ final class Session
             $this->data = json_decode(Cryption::decode(file_get_contents("lib/{$this->hash}.rub"), $this->hash), true);
             $this->auth = $this->data['tmp_session'] ?? $this->data['auth'];
         } else {
+            date_default_timezone_set('Asia/Tehran');
+
             $this->data = array(
                 'phone-number' => $this->phone_number,
                 'date' => date('Y/M/d H:m'),

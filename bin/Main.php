@@ -29,12 +29,17 @@ final class Main
     public static $VERSION = '1.2.0';
     private ?Cryption $crypto;
 
+    /**
+     * @param integer $phone_number 989123456789 or 9123456789
+     * @param string $app_name it just need in login
+     * @param MainSettings $settings by default = (new MainSettings)
+     */
     public function __construct(
         int $phone_number,
         string $app_name = '',
-        private MainSettings $settings = (new MainSettings)
+        private MainSettings $settings = new MainSettings
     ) {
-        $this->phone_number = Tools::phoneNumberParse($phone_number);
+        $this->phone_number = Tools::parse_true_phone_number($phone_number);
 
         if (!Session::is_session($this->phone_number)) {
             $this->req = new Requests($settings->userAgent, $settings->auth, mainSettings: $settings);
@@ -117,6 +122,7 @@ final class Main
         }
 
         $this->crypto = new Cryption($this->req->auth, $this->session->data['private_key']);
+        $this->session->changeData('user', $this->getChatInfo($this->getMySelf()['user_guid'])['user']);
     }
 
     /**
@@ -188,7 +194,7 @@ final class Main
             'token' => '',
             'app_version' => 'WB_4.4.15',
             'lang_code' => 'fa',
-            'system_version' => Tools::getOS($this->req->useragent),
+            'system_version' => Tools::getOSbyUserAgent($this->req->useragent),
             'device_model' => ($app_name != '' ? "Rubika-lib($app_name) " . self::$VERSION : 'Rubika-lib ' . self::$VERSION),
             'device_hash' => Tools::generate_device_hash($this->req->useragent)
         ];
@@ -200,6 +206,12 @@ final class Main
             return $r;
         }
     }
+
+
+
+    // ======================================================= account methods ===================================================================
+
+
 
     /**
      * terminate this session
@@ -243,6 +255,105 @@ final class Main
     {
         return $this->session->data['user'];
     }
+
+    /**
+     * set account username
+     *
+     * @param string $username example: @rubika_lib
+     * @return array API result
+     */
+    public function changeUsername(string $username): array
+    {
+        $d = $this->req->making_request('updateUsername', [
+            'username' => str_replace('@', '', $username)
+        ], $this->session)['data'];
+
+        if ($d['status'] == 'OK') {
+            $this->session->changeData('user', $d['user']);
+        }
+
+        return $d;
+    }
+
+    /**
+     * edit account info
+     *
+     * @param string $first_name
+     * @param string $last_name
+     * @param string $bio
+     * @return array API result
+     */
+    public function editProfile(string $first_name = '', string $last_name = '', string $bio = ''): array
+    {
+        $d = [];
+        if ($first_name != '') {
+            $d['first_name'] = $first_name;
+        }
+        if ($last_name != '') {
+            $d['last_name'] = $last_name;
+        }
+        if ($bio != '') {
+            $d['bio'] = $bio;
+        }
+        $d['updated_parameters'] = [
+            "first_name",
+            "last_name",
+            "bio"
+        ];
+
+        $d = $this->req->making_request('updateProfile', $d, $this->session)['data'];
+
+        if (isset($d['chat_update'])) {
+            $this->session->changeData('user', $d['user']);
+        }
+
+        return $d;
+    }
+
+    /**
+     * request delete account
+     *
+     * @return array API result
+     */
+    public function requestDeleteAccount(): array
+    {
+        return $this->req->making_request('requestDeleteAccount', [], $this->session)['data'];
+    }
+
+    /**
+     * upload new profile picture
+     *
+     * @param string $file_path must be picture
+     * @return array API result
+     */
+    public function uploadNewProfileAvatar(string $file_path): array
+    {
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
+        return $this->req->making_request('uploadAvatar', [
+            'thumbnail_file_id' => $file_id,
+            'main_file_id' => $file_id
+        ], $this->session)['data'];
+    }
+
+    /**
+     * delete profile picture
+     *
+     * @param string $avatar_id
+     * @return void API result
+     */
+    public function deleteMyAvatar(string $avatar_id): array
+    {
+        return $this->req->making_request('deleteAvatar', [
+            'object_guid' => $this->getMySelf()['user_guid'],
+            'avatar_id' => $avatar_id
+        ], $this->session)['data'];
+    }
+
+
+
+    // ====================================================== chating methods ==================================================================
+
+
 
     /**
      * send text to someone or somewhere
@@ -333,17 +444,46 @@ final class Main
     }
 
     /**
-     * get chats list
+     * seen chat
      *
-     * @param int $start_id
+     * @param string $guid
+     * @param string $last_message_id
      * @return array API result
      */
-    public function getChats(int $start_id = 0): array
+    public function seenChats(string $guid, string $last_message_id): array
     {
-        return $this->req->making_request('getChats', [
-            'start_id' => $start_id
+        return $this->req->making_request('seenChats', [
+            'seen_list' => [
+                $guid => $last_message_id
+            ]
         ], $this->session)['data'];
     }
+
+    /**
+     * seen chat
+     *
+     * @param array $guids
+     * @param array $last_message_ids
+     * @example . here is an example:
+     * seenChatsArray(['u0UBF88...', 'g0UKLD66...'],   ['91729830180', '9798103900']);
+     * @return array API result
+     */
+    public function seenChatsArray(array $guids, array $last_message_ids): array
+    {
+        $list = [];
+        for ($i = 0; $i < count($guids); $i++) {
+            $list[] = ['guid' => $guids[$i], 'msg_id' => $last_message_ids[$i]];
+        }
+        return $this->req->making_request('seenChats', [
+            'seen_list' => $list
+        ], $this->session)['data'];
+    }
+
+
+
+    // ======================================================= join and leave methods ===================================================================
+
+
 
     /**
      * join to channel or group
@@ -381,7 +521,7 @@ final class Main
      */
     public function leaveChat(string $guid): array
     {
-        $chatType = strtolower((string)Tools::ChatType_guid($guid));
+        $chatType = strtolower((string)Tools::getChatType_byGuid($guid));
         $d = [
             "{$chatType}_guid" => $guid
         ];
@@ -405,14 +545,25 @@ final class Main
     }
 
     /**
-     * get stickers list
+     * create new group
      *
+     * @param string $title
+     * @param array $members example: ["u0HMRZ...", "u08UBju..."]
      * @return array API result
      */
-    public function getMyStickerSets(): array
+    public function createGroup(string $title, array $members): array
     {
-        return $this->req->making_request('getMyStickerSets', [], $this->session)['data'];
+        return $this->req->making_request('addGroup', [
+            'title' => $title,
+            'member_guids' => $members
+        ], $this->session)['data'];
     }
+
+
+
+    // ======================================================= folders methods ===================================================================
+
+
 
     /**
      * get folders list
@@ -422,6 +573,128 @@ final class Main
     public function getFolders(): array
     {
         return $this->req->making_request('getFolders', [], $this->session)['data'];
+    }
+
+
+
+    // ======================================================= stickers methods ===================================================================
+
+
+
+    /**
+     * get stickers list
+     *
+     * @return array API result
+     */
+    public function getMyStickerSets(): array
+    {
+        return $this->req->making_request('getMyStickerSets', [], $this->session)['data'];
+    }
+
+
+
+    // ======================================================= group methods ===================================================================
+
+
+
+    /**
+     * create new group
+     *
+     * @param string $group_guid
+     * @param array $members example: ["u0HMRZ...", "u08UBju..."]
+     * @return array API result
+     */
+    public function addGroupMembers(string $group_guid, array $members): array
+    {
+        return $this->req->making_request('addGroupMembers', [
+            'group_guid' => $group_guid,
+            'member_guids' => $members
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get groups onlines count
+     *
+     * @param string $group_guid
+     * @return array API result
+     */
+    public function getGroupOnlineCount(string $group_guid): array
+    {
+        return $this->req->making_request('getGroupOnlineCount', [
+            'group_guid' => $group_guid
+        ], $this->session)['data'];
+    }
+    /**
+     * get group members list
+     *
+     * @param string $group_guid
+     * @param string $search_for searh for name
+     * @param integer $start_id section
+     * @return array API result
+     */
+    public function getGroupAllMembers(string $group_guid, string $search_for = '', int $start_id = 0): array
+    {
+        $d = [
+            'group_guid' => $group_guid
+        ];
+        if ($search_for != '') {
+            $d['search_text'] = $search_for;
+        }
+        if ($start_id != 0) {
+            $d['start$start_id'] = $start_id;
+        }
+        return $this->req->making_request('getGroupAllMembers', $d, $this->session)['data'];
+    }
+
+    /**
+     * upload new group avatar picture
+     *
+     * @param string $file_path must be picture
+     * @param string $group_guid
+     * @return array API result
+     */
+    public function uploadNewGroupAvatar(string $group_guid, string $file_path): array
+    {
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
+        return $this->req->making_request('uploadAvatar', [
+            'object_guid' => $group_guid,
+            'thumbnail_file_id' => $file_id,
+            'main_file_id' => $file_id
+        ], $this->session)['data'];
+    }
+
+    /**
+     * delete group profile picture
+     *
+     * @param string $group_guid
+     * @param string $avatar_id
+     * @return array API result
+     */
+    public function deleteGroupAvatar(string $group_guid, string $avatar_id): array
+    {
+        return $this->req->making_request('deleteAvatar', [
+            'object_guid' => $group_guid,
+            'avatar_id' => $avatar_id
+        ], $this->session)['data'];
+    }
+
+
+
+    // ======================================================= chats methods ===================================================================
+
+
+
+    /**
+     * get chats list
+     *
+     * @param int $start_id
+     * @return array API result
+     */
+    public function getChats(int $start_id = 0): array
+    {
+        return $this->req->making_request('getChats', [
+            'start_id' => $start_id
+        ], $this->session)['data'];
     }
 
     /**
@@ -469,34 +742,11 @@ final class Main
     //     ], $this->session)['data'];
     // }
 
-    /**
-     * get groups onlines count
-     *
-     * @param string $group_guid
-     * @return array API result
-     */
-    public function getGroupOnlineCount(string $group_guid): array
-    {
-        return $this->req->making_request('getGroupOnlineCount', [
-            'group_guid' => $group_guid
-        ], $this->session)['data'];
-    }
 
-    /**
-     * seend chats
-     *
-     * @param string $guid
-     * @param string $last_message_id
-     * @return array API result
-     */
-    public function seenChats(string $guid, string $last_message_id): array
-    {
-        return $this->req->making_request('seenChats', [
-            'seen_list' => [
-                $guid => $last_message_id
-            ]
-        ], $this->session)['data'];
-    }
+
+    // ======================================================= contacts methods ===================================================================
+
+
 
     /**
      * seend chats
@@ -525,7 +775,7 @@ final class Main
     public function addContact(int $phone_number, string $first_name, string $last_name = ''): array
     {
         return $this->req->making_request('addAddressBook', [
-            'phone' => '+' . Tools::phoneNumberParse($phone_number),
+            'phone' => '+' . Tools::parse_true_phone_number($phone_number),
             'first_name' => $first_name,
             'last_name' => $last_name
         ], $this->session)['data'];
@@ -563,7 +813,7 @@ final class Main
             'message_contact' => [
                 'first_name' => $first_name,
                 'last_name' => $last_name,
-                'phone_number' => Tools::phoneNumberParse($phone_number)
+                'phone_number' => Tools::parse_true_phone_number($phone_number)
             ]
         ];
         if ($contact_guid != '') {
@@ -575,6 +825,12 @@ final class Main
         return $this->req->making_request('sendMessage', $d, $this->session)['data'];
     }
 
+
+
+    // ======================================================= get chat info methods ===================================================================
+
+
+
     /**
      * get chat info with guid
      *
@@ -583,8 +839,8 @@ final class Main
      */
     public function getChatInfo(string $guid): array
     {
-        return $this->req->making_request('get' . Tools::ChatType_guid($guid) . 'Info', [
-            strtolower(Tools::ChatType_guid($guid)) . '_guid' => $guid
+        return $this->req->making_request('get' . Tools::getChatType_byGuid($guid) . 'Info', [
+            strtolower(Tools::getChatType_byGuid($guid)) . '_guid' => $guid
         ], $this->session)['data'];
     }
 
@@ -602,70 +858,6 @@ final class Main
     }
 
     /**
-     * set account username
-     *
-     * @param string $username example: @rubika_lib
-     * @return array API result
-     */
-    public function changeUsername(string $username): array
-    {
-        $d = $this->req->making_request('updateUsername', [
-            'username' => str_replace('@', '', $username)
-        ], $this->session)['data'];
-
-        if ($d['status'] == 'OK') {
-            $this->session->changeData('user', $d['user']);
-        }
-
-        return $d;
-    }
-
-    /**
-     * edit account info
-     *
-     * @param string $first_name
-     * @param string $last_name
-     * @param string $bio
-     * @return array API result
-     */
-    public function editAccount(string $first_name = '', string $last_name = '', string $bio = ''): array
-    {
-        $d = [];
-        if ($first_name != '') {
-            $d['first_name'] = $first_name;
-        }
-        if ($last_name != '') {
-            $d['last_name'] = $last_name;
-        }
-        if ($bio != '') {
-            $d['bio'] = $bio;
-        }
-        $d['updated_parameters'] = [
-            "first_name",
-            "last_name",
-            "bio"
-        ];
-
-        $d = $this->req->making_request('updateProfile', $d, $this->session)['data'];
-
-        if (isset($d['chat_update'])) {
-            $this->session->changeData('user', $d['user']);
-        }
-
-        return $d;
-    }
-
-    /**
-     * request delete account
-     *
-     * @return array API result
-     */
-    public function requestDeleteAccount(): array
-    {
-        return $this->req->making_request('requestDeleteAccount', [], $this->session)['data'];
-    }
-
-    /**
      * get chat avatar with guid
      *
      * @param string $object_guid
@@ -678,27 +870,11 @@ final class Main
         ], $this->session)['data'];
     }
 
-    /**
-     * get group members list
-     *
-     * @param string $group_guid
-     * @param string $search_for searh for name
-     * @param integer $start_id section
-     * @return array API result
-     */
-    public function getGroupAllMembers(string $group_guid, string $search_for = '', int $start_id = 0): array
-    {
-        $d = [
-            'group_guid' => $group_guid
-        ];
-        if ($search_for != '') {
-            $d['search_text'] = $search_for;
-        }
-        if ($start_id != 0) {
-            $d['start$start_id'] = $start_id;
-        }
-        return $this->req->making_request('getGroupAllMembers', $d, $this->session)['data'];
-    }
+
+
+    // ======================================================= upload and download methods ===================================================================
+
+
 
     /**
      * download a file
@@ -737,7 +913,7 @@ final class Main
      *
      * @param string $path file path or link
      * @param boolean $isLink if $path is a link
-     * @return array API result
+     * @return array [ [$file_id, $dc_id, $access_hash_rec] ]
      */
     private function sendFileToAPI(string $path, bool $isLink = false): array
     {
@@ -758,7 +934,7 @@ final class Main
         $ex = explode('.', $fn);
         $data = $this->requestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
 
-        return $this->req->uploadFile($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data'];
+        return [$data['id'], $data['dc_id'], $this->req->uploadFile($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
     }
 
     /**
@@ -778,6 +954,12 @@ final class Main
         ], $this->session)['data'];
     }
 
+
+
+    // ======================================================= MAin class methods ===================================================================
+
+
+
     /**
      * set runner class for getting updates
      *
@@ -795,7 +977,7 @@ final class Main
      *
      * @return void
      */
-    public function run(): void
+    public function getUpadte(): void
     {
         $this->getChatsUpdates();
 

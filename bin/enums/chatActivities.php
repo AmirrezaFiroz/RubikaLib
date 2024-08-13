@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib\enums;
 
 /**
- * chat activities
+ * chat activities (on top of chats)
  */
 enum chatActivities: string
 {

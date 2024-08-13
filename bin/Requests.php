@@ -14,13 +14,23 @@ use RubikaLib\Logger;
 final class Requests
 {
     private string $getdcmessURL = 'https://getdcmess.iranlms.ir/';
+    /**
+     * all DC URLs
+     *
+     * @var array|null
+     */
     public ?array $links;
     private ?Cryption $crypto;
     private ?string $re_auth;
 
     public function __construct(
+        /**
+         * useragent for request sending
+         *
+         * @var string
+         */
         public string $useragent,
-        public string $auth,
+        public readonly string $auth,
         private MainSettings $mainSettings,
         string $private_key = ''
     ) {

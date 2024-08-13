@@ -50,12 +50,11 @@ final class MainSettings
     public function setUserAgent(string $userAgent): self
     {
         $this->userAgent = $userAgent;
-
         return $this;
     }
 
     /**
-     * set default auth for library
+     * set default auth for library as tmp_session in login step
      *
      * @param string $auth you can generate one by using RubikaLib\Cryption::azRand() 
      * @return self
@@ -63,7 +62,6 @@ final class MainSettings
     public function setAuth(string $auth): self
     {
         $this->auth = $auth;
-
         return $this;
     }
 
@@ -76,7 +74,6 @@ final class MainSettings
     public function setOptimal(bool $Optimal): self
     {
         $this->Optimal = $Optimal;
-
         return $this;
     }
 }

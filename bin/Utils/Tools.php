@@ -18,7 +18,7 @@ final class Tools
      * @throws Logger throws an error when phone number is incorrect
      * @return int true phone number in this format: 989123456789
      */
-    public static function phoneNumberParse(int $phoneNumber): int
+    public static function parse_true_phone_number(int $phoneNumber): int
     {
         $phoneNumber = preg_replace('/[^\d+]/', '', (string)$phoneNumber);
 
@@ -50,7 +50,7 @@ final class Tools
      * @param integer $phoneNumber 989123456789
      * @return string
      */
-    public static function phoneToString(int $phoneNumber): string
+    public static function generate_phone_hash(int $phoneNumber): string
     {
         $array = [
             '0' => 'q',
@@ -65,16 +65,14 @@ final class Tools
             '9' => 'p'
         ];
         $res = '';
-
         foreach (str_split((string)$phoneNumber) as $char) {
             $res .= $array[$char];
         }
-
         return $res;
     }
 
     /**
-     * get hash of useragent for device login
+     * get hash of useragent for device registering
      *
      * @param string $userAgent
      * @return string
@@ -91,7 +89,7 @@ final class Tools
      * @param string $userAgent
      * @return string
      */
-    public static function getOS(string $userAgent)
+    public static function getOSbyUserAgent(string $userAgent)
     {
         $os = "Unknown";
 
@@ -124,7 +122,7 @@ final class Tools
      * @param string $guid
      * @return string|false 'Group', 'Channel', 'User', 'Service' or false
      */
-    public static function ChatType_guid(string $guid): string|false
+    public static function getChatType_byGuid(string $guid): string|false
     {
         if (str_starts_with($guid, 'g0')) {
             return 'Group';

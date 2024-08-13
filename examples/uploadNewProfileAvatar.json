@@ -1,0 +1,51 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "object_type": "User",
+        "user": {
+            "user_guid": "u0HMRYa0...",
+            "first_name": "...",
+            "phone": "...",
+            "username": "...",
+            "avatar_thumbnail": {
+                "file_id": "48852...",
+                "mime": "jpg",
+                "dc_id": "786",
+                "access_hash_rec": "286032540784..."
+            },
+            "last_online": 1723541063,
+            "is_deleted": false,
+            "is_verified": false,
+            "online_time": {
+                "type": "Exact",
+                "exact_time": 1723541063
+            }
+        },
+        "chat_update": {
+            "object_guid": "u0HMRYa0...",
+            "action": "Edit",
+            "chat": {
+                "abs_object": {
+                    "object_guid": "u0HMRYa0...",
+                    "type": "User",
+                    "first_name": "...",
+                    "avatar_thumbnail": {
+                        "file_id": "48852...",
+                        "mime": "jpg",
+                        "dc_id": "786",
+                        "access_hash_rec": "286032540784..."
+                    },
+                    "is_verified": false,
+                    "is_deleted": false
+                }
+            },
+            "updated_parameters": [
+                "abs_object"
+            ],
+            "timestamp": "1723541213",
+            "type": "User"
+        },
+        "timestamp": "1723541213"
+    }
+}

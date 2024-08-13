@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib\enums;
 
 /**
- * for userAgents
+ * for choose userAgents
  */
 enum devices: string
 {

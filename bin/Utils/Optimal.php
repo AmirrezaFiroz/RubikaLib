@@ -7,7 +7,7 @@ namespace RubikaLib\Utils;
 use Generator;
 
 /**
- * library tool functions
+ * library Optimal functions
  */
 final class Optimal
 {
