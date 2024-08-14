@@ -364,3 +364,9 @@ var_dump($session_data);
 ```php
 $this->getChatInfo($this->getMySelf()['user_guid'])['user']
 ```
+
+# Join Us
+
+[rubika ✅](https://rubika.ir/RubikaLibPHP)
+
+[telegram ✅](https://t.me/rubika_lib)
