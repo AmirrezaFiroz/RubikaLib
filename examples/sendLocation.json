@@ -1,0 +1,62 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "message_update": {
+            "message_id": "1080403737670829",
+            "action": "New",
+            "message": {
+                "message_id": "1080403737670829",
+                "time": "1723636932",
+                "is_edited": false,
+                "location": {
+                    "longitude": 211.000,
+                    "latitude": 34.79000
+                },
+                "type": "Location",
+                "author_type": "User",
+                "author_object_guid": "u0HMRYa0b...",
+                "allow_transcription": false
+            },
+            "updated_parameters": [],
+            "timestamp": "1723636933",
+            "prev_message_id": "1080392732776829",
+            "object_guid": "g0ExQe...",
+            "type": "Group",
+            "state": "1723636873"
+        },
+        "status": "OK",
+        "chat_update": {
+            "object_guid": "g0ExQe...",
+            "action": "Edit",
+            "chat": {
+                "time_string": "172363693200001080403737670829",
+                "last_message": {
+                    "message_id": "1080403737670829",
+                    "type": "Other",
+                    "text": "مکان",
+                    "author_object_guid": "u0HMRYa0b...",
+                    "is_mine": true,
+                    "author_title": "شما",
+                    "author_type": "User"
+                },
+                "last_seen_my_mid": "1080403737670829",
+                "last_seen_peer_mid": "1080361718723829",
+                "time": 1723636932,
+                "last_message_id": "1080403737670829",
+                "group_my_last_send_time": 1723636932
+            },
+            "updated_parameters": [
+                "time_string",
+                "last_message",
+                "last_message_id",
+                "last_seen_my_mid",
+                "last_seen_peer_mid",
+                "group_my_last_send_time",
+                "time"
+            ],
+            "timestamp": "1723636933",
+            "type": "Group"
+        }
+    }
+}

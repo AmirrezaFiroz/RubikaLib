@@ -1,0 +1,23 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "voters_abs_objects": [
+            {
+                "object_guid": "u0HMRY...",
+                "type": "User",
+                "first_name": "...",
+                "avatar_thumbnail": {
+                    "file_id": "487597..",
+                    "mime": "jpg",
+                    "dc_id": "878",
+                    "access_hash_rec": "03444590..."
+                },
+                "is_verified": false,
+                "is_deleted": false
+            }
+        ],
+        "has_continue": false,
+        "next_start_id": "66bc9a198f482aa21fb0d233"
+    }
+}

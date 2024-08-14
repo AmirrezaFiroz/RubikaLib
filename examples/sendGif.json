@@ -1,0 +1,71 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "message_update": {
+            "message_id": "1080514792117829",
+            "action": "New",
+            "message": {
+                "message_id": "1080514792117829",
+                "file_inline": {
+                    "file_id": 48892898386129,
+                    "mime": "mp4",
+                    "dc_id": 1003,
+                    "access_hash_rec": "8393400632...",
+                    "file_name": "VID_20240813_232505_170.mp4",
+                    "thumb_inline": "\\/9j\\/4AAQSkZJRgABAQAAAQABAAD\\/4gIoSUNDX1BST0ZJTEUAAQEAAA...",
+                    "width": 360,
+                    "height": 640,
+                    "time": 7000,
+                    "size": 39900,
+                    "type": "Gif"
+                },
+                "time": "1723645475",
+                "is_edited": false,
+                "type": "FileInline",
+                "author_type": "User",
+                "author_object_guid": "u0HMRYa0b1e...",
+                "allow_transcription": false
+            },
+            "updated_parameters": [],
+            "timestamp": "1723645477",
+            "prev_message_id": "1080493781592829",
+            "object_guid": "g0ExQez...",
+            "type": "Group",
+            "state": "1723645417"
+        },
+        "status": "OK",
+        "chat_update": {
+            "object_guid": "g0ExQez...",
+            "action": "Edit",
+            "chat": {
+                "time_string": "172364547500001080514792117829",
+                "last_message": {
+                    "message_id": "1080514792117829",
+                    "type": "Other",
+                    "text": "GIF",
+                    "author_object_guid": "u0HMRY...",
+                    "is_mine": true,
+                    "author_title": "شما",
+                    "author_type": "User"
+                },
+                "last_seen_my_mid": "1080514792117829",
+                "last_seen_peer_mid": "1080477776328829",
+                "time": 1723645475,
+                "last_message_id": "1080514792117829",
+                "group_my_last_send_time": 1723645475
+            },
+            "updated_parameters": [
+                "time_string",
+                "last_message",
+                "last_message_id",
+                "last_seen_my_mid",
+                "last_seen_peer_mid",
+                "group_my_last_send_time",
+                "time"
+            ],
+            "timestamp": "1723645477",
+            "type": "Group"
+        }
+    }
+}

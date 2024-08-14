@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use FFMpeg\Coordinate\TimeCode;
-use FFMpeg\FFMpeg;
-use FFMpeg\FFProbe;
+use getID3;
 use Ratchet\Client\WebSocket;
 use React\EventLoop\Loop;
 use RubikaLib\enums\{
@@ -17,7 +15,8 @@ use RubikaLib\enums\{
     ReactionsEmoji,
     ReactionsString,
     setGroupReactions,
-    groupAdminAccessList
+    groupAdminAccessList,
+    pollType
 };
 use RubikaLib\interfaces\{
     groupDefaultAccesses,
@@ -498,7 +497,7 @@ final class Main
      * @param string $thumbnail base64 encoded picture
      * @return array API result
      */
-    public function sendPhoto(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = ''): array
+    public function sendPhoto(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
     {
         $fn = basename($path);
         if ($isLink) {
@@ -537,6 +536,9 @@ final class Main
         if ($caption != '') {
             $d['text'] = $caption;
         }
+        if ($reply_to_message_id != '') {
+            $d['reply_to_message_id'] = $reply_to_message_id;
+        }
 
         return $this->req->making_request('sendMessage', $d, $this->session)['data'];
     }
@@ -551,57 +553,183 @@ final class Main
      * @param string $thumbnail base64 encoded thumbnail picture
      * @return array API result
      */
-    // public function sendVideo(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = ''): array
-    // {
-    //     $fn = basename($path);
-    //     if ($isLink) {
-    //         if (!$this->settings->Optimal) {
-    //             file_put_contents("lib/$fn", file_get_contents($path));
-    //         } else {
-    //             $f = fopen("lib/$fn", 'a');
-    //             foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
-    //                 fwrite($f, $part);
-    //             }
-    //             fclose($f);
-    //         }
+    public function sendVideo(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
+    {
+        $fn = basename($path);
+        if ($isLink) {
+            if (!$this->settings->Optimal) {
+                file_put_contents("lib/$fn", file_get_contents($path));
+            } else {
+                $f = fopen("lib/$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                    fwrite($f, $part);
+                }
+                fclose($f);
+            }
 
-    //         $path = "lib/$fn";
-    //     }
+            $path = "lib/$fn";
+        }
 
-    //     $ffmpeg = FFMpeg::create();
-    //     $ffprobe = FFProbe::create();
-    //     $video = $ffmpeg->open($path);
-    //     $frame = $video->frame(TimeCode::fromSeconds(0));
-    //     $duration = $ffprobe->format($path)->get('duration');
-    //     $ex = explode('/', $path);
-    //     $frame->save(str_replace(('/' . $ex[count($ex) - 1]), '/Thumbnail.png', $path));
+        $getID3 = new getID3;
+        $file = $getID3->analyze($path);
+        if (isset($file['error'])) {
+            throw new Logger("Error: " . implode("\n", $file['error']));
+        }
 
-    //     list($width, $height, $mime) = Tools::getImageDetails($path);
-    //     list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+        list($width, $height, $mime) = Tools::getImageDetails(__DIR__ . '/video.png');
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
 
-    //     $d = [
-    //         'object_guid' => $guid,
-    //         'rnd' => (string)mt_rand(10000000, 999999999),
-    //         'file_inline' => [
-    //             'dc_id' => $dc_id,
-    //             'file_id' => $file_id,
-    //             'type' => 'Video',
-    //             'file_name' => $fn,
-    //             'size' => filesize($path),
-    //             'mime' => 'mp4',
-    //             'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(file_get_contents(str_replace(('/' . $ex[count($ex) - 1]), '/Thumbnail.png', $path))),
-    //             'width' => $width,
-    //             'height' => $height,
-    //             'time' => $duration,
-    //             'access_hash_rec' => $access_hash_rec
-    //         ]
-    //     ];
-    //     if ($caption != '') {
-    //         $d['text'] = $caption;
-    //     }
+        $d = [
+            'object_guid' => $guid,
+            'rnd' => (string)mt_rand(10000000, 999999999),
+            'file_inline' => [
+                'dc_id' => $dc_id,
+                'file_id' => $file_id,
+                'type' => 'Video',
+                'file_name' => $fn,
+                'size' => filesize($path),
+                'mime' => 'mp4',
+                'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(file_get_contents(__DIR__ . '/video.png')),
+                'width' => $width,
+                'height' => $height,
+                'time' => $file['playtime_seconds'],
+                'access_hash_rec' => $access_hash_rec
+            ]
+        ];
+        if ($caption != '') {
+            $d['text'] = $caption;
+        }
+        if ($reply_to_message_id != '') {
+            $d['reply_to_message_id'] = $reply_to_message_id;
+        }
 
-    //     return $this->req->making_request('sendMessage', $d, $this->session)['data'];
-    // }
+        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    }
+
+    /**
+     * send gif to guid
+     *
+     * @param string $guid
+     * @param string $path file path or url
+     * @param boolean $isLink is $path a URL or not
+     * @param string $caption
+     * @param string $thumbnail base64 encoded thumbnail picture
+     * @return array API result
+     */
+    public function sendGif(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
+    {
+        $fn = basename($path);
+        if ($isLink) {
+            if (!$this->settings->Optimal) {
+                file_put_contents("lib/$fn", file_get_contents($path));
+            } else {
+                $f = fopen("lib/$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                    fwrite($f, $part);
+                }
+                fclose($f);
+            }
+
+            $path = "lib/$fn";
+        }
+
+        $getID3 = new getID3;
+        $file = $getID3->analyze($path);
+        if (isset($file['error'])) {
+            throw new Logger("Error: " . implode("\n", $file['error']));
+        }
+
+        list($width, $height, $mime) = Tools::getImageDetails(__DIR__ . '/video.png');
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+
+        $d = [
+            'object_guid' => $guid,
+            'rnd' => (string)mt_rand(10000000, 999999999),
+            'file_inline' => [
+                'dc_id' => $dc_id,
+                'file_id' => $file_id,
+                'type' => 'Gif',
+                'file_name' => $fn,
+                'size' => filesize($path),
+                'mime' => 'mp4',
+                'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(file_get_contents(__DIR__ . '/video.png')),
+                'width' => $width,
+                'height' => $height,
+                'time' => $file['playtime_seconds'],
+                'access_hash_rec' => $access_hash_rec
+            ]
+        ];
+        if ($caption != '') {
+            $d['text'] = $caption;
+        }
+        if ($reply_to_message_id != '') {
+            $d['reply_to_message_id'] = $reply_to_message_id;
+        }
+
+        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    }
+
+    /**
+     * send music to guid
+     *
+     * @param string $guid
+     * @param string $path path or link
+     * @param boolean $isLink if $path is a link
+     * @param string $caption
+     * @param string $thumbnail
+     * @param string $reply_to_message_id
+     * @return array API result
+     */
+    public function sendMusic(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
+    {
+        $fn = basename($path);
+        if ($isLink) {
+            if (!$this->settings->Optimal) {
+                file_put_contents("lib/$fn", file_get_contents($path));
+            } else {
+                $f = fopen("lib/$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                    fwrite($f, $part);
+                }
+                fclose($f);
+            }
+
+            $path = "lib/$fn";
+        }
+
+        $getID3 = new getID3;
+        $file = $getID3->analyze($path);
+        if (isset($file['error'])) {
+            throw new Logger("Error: " . implode("\n", $file['error']));
+        }
+
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+
+        $d = [
+            'object_guid' => $guid,
+            'rnd' => (string)mt_rand(10000000, 999999999),
+            'file_inline' => [
+                'dc_id' => $dc_id,
+                'file_id' => $file_id,
+                'type' => 'Music',
+                'file_name' => $fn,
+                'size' => filesize($path),
+                'mime' => 'mp3',
+                'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(file_get_contents(__DIR__ . '/video.png')),
+                'time' => $file['playtime_seconds'],
+                'access_hash_rec' => $access_hash_rec,
+                'music_performer' => $file['tags_html']['id3v2']['artist'][0] ?? 'rubikalib'
+            ]
+        ];
+        if ($caption != '') {
+            $d['text'] = $caption;
+        }
+        if ($reply_to_message_id != '') {
+            $d['reply_to_message_id'] = $reply_to_message_id;
+        }
+
+        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    }
 
     /**
      * send message Raction
@@ -635,6 +763,112 @@ final class Main
             'message_id' => $message_id,
             'object_guid' => $guid
         ], $this->session)['data'];
+    }
+
+    /**
+     * send poll to chat
+     *
+     * @param string $guid
+     * @param string $question
+     * @param boolean $is_anonymous
+     * @param array $options example: ['option1', 'options2', ...]
+     * @param pollType $type Regular or Quiz
+     * @param string $explanation if $type if Quiz (can be empty)
+     * @param integer $correct_option_index if $type is Quiz (required)
+     * @param boolean $allows_multiple_answers it can't be set if $type is Quiz
+     * @param string $reply_to_message_id
+     * @return array API result
+     */
+    public function createPoll(
+        string $guid,
+        string $question,
+        array $options,
+        pollType $type,
+        bool $is_anonymous = false,
+        string $explanation = '',
+        int $correct_option_index = 0,
+        bool $allows_multiple_answers = false,
+        string $reply_to_message_id = ''
+    ): array {
+        $d = [
+            'object_guid' => $guid,
+            'options' => $options,
+            'rnd' => (string)mt_rand(10000000, 999999999),
+            'question' => $question,
+            'type' => $type->value,
+            'is_anonymous' => $is_anonymous
+        ];
+        if ($type == pollType::Regular && $allows_multiple_answers) {
+            $d['allows_multiple_answers'] = $allows_multiple_answers;
+        }
+        if ($type == pollType::Quiz) {
+            if ($explanation != '') {
+                $d['explanation'] = $explanation;
+            }
+            $d['correct_option_index'] = $correct_option_index;
+        }
+        if ($reply_to_message_id != '') {
+            $d['reply_to_message_id'] = $reply_to_message_id;
+        }
+        return $this->req->making_request('createPoll', $d, $this->session)['data'];
+    }
+
+    /**
+     * get poll statuc
+     *
+     * @param string $poll_id
+     * @return array API result
+     */
+    public function getPollStatus(string $poll_id): array
+    {
+        return $this->req->making_request('createPoll', [
+            'poll_id' => $poll_id
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get poll option selectors
+     *
+     * @param string $poll_id
+     * @param integer $selection_index
+     * @return array API result
+     */
+    public function getPollOptionVoters(string $poll_id, int $selection_index): array
+    {
+        return $this->req->making_request('getPollOptionVoters', [
+            'poll_id' => $poll_id,
+            'selection_index' => $selection_index
+        ], $this->session)['data'];
+    }
+
+    /**
+     * send location
+     *
+     * @param string $guid
+     * @param float $latitude
+     * @param float $longitude
+     * @return array API result
+     */
+    public function sendLocation(string $guid, float $latitude, float $longitude): array
+    {
+        return $this->req->making_request('sendmessage', [
+            'object_guid' => $guid,
+            'rnd' => (string)mt_rand(10000000, 999999999),
+            'location' => [
+                'latitude' => $latitude,
+                'longitude' => $longitude
+            ]
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get account gifs list
+     *
+     * @return array API result
+     */
+    public function getMyGifSet(): array
+    {
+        return $this->req->making_request('getMyGifSet', [], $this->session)['data'];
     }
 
 
@@ -748,6 +982,42 @@ final class Main
     {
         return $this->req->making_request('getMyStickerSets', [], $this->session)['data'];
     }
+
+    /**
+     * get sticker set data by sticker set id
+     *
+     * @param string $sticker_set_ids
+     * @return array API result
+     */
+    public function getStickersBySetIDs(string $sticker_set_ids): array
+    {
+        return $this->req->making_request('getStickersBySetIDs', [
+            'sticker_set_ids' => $sticker_set_ids
+        ], $this->session)['data'];
+    }
+
+    // public function sendSticker(string $guid): array
+    // {
+    //     $d = [
+    //         'object_guid' => $guid,
+    //         'rnd' => (string)mt_rand(10000000, 999999999),
+    //         'sticker' => [
+    //             "emoji_character" => "😠",
+    //             "w_h_ratio" => "1.0",
+    //             "sticker_id" => "5e0cbc97b424cfe782c3f1cf",
+    //             "file" => [
+    //                 "file_id" => "492739289",
+    //                 "mime" => "png",
+    //                 "dc_id" => "32",
+    //                 "access_hash_rec" => "424555119753073792996994300757",
+    //                 "file_name" => "sticker.png",
+    //                 "cdn_tag" => "PR3"
+    //             ],
+    //             "sticker_set_id" => "5e0cb9f4345de9b18b4ba1ae"
+    //         ]
+    //     ];
+    //     return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    // }
 
 
 

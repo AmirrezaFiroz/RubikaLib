@@ -32,7 +32,7 @@
         "ext-mbstring": "*",
         "ext-openssl": "*",
         "ratchet/pawl": "^0.4.1",
-        "php-ffmpeg/php-ffmpeg": "^1.2"
+        "james-heinrich/getid3": "^1.9"
     },
     "require-dev": {
         "spatie/async": "^1.6"
