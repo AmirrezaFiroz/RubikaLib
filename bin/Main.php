@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
+use FFMpeg\Coordinate\TimeCode;
+use FFMpeg\FFMpeg;
+use FFMpeg\FFProbe;
 use Ratchet\Client\WebSocket;
 use React\EventLoop\Loop;
 use RubikaLib\enums\{
     chatActivities,
     deleteType,
-    Sort
+    Sort,
+    HistoryForNewMembers,
+    ReactionsEmoji,
+    ReactionsString,
+    setGroupReactions,
+    groupAdminAccessList
 };
 use RubikaLib\interfaces\{
+    groupDefaultAccesses,
     MainSettings,
     Runner
 };
@@ -130,7 +139,7 @@ final class Main
      *
      * @param string $pass_key if account have password
      * @throws Logger INVALID_INPUT
-     * @return array
+     * @return array API result
      */
     private function sendCode(string $pass_key = ''): array
     {
@@ -417,7 +426,7 @@ final class Main
      * @param string $object_guid
      * @param array $message_ids
      * @param deleteType $type local or global
-     * @return array
+     * @return array API result
      */
     public function deleteMessages(string $object_guid, array $message_ids, deleteType $type = deleteType::Local): array
     {
@@ -476,6 +485,155 @@ final class Main
         }
         return $this->req->making_request('seenChats', [
             'seen_list' => $list
+        ], $this->session)['data'];
+    }
+
+    /**
+     * send photo to chat
+     *
+     * @param string $guid
+     * @param string $path image path
+     * @param boolean $isLink is $path a link or not
+     * @param string $caption
+     * @param string $thumbnail base64 encoded picture
+     * @return array API result
+     */
+    public function sendPhoto(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = ''): array
+    {
+        $fn = basename($path);
+        if ($isLink) {
+            if (!$this->settings->Optimal) {
+                file_put_contents("lib/$fn", file_get_contents($path));
+            } else {
+                $f = fopen("lib/$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                    fwrite($f, $part);
+                }
+                fclose($f);
+            }
+
+            $path = "lib/$fn";
+        }
+
+        list($width, $height, $mime) = Tools::getImageDetails($path);
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+
+        $d = [
+            'object_guid' => $guid,
+            'rnd' => (string)mt_rand(10000000, 999999999),
+            'file_inline' => [
+                'dc_id' => $dc_id,
+                'file_id' => $file_id,
+                'type' => 'Image',
+                'file_name' => $fn,
+                'size' => filesize($path),
+                'mime' => explode('/', $mime)[1],
+                'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(Tools::createThumbnail($path, $width)),
+                'width' => $width,
+                'height' => $height,
+                'access_hash_rec' => $access_hash_rec
+            ]
+        ];
+        if ($caption != '') {
+            $d['text'] = $caption;
+        }
+
+        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    }
+
+    /**
+     * send video to guid
+     *
+     * @param string $guid
+     * @param string $path file path or url
+     * @param boolean $isLink is $path a URL or not
+     * @param string $caption
+     * @param string $thumbnail base64 encoded thumbnail picture
+     * @return array API result
+     */
+    // public function sendVideo(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = ''): array
+    // {
+    //     $fn = basename($path);
+    //     if ($isLink) {
+    //         if (!$this->settings->Optimal) {
+    //             file_put_contents("lib/$fn", file_get_contents($path));
+    //         } else {
+    //             $f = fopen("lib/$fn", 'a');
+    //             foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+    //                 fwrite($f, $part);
+    //             }
+    //             fclose($f);
+    //         }
+
+    //         $path = "lib/$fn";
+    //     }
+
+    //     $ffmpeg = FFMpeg::create();
+    //     $ffprobe = FFProbe::create();
+    //     $video = $ffmpeg->open($path);
+    //     $frame = $video->frame(TimeCode::fromSeconds(0));
+    //     $duration = $ffprobe->format($path)->get('duration');
+    //     $ex = explode('/', $path);
+    //     $frame->save(str_replace(('/' . $ex[count($ex) - 1]), '/Thumbnail.png', $path));
+
+    //     list($width, $height, $mime) = Tools::getImageDetails($path);
+    //     list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+
+    //     $d = [
+    //         'object_guid' => $guid,
+    //         'rnd' => (string)mt_rand(10000000, 999999999),
+    //         'file_inline' => [
+    //             'dc_id' => $dc_id,
+    //             'file_id' => $file_id,
+    //             'type' => 'Video',
+    //             'file_name' => $fn,
+    //             'size' => filesize($path),
+    //             'mime' => 'mp4',
+    //             'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(file_get_contents(str_replace(('/' . $ex[count($ex) - 1]), '/Thumbnail.png', $path))),
+    //             'width' => $width,
+    //             'height' => $height,
+    //             'time' => $duration,
+    //             'access_hash_rec' => $access_hash_rec
+    //         ]
+    //     ];
+    //     if ($caption != '') {
+    //         $d['text'] = $caption;
+    //     }
+
+    //     return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    // }
+
+    /**
+     * send message Raction
+     *
+     * @param string $guid
+     * @param string $message_id
+     * @param ReactionsEmoji|ReactionsString $reaction
+     * @return array API result
+     */
+    public function addMessageReaction(string $guid, string $message_id, ReactionsEmoji|ReactionsString $reaction): array
+    {
+        return $this->req->making_request('actionOnMessageReaction', [
+            'action' => 'Add',
+            'reaction_id' => $reaction->value,
+            'message_id' => $message_id,
+            'object_guid' => $guid
+        ], $this->session)['data'];
+    }
+
+    /**
+     * remove message Raction
+     *
+     * @param string $guid
+     * @param string $message_id
+     * @return array API result
+     */
+    public function removeMessageReaction(string $guid, string $message_id): array
+    {
+        return $this->req->making_request('actionOnMessageReaction', [
+            'action' => 'Remove',
+            'message_id' => $message_id,
+            'object_guid' => $guid
         ], $this->session)['data'];
     }
 
@@ -663,6 +821,26 @@ final class Main
         ], $this->session)['data'];
     }
 
+    public function setGroupDefaultAccess(string $group_guid, groupDefaultAccesses $settings = new groupDefaultAccesses): array
+    {
+        $d = [
+            'group_guid' => $group_guid
+        ];
+        if ($settings->ViewAdmins) {
+            $d[] = 'ViewAdmins';
+        }
+        if ($settings->SendMessages) {
+            $d[] = 'SendMessages';
+        }
+        if ($settings->ViewMembers) {
+            $d[] = 'ViewMembers';
+        }
+        if ($settings->AddMember) {
+            $d[] = 'AddMember';
+        }
+        return $this->req->making_request('setGroupDefaultAccess', $d, $this->session)['data'];
+    }
+
     /**
      * delete group profile picture
      *
@@ -678,11 +856,298 @@ final class Main
         ], $this->session)['data'];
     }
 
+    /**
+     * get group join link
+     *
+     * @param string $group_guid
+     * @return array API result
+     */
+    public function getGroupLink(string $group_guid): array
+    {
+        return $this->req->making_request('getGroupLink', [
+            'object_guid' => $group_guid,
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get new group join link
+     *
+     * @param string $group_guid
+     * @return array API result
+     */
+    public function getNewGroupLink(string $group_guid): array
+    {
+        return $this->req->making_request('setGroupLink', [
+            'object_guid' => $group_guid,
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get ngroup admins list
+     *
+     * @param string $group_guid
+     * @return array API result
+     */
+    public function getGroupAdminMembers(string $group_guid): array
+    {
+        return $this->req->making_request('getGroupAdminMembers', [
+            'object_guid' => $group_guid,
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get chat history for new members
+     *
+     * @param string $group_guid
+     * @param HistoryForNewMembers $chat_history_for_new_members Hidden or Visible
+     * @return array API result
+     */
+    public function editGroupHistoryForNewMembers(string $group_guid, HistoryForNewMembers $chat_history_for_new_members): array
+    {
+        return $this->req->making_request('setGroupLink', [
+            'object_guid' => $group_guid,
+            'chat_history_for_new_members' => $chat_history_for_new_members->value,
+            'updated_parameters' => ['chat_history_for_new_members']
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get chat event messages for members
+     *
+     * @param string $group_guid
+     * @param bool $EventMssages 
+     * @return array API result
+     */
+    public function setGroupEventMessages(string $group_guid, bool $EventMssages): array
+    {
+        return $this->req->making_request('setGroupLink', [
+            'object_guid' => $group_guid,
+            'event_messages' => $EventMssages,
+            'updated_parameters' => ['event_messages']
+        ], $this->session)['data'];
+    }
+
+    /**
+     * edit group account info
+     *
+     * @param string $group_guid
+     * @param string $title
+     * @param string $description bio
+     * @return array API result
+     */
+    public function editGroupProfile(string $group_guid, string $title = '', string $description = ''): array
+    {
+        $d = [
+            'group_guid' => $group_guid
+        ];
+        if ($title != '') {
+            $d['title'] = $title;
+        }
+        if ($description != '') {
+            $d['description'] = $description;
+        }
+        $d['updated_parameters'] = [
+            "title",
+            "description"
+        ];
+
+        $d = $this->req->making_request('editGroupInfo', $d, $this->session)['data'];
+
+        return $d;
+    }
+
+    /**
+     * ban group member
+     *
+     * @param string $group_guid
+     * @param string $member_guid 
+     * @return array API result
+     */
+    public function banGroupMember(string $group_guid, string $member_guid): array
+    {
+        return $this->req->making_request('banGroupMember', [
+            'group_guid' => $group_guid,
+            'member_guid' => $member_guid,
+            'action' => 'Set'
+        ], $this->session)['data'];
+    }
+
+    /**
+     * unban group member
+     *
+     * @param string $group_guid
+     * @param string $member_guid 
+     * @return array API result
+     */
+    public function unBanGroupMember(string $group_guid, string $member_guid): array
+    {
+        return $this->req->making_request('banGroupMember', [
+            'group_guid' => $group_guid,
+            'member_guid' => $member_guid,
+            'action' => 'Unset'
+        ], $this->session)['data'];
+    }
+
+    /**
+     * set admin or change admin accesses
+     *
+     * @param string $group_guid
+     * @param string $member_guid
+     * @param array $access_list
+     * @example . setGroupAdmin('g0UBD989...', 'u0YUB78...', [groupAdminAccessList::BanMember, ...])
+     * @return array API result
+     */
+    public function setGroupAdmin(string $group_guid, string $member_guid, array $access_list): array
+    {
+        $d = [
+            'group_guid' => $group_guid,
+            'member_guid' => $member_guid,
+            'action' => 'SetAdmin'
+        ];
+        foreach ($access_list as $access) {
+            if ($access instanceof groupAdminAccessList) {
+                $d['access_list'][] = (string)$access->value;
+            }
+        }
+        return $this->req->making_request('setGroupAdmin', $d, $this->session)['data'];
+    }
+
+    /**
+     * remove admin
+     *
+     * @param string $group_guid
+     * @param string $member_guid
+     * @return array API result
+     */
+    public function removeGroupAdmin(string $group_guid, string $member_guid): array
+    {
+        return $this->req->making_request('setGroupAdmin', [
+            'group_guid' => $group_guid,
+            'member_guid' => $member_guid,
+            'action' => 'UnsetAdmin'
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get group admin accesses
+     *
+     * @param string $group_guid
+     * @param string $admin_guid
+     * @return array API resilt
+     */
+    public function getGroupAdminAccessList(string $group_guid, string $admin_guid): array
+    {
+        return $this->req->making_request('getGroupAdminAccessList', [
+            'group_guid' => $group_guid,
+            'member_guid' => $admin_guid,
+        ], $this->session)['data'];
+    }
+
+    /**
+     * set group slow mode
+     *
+     * @param string $group_guid
+     * @param integer $time (in seconds). just allowed -> 0, 10, 30, 60, 300, 900, 3600
+     * @return array API resilt
+     */
+    public function setGroupSlowModeTime(string $group_guid, int $time): array
+    {
+        return $this->req->making_request('editGroupInfo', [
+            'group_guid' => $group_guid,
+            'slow_mode' => $time,
+            'updated_parameters' => ['slow_mode']
+        ], $this->session)['data'];
+    }
+
+    /**
+     * get group banned members
+     *
+     * @param string $group_guid
+     * @return array API resilt
+     */
+    public function getBannedGroupMembers(string $group_guid): array
+    {
+        return $this->req->making_request('getBannedGroupMembers', [
+            'group_guid' => $group_guid
+        ], $this->session)['data'];
+    }
+
+    /**
+     * set group allowed reactions
+     *
+     * @param string $group_guid
+     * @param setGroupReactions $mode all or diabled or selected
+     * @param array $selects if mode is set to Selected
+     * @example . setGroupReactions('g0UBD989...', setGroupReactions::Selected, [ReactionsEmoji::❤️, ReactionsEmoji::👍])
+     * @return array API result
+     */
+    public function setGroupReactions(string $group_guid, setGroupReactions $mode, array $selects = []): array
+    {
+        $d = [
+            'group_guid' => $group_guid,
+            'chat_reaction_setting' => [
+                'reaction_type' => $mode->value
+            ],
+            'updated_parameters' => ['chat_reaction_setting']
+        ];
+        if ($mode == setGroupReactions::Selected) {
+            foreach ($selects as $reaction) {
+                if ($reaction instanceof ReactionsEmoji or $reaction instanceof ReactionsString) {
+                    $d['chat_reaction_setting']['selected_reactions'][] = (string)$reaction->value;
+                }
+            }
+        }
+        return $this->req->making_request('editGroupInfo', $d, $this->session)['data'];
+    }
+
 
 
     // ======================================================= chats methods ===================================================================
 
 
+
+    /**
+     * set another admin to group owner
+     *
+     * @param string $group_guid
+     * @param string $new_owner_user_guid
+     * @return array API result
+     */
+    public function requestChangeObjectOwner(string $group_guid, string $new_owner_user_guid): array
+    {
+        return $this->req->making_request('editGroupInfo', [
+            'group_guid' => $group_guid,
+            'new_owner_user_guid' => $new_owner_user_guid
+        ], $this->session)['data'];
+    }
+
+    /**
+     * accept onwing object
+     *
+     * @param string $object_guid
+     * @return array API resilt
+     */
+    public function AcceptRequestObjectOwning(string $object_guid): array
+    {
+        return $this->req->making_request('editGroupInfo', [
+            'object_guid' => $object_guid,
+            'action' => 'Accept'
+        ], $this->session)['data'];
+    }
+
+    /**
+     * rejecr onwing object
+     *
+     * @param string $object_guid
+     * @return array API resilt
+     */
+    public function RejectRequestObjectOwning(string $object_guid): array
+    {
+        return $this->req->making_request('editGroupInfo', [
+            'object_guid' => $object_guid,
+            'action' => 'Reject'
+        ], $this->session)['data'];
+    }
 
     /**
      * get chats list
@@ -913,7 +1378,7 @@ final class Main
      *
      * @param string $path file path or link
      * @param boolean $isLink if $path is a link
-     * @return array [ [$file_id, $dc_id, $access_hash_rec] ]
+     * @return array [$file_id, $dc_id, $access_hash_rec]
      */
     private function sendFileToAPI(string $path, bool $isLink = false): array
     {

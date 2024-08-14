@@ -1,0 +1,71 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "message_update": {
+            "message_id": "1079518304138829",
+            "action": "New",
+            "message": {
+                "message_id": "1079518304138829",
+                "text": "cap😁",
+                "file_inline": {
+                    "file_id": 4885,
+                    "mime": "png",
+                    "dc_id": 795,
+                    "access_hash_rec": "35104329...",
+                    "file_name": "Screenshot 2023-09-09 132252.png",
+                    "thumb_inline": "\\/9j\\/4AAQSkZJRgABAQAAAQABAAD\\/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0...",
+                    "width": 978,
+                    "height": 890,
+                    "size": 290342,
+                    "type": "Image"
+                },
+                "time": "1723565122",
+                "is_edited": false,
+                "type": "FileInlineCaption",
+                "author_type": "User",
+                "author_object_guid": "u0HMRYa...",
+                "allow_transcription": false
+            },
+            "updated_parameters": [],
+            "timestamp": "1723565123",
+            "prev_message_id": "1079224171171829",
+            "object_guid": "g0ExQe...",
+            "type": "Group",
+            "state": "1723565063"
+        },
+        "status": "OK",
+        "chat_update": {
+            "object_guid": "g0ExQe...",
+            "action": "Edit",
+            "chat": {
+                "time_string": "172356512200001079518304138829",
+                "last_message": {
+                    "message_id": "1079518304138829",
+                    "type": "Text",
+                    "text": "🖼 cap😁",
+                    "author_object_guid": "u0HMRYa...",
+                    "is_mine": true,
+                    "author_title": "شما",
+                    "author_type": "User"
+                },
+                "last_seen_my_mid": "1079518304138829",
+                "last_seen_peer_mid": "1079224171171829",
+                "time": 1723565122,
+                "last_message_id": "1079518304138829",
+                "group_my_last_send_time": 1723565122
+            },
+            "updated_parameters": [
+                "time_string",
+                "last_message",
+                "last_message_id",
+                "last_seen_my_mid",
+                "last_seen_peer_mid",
+                "group_my_last_send_time",
+                "time"
+            ],
+            "timestamp": "1723565123",
+            "type": "Group"
+        }
+    }
+}

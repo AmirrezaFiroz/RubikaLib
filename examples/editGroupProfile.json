@@ -1,0 +1,91 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "group": {
+            "group_guid": "g0Ex...",
+            "group_title": "name",
+            "avatar_thumbnail": {
+                "file_id": "48853...",
+                "mime": "jpg",
+                "dc_id": "782",
+                "access_hash_rec": "02961143..."
+            },
+            "count_members": 2,
+            "is_deleted": false,
+            "is_verified": false,
+            "slow_mode": 0,
+            "description": "hi",
+            "chat_history_for_new_members": "Visible",
+            "event_messages": true,
+            "chat_reaction_setting": {
+                "reaction_type": "Disabled"
+            },
+            "is_restricted_content": false
+        },
+        "chat_update": {
+            "object_guid": "g0Ex",
+            "action": "Edit",
+            "chat": {
+                "time_string": "172354423000001079224171171829",
+                "last_message": {
+                    "message_id": "1079224171171829",
+                    "type": "Other",
+                    "text": "نام به name تغییر یافت.",
+                    "is_mine": false
+                },
+                "time": 1723544230,
+                "abs_object": {
+                    "object_guid": "g0Ex...",
+                    "type": "Group",
+                    "title": "name",
+                    "avatar_thumbnail": {
+                        "file_id": "48853...",
+                        "mime": "jpg",
+                        "dc_id": "782",
+                        "access_hash_rec": "02961143..."
+                    },
+                    "is_verified": false,
+                    "is_deleted": false
+                },
+                "last_message_id": "1079224171171829"
+            },
+            "updated_parameters": [
+                "abs_object",
+                "last_message",
+                "time_string",
+                "last_message_id",
+                "time"
+            ],
+            "timestamp": "1723544231",
+            "type": "Group"
+        },
+        "timestamp": "1723544231",
+        "message_update": {
+            "message_id": "1079224171171829",
+            "action": "New",
+            "message": {
+                "message_id": "1079224171171829",
+                "text": "نام به name تغییر یافت.",
+                "time": "1723544230",
+                "is_edited": false,
+                "type": "Event",
+                "event_data": {
+                    "type": "TitleUpdate",
+                    "performer_object": {
+                        "type": "User",
+                        "object_guid": "u0HMRY..."
+                    },
+                    "title": "kubs"
+                },
+                "allow_transcription": false
+            },
+            "updated_parameters": [],
+            "timestamp": "1723544231",
+            "prev_message_id": "1079221170800829",
+            "object_guid": "g0Ex...",
+            "type": "Group",
+            "state": "1723544171"
+        }
+    }
+}
