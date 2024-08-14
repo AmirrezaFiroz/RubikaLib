@@ -1,0 +1,77 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "chat_update": {
+            "object_guid": "g0ExQez0...",
+            "action": "Edit",
+            "chat": {
+                "time_string": "172363473200001080366721370829",
+                "last_message": {
+                    "message_id": "1080366721370829",
+                    "type": "Other",
+                    "text": "📊 ??",
+                    "author_object_guid": "u0HMRYa...",
+                    "is_mine": true,
+                    "author_title": "شما",
+                    "author_type": "User"
+                },
+                "last_seen_my_mid": "1080366721370829",
+                "time": 1723634732,
+                "last_message_id": "1080366721370829",
+                "group_my_last_send_time": 1723634732
+            },
+            "updated_parameters": [
+                "time_string",
+                "last_message",
+                "last_message_id",
+                "last_seen_my_mid",
+                "group_my_last_send_time",
+                "time"
+            ],
+            "timestamp": "1723634732",
+            "type": "Group"
+        },
+        "status": "OK",
+        "message_update": {
+            "message_id": "1080366721370829",
+            "action": "New",
+            "message": {
+                "message_id": "1080366721370829",
+                "time": "1723634732",
+                "is_edited": false,
+                "type": "Poll2",
+                "author_type": "User",
+                "author_object_guid": "u0HMRYa...",
+                "poll": {
+                    "poll_id": "66bc942c619ecf6ef484546f_151115853821787335851375171211",
+                    "question": "??",
+                    "options": [
+                        "test1",
+                        "test2"
+                    ],
+                    "poll_status": {
+                        "state": "Open",
+                        "percent_vote_options": [
+                            0,
+                            0
+                        ],
+                        "total_vote": 0,
+                        "show_total_votes": true,
+                        "multiple_selections": []
+                    },
+                    "is_anonymous": true,
+                    "type": "Regular",
+                    "allows_multiple_answers": true
+                },
+                "allow_transcription": false
+            },
+            "updated_parameters": [],
+            "timestamp": "1723634732",
+            "prev_message_id": "1080361718723829",
+            "object_guid": "g0ExQez0...",
+            "type": "Group",
+            "state": "1723634672"
+        }
+    }
+}

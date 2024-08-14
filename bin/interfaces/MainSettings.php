@@ -18,7 +18,18 @@ final class MainSettings
      * @var string|null
      */
     public ?string $userAgent;
+    /**
+     * auth for sign up (it will be changes with API)
+     *
+     * @var string|null
+     */
     public ?string $auth;
+    /**
+     * use optimal mode
+     *
+     * @var boolean
+     */
+    public bool $Optimal = true;
 
     public function __construct()
     {
@@ -39,12 +50,11 @@ final class MainSettings
     public function setUserAgent(string $userAgent): self
     {
         $this->userAgent = $userAgent;
-
         return $this;
     }
 
     /**
-     * set default auth for library
+     * set default auth for library as tmp_session in login step
      *
      * @param string $auth you can generate one by using RubikaLib\Cryption::azRand() 
      * @return self
@@ -52,7 +62,18 @@ final class MainSettings
     public function setAuth(string $auth): self
     {
         $this->auth = $auth;
+        return $this;
+    }
 
+    /**
+     * set optimal mode
+     *
+     * @param boolean $Optimal
+     * @return self
+     */
+    public function setOptimal(bool $Optimal): self
+    {
+        $this->Optimal = $Optimal;
         return $this;
     }
 }

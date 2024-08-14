@@ -1,0 +1,29 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "in_chat_member": {
+            "member_type": "User",
+            "member_guid": "u0HMRZI...",
+            "first_name": "Robot",
+            "last_name": "",
+            "avatar_thumbnail": {
+                "file_id": "48759...",
+                "mime": "jpg",
+                "dc_id": "878",
+                "access_hash_rec": "743363922089..."
+            },
+            "is_verified": false,
+            "is_deleted": false,
+            "promoted_by_object_guid": "u0HMRYa...",
+            "promoted_by_object_type": "User",
+            "join_type": "Admin",
+            "username": "...",
+            "online_time": {
+                "type": "Approximate",
+                "approximate_period": "Recently"
+            }
+        },
+        "timestamp": "1723623988"
+    }
+}

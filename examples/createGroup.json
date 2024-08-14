@@ -1,0 +1,97 @@
+{
+    "group": {
+        "group_guid": "g0ExR4...",
+        "group_title": "...",
+        "count_members": 1,
+        "is_deleted": false,
+        "is_verified": false,
+        "slow_mode": 0,
+        "chat_history_for_new_members": "Visible",
+        "event_messages": true,
+        "chat_reaction_setting": {
+            "reaction_type": "Disabled"
+        },
+        "is_restricted_content": false
+    },
+    "chat_update": {
+        "object_guid": "g0ExR4...",
+        "action": "New",
+        "chat": {
+            "object_guid": "g0ExR4...",
+            "access": [
+                "ChangeInfo",
+                "PinMessages",
+                "DeleteGlobalAllMessages",
+                "BanMember",
+                "SetAdmin",
+                "SetJoinLink",
+                "SetMemberAccess",
+                "ViewMembers",
+                "ViewAdmins",
+                "SendMessages",
+                "AddMember",
+                "SuperAdmin",
+                "RemoveObject",
+                "ViewInfo",
+                "ViewMessages",
+                "DeleteLocalMessages",
+                "EditMyMessages",
+                "DeleteGlobalMyMessages"
+            ],
+            "count_unseen": 0,
+            "is_mute": false,
+            "is_pinned": false,
+            "time_string": "172354169300000000000000000000",
+            "last_message": {
+                "message_id": "0",
+                "type": "NotMessage",
+                "text": "\u06af\u0631\u0648\u0647 \u062c\u062f\u06cc\u062f \u0627\u06cc\u062c\u0627\u062f \u0634\u062f."
+            },
+            "last_seen_my_mid": "0",
+            "last_seen_peer_mid": "0",
+            "status": "Active",
+            "time": 1723541693,
+            "abs_object": {
+                "object_guid": "g0ExR4...",
+                "type": "Group",
+                "title": "...",
+                "is_verified": false,
+                "is_deleted": false
+            },
+            "is_blocked": false,
+            "last_message_id": "0",
+            "last_deleted_mid": "0",
+            "slow_mode_duration": 0
+        },
+        "updated_parameters": [],
+        "timestamp": "1723541694",
+        "type": "Group"
+    },
+    "message_update": {
+        "message_id": "1079176977451154",
+        "action": "New",
+        "message": {
+            "message_id": "1079176977451154",
+            "text": "\u06af\u0631\u0648\u0647 ... \u0627\u06cc\u062c\u0627\u062f \u0634\u062f.",
+            "time": "1723541694",
+            "is_edited": false,
+            "type": "Event",
+            "event_data": {
+                "type": "GroupCreated",
+                "performer_object": {
+                    "type": "User",
+                    "object_guid": "u0HM..."
+                },
+                "title": "..."
+            },
+            "allow_transcription": false
+        },
+        "updated_parameters": [],
+        "timestamp": "1723541694",
+        "prev_message_id": "0",
+        "object_guid": "g0ExR4...",
+        "type": "Group",
+        "state": "1723541634"
+    },
+    "timestamp": "1723541694"
+}

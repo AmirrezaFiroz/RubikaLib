@@ -1,0 +1,20 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "poll_status": {
+            "state": "Open",
+            "selection_index": 1,
+            "percent_vote_options": [
+                25,
+                75
+            ],
+            "total_vote": 1,
+            "show_total_votes": true,
+            "voters_object_guids": [
+                "u0H2MRY...", "u0HMeRY...", "u0H3MRY...", "u0H43MRY..."
+            ],
+            "correct_option_index": 0
+        }
+    }
+}

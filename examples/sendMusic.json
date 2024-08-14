@@ -1,0 +1,66 @@
+{
+    "message_update": {
+        "message_id": "1080346713109829",
+        "action": "New",
+        "message": {
+            "message_id": "1080346713109829",
+            "file_inline": {
+                "file_id": 48892901600267,
+                "mime": "mp3",
+                "dc_id": 798,
+                "access_hash_rec": "35587927414...",
+                "file_name": "name.mp3",
+                "thumb_inline": "\/9j\/4AAQSkZJRgABAQAAAQABAAD\/2wBDABQODxIPDRQSEB...",
+                "time": 7,
+                "size": 205606,
+                "type": "Music",
+                "music_performer": "..."
+            },
+            "time": "1723633700",
+            "is_edited": false,
+            "type": "FileInline",
+            "author_type": "User",
+            "author_object_guid": "u0HMRYa0b1...",
+            "allow_transcription": false
+        },
+        "updated_parameters": [],
+        "timestamp": "1723633700",
+        "prev_message_id": "1080332701366829",
+        "object_guid": "g0ExQez0c5...",
+        "type": "Group",
+        "state": "1723633640"
+    },
+    "status": "OK",
+    "chat_update": {
+        "object_guid": "g0ExQez0c5...",
+        "action": "Edit",
+        "chat": {
+            "time_string": "172363370000001080346713109829",
+            "last_message": {
+                "message_id": "1080346713109829",
+                "type": "Other",
+                "text": "...",
+                "author_object_guid": "u0HMRYa0b1...",
+                "is_mine": true,
+                "author_title": "\u0634\u0645\u0627",
+                "author_type": "User"
+            },
+            "last_seen_my_mid": "1080346713109829",
+            "last_seen_peer_mid": "1079631357019829",
+            "time": 1723633700,
+            "last_message_id": "1080346713109829",
+            "group_my_last_send_time": 1723633700
+        },
+        "updated_parameters": [
+            "time_string",
+            "last_message",
+            "last_message_id",
+            "last_seen_my_mid",
+            "last_seen_peer_mid",
+            "group_my_last_send_time",
+            "time"
+        ],
+        "timestamp": "1723633700",
+        "type": "Group"
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "group": {
+            "group_guid": "g0ExQ...",
+            "group_title": "kubs",
+            "avatar_thumbnail": {
+                "file_id": "48853...",
+                "mime": "jpg",
+                "dc_id": "782",
+                "access_hash_rec": "029611..."
+            },
+            "count_members": 2,
+            "is_deleted": false,
+            "is_verified": false,
+            "slow_mode": 0,
+            "description": "hi",
+            "chat_history_for_new_members": "Visible",
+            "event_messages": false,
+            "chat_reaction_setting": {
+                "reaction_type": "Selected",
+                "selected_reactions": [
+                    "3",
+                    "2"
+                ]
+            },
+            "is_restricted_content": false
+        },
+        "timestamp": "1723623368"
+    }
+}

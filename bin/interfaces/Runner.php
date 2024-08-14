@@ -13,14 +13,15 @@ use RubikaLib\Main;
 interface runner
 {
     /**
-     * this is a function which callen when wunner is started
+     * this function will call when runner class is set and starts to get updates
      *
+     * @param array $mySelf account info
      * @return void
      */
     public function onStart(array $mySelf): void;
 
     /**
-     * this function callen when API send you a new update
+     * this function will call when a new update got from API
      *
      * @param array $update
      * @param Main $class to working with methods
@@ -29,11 +30,12 @@ interface runner
     public function onMessage(array $update, Main $class): void;
 
     /**
-     * when a chat activitie send
+     * when a chat activitie catched
      *
      * @param chatActivities $activitie
      * @param string $guid this chat which update is from (group, chat, ...)
      * @param string $from the activitie maker person (user)
+     * @param Main $class to working with methods
      * @return void
      */
     public function onAction(chatActivities $activitie, string $guid, string $from, Main $class): void;

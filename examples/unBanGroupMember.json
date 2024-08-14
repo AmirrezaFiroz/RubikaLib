@@ -1,0 +1,32 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "timestamp": "1723564012",
+        "group": {
+            "group_guid": "g0ExQe...",
+            "group_title": "...",
+            "avatar_thumbnail": {
+                "file_id": "4885...",
+                "mime": "jpg",
+                "dc_id": "782",
+                "access_hash_rec": "02961..."
+            },
+            "count_members": 1,
+            "is_deleted": false,
+            "is_verified": false,
+            "slow_mode": 300,
+            "description": "hi",
+            "chat_history_for_new_members": "Visible",
+            "event_messages": false,
+            "chat_reaction_setting": {
+                "reaction_type": "Selected",
+                "selected_reactions": [
+                    "3",
+                    "2"
+                ]
+            },
+            "is_restricted_content": false
+        }
+    }
+}

@@ -1,0 +1,456 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "stickers": [
+            {
+                "emoji_character": "♥️",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cba2603ae0456535bb47d",
+                "file": {
+                    "file_id": "492749501",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "824634132521720393928144713513",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😊",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cba346282726921b76423",
+                "file": {
+                    "file_id": "492749242",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "546197607075589223057367950146",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😊",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cba43c950e3efaf207ceb",
+                "file": {
+                    "file_id": "492748840",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "824760393275559744062929204920",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😱",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cba5c03ae0456535bb480",
+                "file": {
+                    "file_id": "492748616",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "513417078450769313097657792008",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😀",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cba746282726921b76426",
+                "file": {
+                    "file_id": "492748381",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "102828147759506816483921028953",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😱",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cba84c950e3efaf207cee",
+                "file": {
+                    "file_id": "492748140",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "836989629895324275583731935820",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😲",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cba9b6282726921b76427",
+                "file": {
+                    "file_id": "492747874",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "483595214143020123339393292362",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "🙁",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbabf03ae0456535bb485",
+                "file": {
+                    "file_id": "492747214",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "553006245459586767920247083782",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😄",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbacd60a8f4ef243bcd54",
+                "file": {
+                    "file_id": "492746664",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "460196792855732340743301696632",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😒",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbaef03ae0456535bb487",
+                "file": {
+                    "file_id": "492746293",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "268483957653364824425534221809",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😪",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbb2b60a8f4ef243bcd56",
+                "file": {
+                    "file_id": "492745842",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "959637542457482191209696505946",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😯",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbb3c03ae0456535bb48a",
+                "file": {
+                    "file_id": "492745495",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "613588082622511420740973541435",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😖",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbb4c60a8f4ef243bcd5a",
+                "file": {
+                    "file_id": "492745186",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "447723744347531575625583157418",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "☔️",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbb5960a8f4ef243bcd5b",
+                "file": {
+                    "file_id": "492744920",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "159287939116233903345594513960",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😭",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbb7972dc8ffd7d1cd7e8",
+                "file": {
+                    "file_id": "492744652",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "683673634017464126920897040476",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😢",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbb8c03ae0456535bb48e",
+                "file": {
+                    "file_id": "492744284",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "474235655112224792212939605692",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "☹️",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbbca60a8f4ef243bcd5f",
+                "file": {
+                    "file_id": "492743972",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "552288655369709172757593411636",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "🙁",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbbf303ae0456535bb492",
+                "file": {
+                    "file_id": "492742732",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "106648039868185825922277325516",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😐",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc0272dc8ffd7d1cd7eb",
+                "file": {
+                    "file_id": "492742239",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "240839818115099838414568139107",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😒",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc28c950e3efaf207cf7",
+                "file": {
+                    "file_id": "492741883",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "250627099674411133594301544479",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😆",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc37587ba9af4ab7ac47",
+                "file": {
+                    "file_id": "492741570",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "456838977600040391604045540410",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😊",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc4703ae0456535bb494",
+                "file": {
+                    "file_id": "492741292",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "237075194665210110798342116796",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😊",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc586282726921b76432",
+                "file": {
+                    "file_id": "492740888",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "340015987677766873201517421544",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😱",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc6fbcfaf77f4f1b6480",
+                "file": {
+                    "file_id": "492740453",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "295687037769343898517603165889",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😰",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc8103ae0456535bb497",
+                "file": {
+                    "file_id": "492740082",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "124621662195432290878911801066",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😠",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbc97b424cfe782c3f1cf",
+                "file": {
+                    "file_id": "492739289",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "424555119753073792996994300757",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😡",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbcaf03ae0456535bb499",
+                "file": {
+                    "file_id": "492738848",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "103395205732769125429602945024",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😤",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbcdcc950e3efaf207cfc",
+                "file": {
+                    "file_id": "492738633",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "826263048709078343214696632229",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😟",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbcf76282726921b76437",
+                "file": {
+                    "file_id": "492738235",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "646004357312588691455318617055",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😔",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbd1c03ae0456535bb49c",
+                "file": {
+                    "file_id": "492737992",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "203671882981578862135497223896",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😖",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbd2c03ae0456535bb49e",
+                "file": {
+                    "file_id": "492737550",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "833488604754950724538673548150",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            },
+            {
+                "emoji_character": "😲",
+                "w_h_ratio": "1.0",
+                "sticker_id": "5e0cbd376282726921b7643b",
+                "file": {
+                    "file_id": "492736762",
+                    "mime": "png",
+                    "dc_id": "32",
+                    "access_hash_rec": "401653445785153787994667927906",
+                    "file_name": "sticker.png",
+                    "cdn_tag": "PR3"
+                },
+                "sticker_set_id": "5e0cb9f4345de9b18b4ba1ae"
+            }
+        ]
+    }
+}

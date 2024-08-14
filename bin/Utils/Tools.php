@@ -18,7 +18,7 @@ final class Tools
      * @throws Logger throws an error when phone number is incorrect
      * @return int true phone number in this format: 989123456789
      */
-    public static function phoneNumberParse(int $phoneNumber): int
+    public static function parse_true_phone_number(int $phoneNumber): int
     {
         $phoneNumber = preg_replace('/[^\d+]/', '', (string)$phoneNumber);
 
@@ -50,7 +50,7 @@ final class Tools
      * @param integer $phoneNumber 989123456789
      * @return string
      */
-    public static function phoneToString(int $phoneNumber): string
+    public static function generate_phone_hash(int $phoneNumber): string
     {
         $array = [
             '0' => 'q',
@@ -65,16 +65,14 @@ final class Tools
             '9' => 'p'
         ];
         $res = '';
-
         foreach (str_split((string)$phoneNumber) as $char) {
             $res .= $array[$char];
         }
-
         return $res;
     }
 
     /**
-     * get hash of useragent for device login
+     * get hash of useragent for device registering
      *
      * @param string $userAgent
      * @return string
@@ -91,7 +89,7 @@ final class Tools
      * @param string $userAgent
      * @return string
      */
-    public static function getOS(string $userAgent)
+    public static function getOSbyUserAgent(string $userAgent)
     {
         $os = "Unknown";
 
@@ -124,7 +122,7 @@ final class Tools
      * @param string $guid
      * @return string|false 'Group', 'Channel', 'User', 'Service' or false
      */
-    public static function ChatType_guid(string $guid): string|false
+    public static function getChatType_byGuid(string $guid): string|false
     {
         if (str_starts_with($guid, 'g0')) {
             return 'Group';
@@ -146,4 +144,82 @@ final class Tools
      * @return array|false array of metadatas or false if no metadata found
      */
     public static function loadMetaData(string $text) {}
+
+    /**
+     * craate photo thumbnail
+     *
+     * @param string $file_path
+     * @param integer $thumb_width
+     * @return string thumbnail data
+     */
+    public static function createThumbnail(string $file_path, int $thumb_width): string
+    {
+        $image_info = getimagesize($file_path);
+        if ($image_info === false) {
+            return "Not a valid image file.";
+        }
+
+        $width = $image_info[0];
+        $height = $image_info[1];
+        $thumb_height = floor($height * ($thumb_width / $width));
+
+        $image_type = $image_info[2];
+        switch ($image_type) {
+            case IMAGETYPE_JPEG:
+                $source_image = imagecreatefromjpeg($file_path);
+                break;
+            case IMAGETYPE_PNG:
+                $source_image = imagecreatefrompng($file_path);
+                break;
+            case IMAGETYPE_GIF:
+                $source_image = imagecreatefromgif($file_path);
+                break;
+            default:
+                return "Unsupported image type.";
+        }
+
+        $thumb_image = imagecreatetruecolor($thumb_width, (int)$thumb_height);
+
+        imagecopyresampled($thumb_image, $source_image, 0, 0, 0, 0, $thumb_width, (int)$thumb_height, $width, $height);
+
+        ob_start();
+        switch ($image_type) {
+            case IMAGETYPE_JPEG:
+                imagejpeg($thumb_image);
+                break;
+            case IMAGETYPE_PNG:
+                imagepng($thumb_image);
+                break;
+            case IMAGETYPE_GIF:
+                imagegif($thumb_image);
+                break;
+        }
+        $thumb_content = ob_get_contents();
+        ob_end_clean();
+
+        imagedestroy($source_image);
+        imagedestroy($thumb_image);
+
+        return $thumb_content;
+    }
+
+    /**
+     * get image data
+     *
+     * @param string $file_path
+     * @return array return [$Width, $Height, $Mime]
+     */
+    public static function getImageDetails(string $file_path): array
+    {
+        $image_info = getimagesize($file_path);
+        if ($image_info === false) {
+            return "Not a valid image file.";
+        }
+
+        return [
+            $image_info[0],
+            $image_info[1],
+            $image_info['mime']
+        ];
+    }
 }

@@ -1,0 +1,17 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "reactions": [
+            {
+                "user_guids": [
+                    "u0HMRYa..."
+                ],
+                "reaction_count": 1,
+                "emoji_char": "👎",
+                "reaction_id": 3,
+                "is_selected": true
+            }
+        ]
+    }
+}

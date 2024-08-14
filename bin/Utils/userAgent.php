@@ -8,7 +8,7 @@ use RubikaLib\enums\devices;
 use RubikaLib\Logger;
 
 /**
- * https://github.com/phpfail/UserAgentGenerator/
+ * https://github.com/phpfail/UserAgentGenerator/ with some edits
  */
 final class userAgent
 {
@@ -21,7 +21,6 @@ final class userAgent
         '[Windows; |Windows; U; |]Windows NT 6.:number0-3:;[ Win64; x64| WOW64| x64|]',
         '[Windows; |Windows; U; |]Windows NT 10.:number0-5:;[ Win64; x64| WOW64| x64|]',
     ];
-
     /**
      * Linux Operating Systems [limited]
      * 
@@ -31,7 +30,6 @@ final class userAgent
         '[Linux; |][U; |]Linux x86_64',
         '[Linux; |][U; |]Linux i:number5-6::number4-8::number0-6: [x86_64|]'
     ];
-
     /**
      * Mac Operating System (OS X) with dynamic versioning
      * 
@@ -41,7 +39,6 @@ final class userAgent
         'Macintosh; [U; |]Intel Mac OS X :number7-9:_:number0-9:_:number0-9:',
         'Macintosh; [U; |]Intel Mac OS X 10_:number0-12:_:number0-9:'
     ];
-
     /**
      * Versions of Android to be used
      * 
@@ -63,14 +60,12 @@ final class userAgent
         '7.1',
         '7.1.1'
     ];
-
     /**
      * Holds the version of android for the User Agent being generated
      * 
      * @property string $androidVersion
      */
     public static $androidVersion;
-
     /**
      * Android devices and for specific android versions
      * 
@@ -169,7 +164,6 @@ final class userAgent
             'LG-H:number90-93:0 Build/NRD90[C|M]'
         ]
     ];
-
     /**
      * List of "OS" strings used for android
      * 
@@ -181,7 +175,6 @@ final class userAgent
         'Linux; U; Android :androidVersion:; :androidDevice:',
         'Android; Android :androidVersion:; :androidDevice:',
     ];
-
     /**
      * List of "OS" strings used for iOS
      * 
@@ -229,7 +222,7 @@ final class userAgent
      * @param null|string $os Can specifiy android, iphone, ipad, ipod, or null/blank for random
      * @return string *
      */
-    public static function getMobileOS(null|string $os = NULL): string
+    public static function getMobileOS(null|string $os = null): string
     {
         $os = strtolower($os);
         $_os = [];
@@ -353,7 +346,7 @@ final class userAgent
      * generate a new useragent
      * 
      * @param device|null $userAgent You can specify either firefox, chrome, mobile, windows, mac, iphone, ipad, ipod, and android.
-     * @return string useragent
+     * @return string useragent returns a true useragent
      */
     public static function generate(devices|null $userAgent = NULL): string
     {

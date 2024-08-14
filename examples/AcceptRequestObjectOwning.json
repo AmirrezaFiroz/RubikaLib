@@ -1,0 +1,37 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "chat_update": {
+            "object_guid": "g0ExQez0...",
+            "action": "Edit",
+            "chat": {
+                "access": [
+                    "ChangeInfo",
+                    "PinMessages",
+                    "DeleteGlobalAllMessages",
+                    "BanMember",
+                    "SetAdmin",
+                    "SetJoinLink",
+                    "SetMemberAccess",
+                    "ViewMembers",
+                    "ViewAdmins",
+                    "SendMessages",
+                    "AddMember",
+                    "SuperAdmin",
+                    "RemoveObject",
+                    "ViewInfo",
+                    "ViewMessages",
+                    "DeleteLocalMessages",
+                    "EditMyMessages",
+                    "DeleteGlobalMyMessages"
+                ]
+            },
+            "updated_parameters": [
+                "access"
+            ],
+            "timestamp": "1723623481",
+            "type": "Group"
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "status": "OK",
+    "status_det": "OK",
+    "data": {
+        "access_list": [
+            "PinMessages",
+            "DeleteGlobalAllMessages",
+            "BanMember",
+            "SetAdmin",
+            "SetJoinLink",
+            "SetMemberAccess",
+            "ChangeInfo",
+            "ViewMembers",
+            "ViewAdmins",
+            "SendMessages",
+            "AddMember"
+        ]
+    }
+}
