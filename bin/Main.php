@@ -871,6 +871,28 @@ final class Main
         return $this->req->making_request('getMyGifSet', [], $this->session)['data'];
     }
 
+    /**
+     * vote a poll
+     *
+     * @param string $poll_id
+     * @param integer ...$selection_indexs
+     * @example . votePoll('ifnaonoasd...', 0) or votePoll('ifnaonoasd...', 0, 1) or votePoll('ifnaonoasd...', 2, 3)
+     * @return array
+     */
+    public function votePoll(string $poll_id, int ...$selection_indexs): array
+    {
+        $list = $selection_indexs[0];
+        array_splice($selection_indexs, 0, 1);
+        $selection_indexs = array_unique($selection_indexs);
+        foreach ($selection_indexs as $selection) {
+            $list .= ',' . (string)$selection;
+        }
+        return $this->req->making_request('votePoll', [
+            'poll_id' => $poll_id,
+            'selection_index' => $list
+        ], $this->session)['data'];
+    }
+
 
 
     // ======================================================= join and leave methods ===================================================================
