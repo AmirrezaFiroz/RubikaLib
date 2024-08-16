@@ -360,7 +360,7 @@ var_dump($session_data);
 
 # Some Hints
 
-**!** `down forget to update user info` use this code to get newest info abount account profile. (this proble will solve on next updates)
+**!** `don't forget to update user info` use this code to get newest info abount account profile. (this problem will solve on next updates)
 ```php
 $this->getChatInfo($this->getMySelf()['user_guid'])['user']
 ```
