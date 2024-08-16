@@ -28,7 +28,7 @@
     },
     "require": {
         "phpseclib/phpseclib": "^3.0",
-        "php": ">= 8.1.0",
+        "php": ">= 8.0.0",
         "ext-mbstring": "*",
         "ext-openssl": "*",
         "ratchet/pawl": "^0.4.1",
