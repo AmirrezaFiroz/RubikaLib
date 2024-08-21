@@ -60,7 +60,7 @@ try {
         }
     );
 
-    $app->getUpadte();
+    $app->RunAndLoop();
 } catch (Logger $e) {
     echo $e->getMessage() . "\n";
 }
@@ -269,7 +269,7 @@ $app->proccess(
     }
 );
 
-$app->getUpadte();
+$app->RunAndLoop();
 ```
 
 see more about methods result: [here](examples)
@@ -285,7 +285,7 @@ try {
 
     // ...
 
-    $app->getUpadte();
+    $app->RunAndLoop();
 } catch (Logger $error) {
     echo $error->getMessage() . "\n";
 
