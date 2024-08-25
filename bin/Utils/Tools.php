@@ -122,7 +122,7 @@ final class Tools
      * @param string $guid
      * @return string|false 'Group', 'Channel', 'User', 'Service' or false
      */
-    public static function getChatType_byGuid(string $guid): string|false
+    public static function ChatTypeByGuid(string $guid): string|false
     {
         if (str_starts_with($guid, 'g0')) {
             return 'Group';
@@ -143,7 +143,82 @@ final class Tools
      * @param string $text text with metadatas
      * @return array|false array of metadatas or false if no metadata found
      */
-    public static function loadMetaData(string $text) {}
+    public static function loadMetaData(string $text): array
+    {
+        if ($text === null) {
+            return [[], ""];
+        }
+
+        $real_text = preg_replace('/``|\*\*|__|~~|--|@@|##/', '', $text);
+        $metadata = [];
+        $conflict = 0;
+        $mentionObjectIndex = 0;
+        $result = [];
+
+        $patterns = [
+            "Mono" => '/\`\`([^``]*)\`\`/',
+            "Bold" => '/\*\*([^**]*)\*\*/',
+            "Italic" => '/\_\_([^__]*)\_\_/',
+            "Strike" => '/\~\~([^~~]*)\~\~/',
+            "Underline" => '/\-\-([^__]*)\-\-/',
+            "Mention" => '/\@\@([^@@]*)\@\@/',
+            "Spoiler" => '/\#\#([^##]*)\#\#/',
+        ];
+
+        foreach ($patterns as $style => $pattern) {
+            preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE);
+            foreach ($matches[1] as $match) {
+                $metadata[] = [$match[1], strlen($match[0]), $style];
+            }
+        }
+
+        usort($metadata, function ($a, $b) {
+            return $a[0] - $b[0];
+        });
+
+        foreach ($metadata as $item) {
+            list($start, $length, $style) = $item;
+            if ($style !== "Mention") {
+                $result[] = [
+                    "type" => $style,
+                    "from_index" => $start - $conflict,
+                    "length" => $length,
+                ];
+                $conflict += 4;
+            } else {
+                preg_match_all('/\@\(([^(]*)\)/', $text, $mentionObjects);
+                $mentionType = self::ChatTypeByGuid($mentionObjects[1][$mentionObjectIndex]) ?? "Link";
+
+                if ($mentionType === "Link") {
+                    $result[] = [
+                        "from_index" => $start - $conflict,
+                        "length" => $length,
+                        "link" => [
+                            "hyperlink_data" => [
+                                "url" => $mentionObjects[1][$mentionObjectIndex]
+                            ],
+                            "type" => "hyperlink",
+                        ],
+                        "type" => $mentionType,
+                    ];
+                } else {
+                    $result[] = [
+                        "type" => "MentionText",
+                        "from_index" => $start - $conflict,
+                        "length" => $length,
+                        "mention_text_object_guid" => $mentionObjects[1][$mentionObjectIndex],
+                        "mention_text_object_type" => $mentionType
+                    ];
+                }
+
+                $real_text = str_replace("({$mentionObjects[1][$mentionObjectIndex]})", "", $real_text);
+                $conflict += 6 + strlen($mentionObjects[1][$mentionObjectIndex]);
+                $mentionObjectIndex++;
+            }
+        }
+
+        return [$result, $real_text];
+    }
 
     /**
      * craate photo thumbnail

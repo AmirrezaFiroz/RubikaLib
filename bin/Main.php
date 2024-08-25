@@ -30,7 +30,7 @@ use RubikaLib\Utils\{
 
 final class Main
 {
-    private ?Runner $runner;
+    private ?Runner $Runner;
     private ?int $phone_number;
     private ?Requests $req;
     private ?Session $session;
@@ -222,7 +222,7 @@ final class Main
 
 
     /**
-     * terminate this session
+     * Terminate This Session
      *
      * @return array API result
      */
@@ -233,7 +233,7 @@ final class Main
     }
 
     /**
-     * get account sessions
+     * get Account Sessions List
      *
      * @return array API result
      */
@@ -243,11 +243,12 @@ final class Main
     }
 
     /**
-     * terminate session
+     * Terminate a Session
      *
+     * @param string $session_key session key
      * @return array API result
      */
-    public function terminateSession(string $session_key): array
+    public function TerminateSession(string $session_key): array
     {
         return $this->req->making_request('terminateSession', [
             'session_key' => $session_key
@@ -255,7 +256,7 @@ final class Main
     }
 
     /**
-     * get session data
+     * get Session Data
      *
      * @return array user data of session
      */
@@ -265,15 +266,15 @@ final class Main
     }
 
     /**
-     * set account username
+     * Set Account Username
      *
-     * @param string $username example: @rubika_lib
+     * @param string $newUserName example: @rubika_lib or rubika_lib
      * @return array API result
      */
-    public function changeUsername(string $username): array
+    public function ChangeUsername(string $newUserName): array
     {
         $d = $this->req->making_request('updateUsername', [
-            'username' => str_replace('@', '', $username)
+            'username' => str_replace('@', '', $newUserName)
         ], $this->session)['data'];
 
         if ($d['status'] == 'OK') {
@@ -284,30 +285,30 @@ final class Main
     }
 
     /**
-     * edit account info
+     * Edit Account Info
      *
-     * @param string $first_name
-     * @param string $last_name
-     * @param string $bio
+     * @param string $first_name new first name (if want to change)
+     * @param string $last_name new last name (if want to change)
+     * @param string $bio new bio (if want to change)
      * @return array API result
      */
-    public function editProfile(string $first_name = '', string $last_name = '', string $bio = ''): array
+    public function EditProfile(string $first_name = '', string $last_name = '', string $bio = ''): array
     {
-        $d = [];
+        $d = [
+            'updated_parameters' => []
+        ];
         if ($first_name != '') {
-            $d['first_name'] = $first_name;
+            $d['first_name'] = mb_substr($first_name, 0, 32);
+            $d['updated_parameters'][] = 'first_name';
         }
         if ($last_name != '') {
-            $d['last_name'] = $last_name;
+            $d['last_name'] = mb_substr($last_name, 0, 32);
+            $d['updated_parameters'][] = 'last_name';
         }
         if ($bio != '') {
             $d['bio'] = $bio;
+            $d['updated_parameters'][] = 'bio';
         }
-        $d['updated_parameters'] = [
-            "first_name",
-            "last_name",
-            "bio"
-        ];
 
         $d = $this->req->making_request('updateProfile', $d, $this->session)['data'];
 
@@ -319,24 +320,25 @@ final class Main
     }
 
     /**
-     * request delete account
+     * Request Delete Account
      *
      * @return array API result
      */
-    public function requestDeleteAccount(): array
+    public function RequestDeleteAccount(): array
     {
         return $this->req->making_request('requestDeleteAccount', [], $this->session)['data'];
     }
 
     /**
-     * upload new profile picture
+     * Upload New Profile Picture
      *
-     * @param string $file_path must be picture
+     * @param string $file_path must be a picture (png/jpg/jpeg)
      * @return array API result
      */
-    public function uploadNewProfileAvatar(string $file_path): array
+    public function UploadNewProfileAvatar(string $file_path): array
     {
         list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
+
         return $this->req->making_request('uploadAvatar', [
             'thumbnail_file_id' => $file_id,
             'main_file_id' => $file_id
@@ -344,12 +346,12 @@ final class Main
     }
 
     /**
-     * delete profile picture
+     * Delete Profile Picture
      *
      * @param string $avatar_id
      * @return void API result
      */
-    public function deleteMyAvatar(string $avatar_id): array
+    public function DeleteMyAvatar(string $avatar_id): array
     {
         return $this->req->making_request('deleteAvatar', [
             'object_guid' => $this->getMySelf()['user_guid'],
@@ -368,36 +370,39 @@ final class Main
      *
      * @param string $guid object_guid
      * @param string $text message
-     * @param string $reply_to_message_id if you have to reply
+     * @param int $reply_to_message_id if you have to reply
      * @return array API result
      */
-    public function sendMessage(string $guid, string $text, string $reply_to_message_id = ''): array
+    public function sendMessage(string $guid, string $text, int $reply_to_message_id = 0): array
     {
         $d = [
             'object_guid' => $guid,
             'rnd' => (string)mt_rand(10000000, 999999999),
-            'text' => $text
+            'text' => Tools::loadMetaData($text)[1],
+            'metadata' => [
+                'meta_data_parts'=>Tools::loadMetaData($text)[0]
+            ]
         ];
-        if ($reply_to_message_id != '') {
-            $d['reply_to_message_id'] = $reply_to_message_id;
+        if ($reply_to_message_id != 0) {
+            $d['reply_to_message_id'] = (string)$reply_to_message_id;
         }
         return $this->req->making_request('sendMessage', $d, $this->session)['data'];
     }
 
     /**
-     * edit message text
+     * Edit Message Text
      *
      * @param string $guid object_guid
-     * @param string $text message
+     * @param string $NewText message
      * @param int $message_id
      * @return array API result
      */
-    public function editMessage(string $guid, string $text, string $message_id): array
+    public function EditMessage(string $guid, string $NewText, int $message_id): array
     {
-        return $this->req->making_request('editMessage', [
+        return $this->req->making_request('EditMessage', [
             'object_guid' => $guid,
-            'text' => $text,
-            'message_id' => $message_id
+            'text' => $NewText,
+            'message_id' => (string)$message_id
         ], $this->session)['data'];
     }
 
@@ -935,7 +940,7 @@ final class Main
      */
     public function leaveChat(string $guid): array
     {
-        $chatType = strtolower((string)Tools::getChatType_byGuid($guid));
+        $chatType = strtolower((string)Tools::ChatTypeByGuid($guid));
         $d = [
             "{$chatType}_guid" => $guid
         ];
@@ -1596,8 +1601,8 @@ final class Main
      */
     public function getChatInfo(string $guid): array
     {
-        return $this->req->making_request('get' . Tools::getChatType_byGuid($guid) . 'Info', [
-            strtolower(Tools::getChatType_byGuid($guid)) . '_guid' => $guid
+        return $this->req->making_request('get' . Tools::ChatTypeByGuid($guid) . 'Info', [
+            strtolower(Tools::ChatTypeByGuid($guid)) . '_guid' => $guid
         ], $this->session)['data'];
     }
 
@@ -1718,14 +1723,14 @@ final class Main
 
 
     /**
-     * set runner class for getting updates
+     * set Runner class for getting updates
      *
-     * @param runner $class runner Object
+     * @param Runner $class Runner Object
      * @return void
      */
     public function proccess(Runner $class): void
     {
-        $this->runner = $class;
+        $this->Runner = $class;
         $class->onStart($this->getMySelf());
     }
 
@@ -1755,13 +1760,13 @@ final class Main
                         $update = json_decode($this->crypto->dec($h['data_enc']), true);
                         if (isset($update['show_activities'])) {
                             $update = $update['show_activities'][0];
-                            $this->runner->onAction(match ($update['type']) {
+                            $this->Runner->onAction(match ($update['type']) {
                                 'Typing' => chatActivities::Typing,
                                 'Recording' => chatActivities::Recording,
                                 'Uploading' => chatActivities::Uploading
                             }, $update['object_guid'], $update['user_activity_guid'], $this);
                         } else {
-                            $this->runner->onMessage($update, $this);
+                            $this->Runner->onMessage($update, $this);
                         }
                     }
                 });

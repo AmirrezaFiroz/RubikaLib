@@ -84,7 +84,7 @@ final class Session
     /**
      * check is there a session for phone number
      *
-     * @param int $phone_number
+     * @param int $phone_number must be like 989123456789
      * @return boolean true if there is a session or false if session not exists
      */
     public static function is_session(int $phone_number): bool

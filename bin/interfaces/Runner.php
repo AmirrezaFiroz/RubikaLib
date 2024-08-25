@@ -10,10 +10,10 @@ use RubikaLib\Main;
 /**
  * interface for Main class to pass updates
  */
-interface runner
+interface Runner
 {
     /**
-     * this function will call when runner class is set and starts to get updates
+     * this function will call when Runner class is set and starts to get updates
      *
      * @param array $mySelf account info
      * @return void

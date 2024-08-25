@@ -31,7 +31,7 @@ for getting updates, you must create new class with a name and call it
 require_once __DIR__ . '/vendor/autoload.php';
 
 use RubikaLib\enums\chatActivities;
-use RubikaLib\interfaces\runner;
+use RubikaLib\interfaces\Runner;
 use RubikaLib\{
     Logger,
     Main
@@ -41,7 +41,7 @@ try {
     $app = new Main(9123456789);
 
     $app->proccess(
-        new class implements runner
+        new class implements Runner
         {
             # when this class declared as update getter on Main, this method get called
             public function onStart(array $mySelf): void
@@ -49,7 +49,7 @@ try {
             }
 
             # All updates will pass to this method (not action updates)
-            public function onMessage(array $update, Main $class): void
+            public function onMessage(array $updates, Main $class): void
             {
             }
 
@@ -135,10 +135,11 @@ try {
 | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------: |
 |                                                                                                              logout                                                                                                              |                                               logout and terminate session                                                |                        [logout.json](examples/logout.json)                        |
 |                                                                                                          getMySessions                                                                                                           |                                                   get account sessions                                                    |                 [getMySessions.json](examples/getMySessions.json)                 |
-|                                                                                              terminateSession(string $session_key)                                                                                               |                          terminate sessions which are got by getMySessions() ---> session['key']                          |              [terminateSession.json](examples/terminateSession.json)              |
+|                                                                                              TerminateSession(string $session_key)                                                                                               |                          terminate sessions which are got by getMySessions() ---> session['key']                          |              [terminateSession.json](examples/terminateSession.json)              |
 |                                                                                                            getMySelf                                                                                                             |                                                  get account's self info                                                  |                     [getMySelf.json](examples/getMySelf.json)                     |
-|                                                                            sendMessage(string $guid, string $text, string $reply_to_message_id = '')                                                                             |                                                 send text message to guid                                                 |                   [sendMessage.json](examples/sendMessage.json)                   |
-|                                                                                   editMessage(string $guid, string $text, string $message_id)                                                                                    |                                                 edit message in guid chat                                                 |                   [editMessage.json](examples/editMessage.json)                   |
+|                                                                                            ChangeUsername(string $newUserName): array                                                                                            |                                                     set new username                                                      |                [ChangeUsername.json](examples/ChangeUsername.json)                |
+|                                                                              sendMessage(string $guid, string $text, int $reply_to_message_id = 0)                                                                               |                                                 send text message to guid                                                 |                   [sendMessage.json](examples/sendMessage.json)                   |
+|                                                                                   EditMessage(string $guid, string $NewText, string $message_id)                                                                                    |                                                 edit message in guid chat                                                 |                   [EditMessage.json](examples/EditMessage.json)                   |
 |                                                                      forwardMessages(string $from_object_guid, array $message_ids, string $to_object_guid)                                                                       |                   forward message to guid ----> array of message-ids: ['11916516161', '85626232', ...]                    |               [forwardMessages.json](examples/forwardMessages.json)               |
 |                                                                  deleteMessages(string $object_guid, array $message_ids, deleteType $type = deleteType::Local)                                                                   |                                delete message in guid ---->  deleteType = {Global, Local}                                 |                [deleteMessages.json](examples/deleteMessages.json)                |
 |                                                                                     sendChatActivity(string $guid, chatActivities $activity)                                                                                     |                  send an activitie on top of chat ---->  chatActivities = {Typing, Uploading,Recording}                   |              [sendChatActivity.json](examples/sendChatActivity.json)              |
@@ -159,15 +160,14 @@ try {
 |                                      sendContact(string $guid, string $first_name, int $phone_number, string $contact_guid = '', string $last_name = '', string $reply_to_message_id = '0')                                      |                                                 send contsct to some one                                                  |                   [sendContact.json](examples/sendContact.json)                   |
 |                                                                                                    getChatInfo(string $guid)                                                                                                     |                                                       get chat info                                                       |                   [getChatInfo.json](examples/getChatInfo.json)                   |
 |                                                                                             getChatInfoByUsername(string $username)                                                                                              |                                     get chat info by username ---> exmample: @someone                                     |         [getChatInfoByUsername.json](examples/getChatInfoByUsername.json)         |
-|                                                                                                 changeUsername(string $username)                                                                                                 |                                                      change username                                                      |                [changeUsername.json](examples/changeUsername.json)                |
-|                                                                          editProfile(string $first_name = '', string $last_name = '', string $bio = '')                                                                          |                                                 change account parameters                                                 |                   [editProfile.json](examples/editProfile.json)                   |
-|                                                                                                       requestDeleteAccount                                                                                                       |                                            send request to delete this account                                            |                                not researched yet                                 |
+|                                                                          EditProfile(string $first_name = '', string $last_name = '', string $bio = '')                                                                          |                                                 change account parameters                                                 |                   [EditProfile.json](examples/EditProfile.json)                   |
+|                                                                                                       RequestDeleteAccount                                                                                                       |                                            send request to delete this account                                            |                                not researched yet                                 |
 |                                                                                                 getAvatars(string $object_guid)                                                                                                  |                                                     get guid avatars                                                      |                    [getAvatars.json](examples/getAvatars.json)                    |
 |                                                                        getGroupAllMembers(string $group_guid, string $search_for = '', int $start_id = 0)                                                                        |                                                  get group members list                                                   |            [getGroupAllMembers.json](examples/getGroupAllMembers.json)            |
 |                                                                          downloadFile(string $access_hash_rec, string $file_id, string $path, int $DC)                                                                           |                                                      download a file                                                      |                 `true` or `false` (depended on API file finding)                  |
-|                                                                                            uploadNewProfileAvatar(string $file_path)                                                                                             |                                            upload new account profile picture                                             |        [uploadNewProfileAvatar.json](examples/uploadNewProfileAvatar.json)        |
+|                                                                                            UploadNewProfileAvatar(string $file_path)                                                                                             |                                            upload new account profile picture                                             |        [UploadNewProfileAvatar.json](examples/UploadNewProfileAvatar.json)        |
 |                                                                                   uploadNewGroupAvatar(string $group_guid, string $file_path)                                                                                    |                                            upload new account profile picture                                             |          [uploadNewGroupAvatar.json](examples/uploadNewGroupAvatar.json)          |
-|                                                                                                deleteMyAvatar(string $avatar_id)                                                                                                 |                                              delete account profile picture                                               |                [deleteMyAvatar.json](examples/deleteMyAvatar.json)                |
+|                                                                                                DeleteMyAvatar(string $avatar_id)                                                                                                 |                                              delete account profile picture                                               |                [DeleteMyAvatar.json](examples/DeleteMyAvatar.json)                |
 |                                                                                            createGroup(string $title, array $members)                                                                                            |                                                     create new group                                                      |                   [createGroup.json](examples/createGroup.json)                   |
 |                                                                                       addGroupMembers(string $group_guid, array $members)                                                                                        |                                                     add group members                                                     |               [addGroupMembers.json](examples/addGroupMembers.json)               |
 |                                                                                     deleteGroupAvatar(string $group_guid, string $avatar_id)                                                                                     |                                               delete group profile picture                                                |             [deleteGroupAvatar.json](examples/deleteGroupAvatar.json)             |
@@ -212,7 +212,7 @@ declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
 use RubikaLib\enums\chatActivities;
-use RubikaLib\interfaces\runner;
+use RubikaLib\interfaces\Runner;
 use RubikaLib\{
     Logger,
     Main
@@ -221,7 +221,7 @@ use RubikaLib\{
 $app = new Main(9123456789);
 
 $app->proccess(
-    new class implements runner
+    new class implements Runner
     {
         private ?array $me;
         private array $userData = [];
@@ -232,10 +232,10 @@ $app->proccess(
             echo "bot is running...\n";
         }
 
-        public function onMessage(array $update, Main $class): void
+        public function onMessage(array $updates, Main $class): void
         {
-            if (isset($update['message_updates'])) {
-                foreach ($update['message_updates'] as $update) {
+            if (isset($updates['message_updates'])) {
+                foreach ($updates['message_updates'] as $update) {
                     if ($update['action'] == 'New') {
                         $guid = $update['object_guid']; # chat guid
                         $message_id = $update['message_id'];
