@@ -37,11 +37,11 @@ final class Requests
         $this->crypto = new Cryption($this->auth, $private_key);
         $this->re_auth = $auth != '' ? cryption::re_auth($this->auth) : '';
 
-        if (file_exists("lib/api-links.json")) {
-            $this->links = json_decode(file_get_contents("lib/api-links.json"), true);
+        if (file_exists("{$mainSettings->base}api-links.json")) {
+            $this->links = json_decode(file_get_contents("{$mainSettings->base}api-links.json"), true);
         } else {
             !is_dir("lib") ? mkdir("lib") : null;
-            file_put_contents("lib/api-links.json", json_encode($this->getdcmess()));
+            file_put_contents("{$mainSettings->base}api-links.json", json_encode($this->getdcmess()));
         }
     }
 

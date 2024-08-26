@@ -5,3 +5,4 @@ lib/
 file.php
 .rnd
 todo/
+.phpunit.result.cache

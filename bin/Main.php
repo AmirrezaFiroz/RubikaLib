@@ -51,7 +51,7 @@ final class Main
 
         if (!Session::is_session($this->phone_number)) {
             $this->req = new Requests($settings->userAgent, $settings->auth, mainSettings: $settings);
-            $this->session = new Session($this->phone_number);
+            $this->session = new Session($this->phone_number, workDir: $settings->base);
             $send_code = $this->sendCode();
 
             if ($send_code['status'] == 'SendPassKey') {
@@ -94,7 +94,7 @@ final class Main
 
             $this->registerDevice($app_name);
         } else {
-            $this->session = new Session($this->phone_number);
+            $this->session = new Session($this->phone_number, workDir: $settings->base);
             $this->req = new Requests(
                 auth: $this->session->auth,
                 private_key: $this->session->data['private_key'] ?? '',
@@ -359,6 +359,78 @@ final class Main
         ], $this->session)['data'];
     }
 
+    /**
+     * get account gifs list
+     *
+     * @return array API result
+     */
+    public function getMyGifSet(): array
+    {
+        return $this->req->making_request('getMyGifSet', [], $this->session)['data'];
+    }
+
+    /**
+     * get folders list
+     *
+     * @return array API result
+     */
+    public function getFolders(): array
+    {
+        return $this->req->making_request('getFolders', [], $this->session)['data'];
+    }
+
+
+
+    // ======================================================= stickers methods ===================================================================
+
+
+
+    /**
+     * get stickers list
+     *
+     * @return array API result
+     */
+    public function getMyStickerSets(): array
+    {
+        return $this->req->making_request('getMyStickerSets', [], $this->session)['data'];
+    }
+
+    /**
+     * get sticker set data by sticker set id
+     *
+     * @param string $sticker_set_ids
+     * @return array API result
+     */
+    public function getStickersBySetIDs(string $sticker_set_ids): array
+    {
+        return $this->req->making_request('getStickersBySetIDs', [
+            'sticker_set_ids' => $sticker_set_ids
+        ], $this->session)['data'];
+    }
+
+    // public function sendSticker(string $guid): array
+    // {
+    //     $d = [
+    //         'object_guid' => $guid,
+    //         'rnd' => (string)mt_rand(10000000, 999999999),
+    //         'sticker' => [
+    //             "emoji_character" => "😠",
+    //             "w_h_ratio" => "1.0",
+    //             "sticker_id" => "5e0cbc97b424cfe782c3f1cf",
+    //             "file" => [
+    //                 "file_id" => "492739289",
+    //                 "mime" => "png",
+    //                 "dc_id" => "32",
+    //                 "access_hash_rec" => "424555119753073792996994300757",
+    //                 "file_name" => "sticker.png",
+    //                 "cdn_tag" => "PR3"
+    //             ],
+    //             "sticker_set_id" => "5e0cb9f4345de9b18b4ba1ae"
+    //         ]
+    //     ];
+    //     return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    // }
+
 
 
     // ====================================================== chating methods ==================================================================
@@ -375,16 +447,17 @@ final class Main
      */
     public function sendMessage(string $guid, string $text, int $reply_to_message_id = 0): array
     {
+        $m = Tools::loadMetaData($text);
         $d = [
             'object_guid' => $guid,
             'rnd' => (string)mt_rand(10000000, 999999999),
-            'text' => Tools::loadMetaData($text)[1],
-            'metadata' => [
-                'meta_data_parts'=>Tools::loadMetaData($text)[0]
-            ]
+            'text' => $m == false ? $text : $m[1]
         ];
         if ($reply_to_message_id != 0) {
             $d['reply_to_message_id'] = (string)$reply_to_message_id;
+        }
+        if ($m != false) {
+            $d['metadata']['meta_data_parts'] = $m[0];
         }
         return $this->req->making_request('sendMessage', $d, $this->session)['data'];
     }
@@ -399,11 +472,16 @@ final class Main
      */
     public function EditMessage(string $guid, string $NewText, int $message_id): array
     {
-        return $this->req->making_request('EditMessage', [
+        $m = Tools::loadMetaData($NewText);
+        $d = [
             'object_guid' => $guid,
-            'text' => $NewText,
+            'text' => $m == false ? $NewText : $m[1],
             'message_id' => (string)$message_id
-        ], $this->session)['data'];
+        ];
+        if ($m != false) {
+            $d['metadata']['meta_data_parts'] = $m[0];
+        }
+        return $this->req->making_request('EditMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -507,16 +585,16 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("lib/$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("lib/$fn", 'a');
+                $f = fopen("{$this->settings->base}$fn", 'a');
                 foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "lib/$fn";
+            $path = "{$this->settings->base}$fn";
         }
 
         list($width, $height, $mime) = Tools::getImageDetails($path);
@@ -539,7 +617,11 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $d['text'] = $caption;
+            $m = Tools::loadMetaData($caption);
+            if ($m != false) {
+                $d['metadata']['meta_data_parts'] = $m[0];
+            }
+            $d['text'] = ($m == false) ? $caption : $m[1];
         }
         if ($reply_to_message_id != '') {
             $d['reply_to_message_id'] = $reply_to_message_id;
@@ -563,16 +645,16 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("lib/$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("lib/$fn", 'a');
+                $f = fopen("{$this->settings->base}$fn", 'a');
                 foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "lib/$fn";
+            $path = "{$this->settings->base}$fn";
         }
 
         $getID3 = new getID3;
@@ -602,7 +684,11 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $d['text'] = $caption;
+            $m = Tools::loadMetaData($caption);
+            if ($m != false) {
+                $d['metadata']['meta_data_parts'] = $m[0];
+            }
+            $d['text'] = ($m == false) ? $caption : $m[1];
         }
         if ($reply_to_message_id != '') {
             $d['reply_to_message_id'] = $reply_to_message_id;
@@ -626,16 +712,16 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("lib/$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("lib/$fn", 'a');
+                $f = fopen("{$this->settings->base}$fn", 'a');
                 foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "lib/$fn";
+            $path = "{$this->settings->base}$fn";
         }
 
         $getID3 = new getID3;
@@ -665,7 +751,11 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $d['text'] = $caption;
+            $m = Tools::loadMetaData($caption);
+            if ($m != false) {
+                $d['metadata']['meta_data_parts'] = $m[0];
+            }
+            $d['text'] = ($m == false) ? $caption : $m[1];
         }
         if ($reply_to_message_id != '') {
             $d['reply_to_message_id'] = $reply_to_message_id;
@@ -690,16 +780,16 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("lib/$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("lib/$fn", 'a');
+                $f = fopen("{$this->settings->base}$fn", 'a');
                 foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "lib/$fn";
+            $path = "{$this->settings->base}$fn";
         }
 
         $getID3 = new getID3;
@@ -727,7 +817,11 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $d['text'] = $caption;
+            $m = Tools::loadMetaData($caption);
+            if ($m != false) {
+                $d['metadata']['meta_data_parts'] = $m[0];
+            }
+            $d['text'] = ($m == false) ? $caption : $m[1];
         }
         if ($reply_to_message_id != '') {
             $d['reply_to_message_id'] = $reply_to_message_id;
@@ -867,16 +961,6 @@ final class Main
     }
 
     /**
-     * get account gifs list
-     *
-     * @return array API result
-     */
-    public function getMyGifSet(): array
-    {
-        return $this->req->making_request('getMyGifSet', [], $this->session)['data'];
-    }
-
-    /**
      * vote a poll
      *
      * @param string $poll_id
@@ -978,73 +1062,6 @@ final class Main
         ], $this->session)['data'];
     }
 
-
-
-    // ======================================================= folders methods ===================================================================
-
-
-
-    /**
-     * get folders list
-     *
-     * @return array API result
-     */
-    public function getFolders(): array
-    {
-        return $this->req->making_request('getFolders', [], $this->session)['data'];
-    }
-
-
-
-    // ======================================================= stickers methods ===================================================================
-
-
-
-    /**
-     * get stickers list
-     *
-     * @return array API result
-     */
-    public function getMyStickerSets(): array
-    {
-        return $this->req->making_request('getMyStickerSets', [], $this->session)['data'];
-    }
-
-    /**
-     * get sticker set data by sticker set id
-     *
-     * @param string $sticker_set_ids
-     * @return array API result
-     */
-    public function getStickersBySetIDs(string $sticker_set_ids): array
-    {
-        return $this->req->making_request('getStickersBySetIDs', [
-            'sticker_set_ids' => $sticker_set_ids
-        ], $this->session)['data'];
-    }
-
-    // public function sendSticker(string $guid): array
-    // {
-    //     $d = [
-    //         'object_guid' => $guid,
-    //         'rnd' => (string)mt_rand(10000000, 999999999),
-    //         'sticker' => [
-    //             "emoji_character" => "😠",
-    //             "w_h_ratio" => "1.0",
-    //             "sticker_id" => "5e0cbc97b424cfe782c3f1cf",
-    //             "file" => [
-    //                 "file_id" => "492739289",
-    //                 "mime" => "png",
-    //                 "dc_id" => "32",
-    //                 "access_hash_rec" => "424555119753073792996994300757",
-    //                 "file_name" => "sticker.png",
-    //                 "cdn_tag" => "PR3"
-    //             ],
-    //             "sticker_set_id" => "5e0cb9f4345de9b18b4ba1ae"
-    //         ]
-    //     ];
-    //     return $this->req->making_request('sendMessage', $d, $this->session)['data'];
-    // }
 
 
 
@@ -1682,16 +1699,16 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("lib/$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("lib/$fn", 'a');
+                $f = fopen("{$this->settings->base}$fn", 'a');
                 foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "lib/$fn";
+            $path = "{$this->settings->base}$fn";
         }
         $ex = explode('.', $fn);
         $data = $this->requestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
@@ -1726,12 +1743,14 @@ final class Main
      * set Runner class for getting updates
      *
      * @param Runner $class Runner Object
-     * @return void
+     * @return self
      */
-    public function proccess(Runner $class): void
+    public function proccess(Runner $class): self
     {
         $this->Runner = $class;
         $class->onStart($this->getMySelf());
+
+        return $this;
     }
 
     /**

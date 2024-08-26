@@ -32,13 +32,14 @@
         "ext-openssl": "*",
         "ext-gd": "*",
         "ext-json": "*",
-        "ext-pdo":"*",
+        "ext-phar": "*",
+        "ext-pdo": "*",
         "ratchet/pawl": "^0.4.1",
         "james-heinrich/getid3": "^1.9",
-        "phpseclib/phpseclib": "^3.0",
-        "spatie/async": "^1.6"
+        "phpseclib/phpseclib": "^3.0"
     },
     "require-dev": {
+        "spatie/async": "^1.6",
         "phpunit/phpunit": "^11.3",
         "vlucas/phpdotenv": "^5.6",
         "chillerlan/php-qrcode": "^5.0"

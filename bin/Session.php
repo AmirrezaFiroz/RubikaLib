@@ -19,6 +19,7 @@ final class Session
      */
     public ?string $hash;
     public array $data = [];
+    private static string $workDirStatic = 'lib/';
 
     /**
      * construct the object
@@ -28,9 +29,12 @@ final class Session
      */
     public function __construct(
         private int $phone_number,
-        public string $auth = ''
+        public string $auth = '',
+        private string $workDir = 'lib/'
     ) {
         $this->hash = self::generatePhoneHash($phone_number);
+
+        if ($workDir != 'lib/') self::$workDirStatic = $workDir;
 
         $this->generate_session();
     }
@@ -84,12 +88,12 @@ final class Session
     /**
      * check is there a session for phone number
      *
-     * @param int $phone_number must be like 989123456789
+     * @param int $phone_number must be like 989123456789 or 9123456789
      * @return boolean true if there is a session or false if session not exists
      */
     public static function is_session(int $phone_number): bool
     {
-        return file_exists("lib/" . self::generatePhoneHash($phone_number) . ".rub");
+        return file_exists(self::$workDirStatic . self::generatePhoneHash(strlen((string)$phone_number) == 10 ? 98 . $phone_number : $phone_number) . ".rub");
     }
 
     /**
@@ -99,8 +103,8 @@ final class Session
      */
     public function generate_session(): void
     {
-        if (file_exists("lib/{$this->hash}.rub")) {
-            $this->data = json_decode(Cryption::decode(file_get_contents("lib/{$this->hash}.rub"), $this->hash), true);
+        if (file_exists("{$this->workDir}{$this->hash}.rub")) {
+            $this->data = json_decode(Cryption::decode(file_get_contents("{$this->workDir}{$this->hash}.rub"), $this->hash), true);
             $this->auth = $this->data['tmp_session'] ?? $this->data['auth'];
         } else {
             date_default_timezone_set('Asia/Tehran');
@@ -123,7 +127,7 @@ final class Session
      */
     private function saveData(): void
     {
-        file_put_contents("lib/{$this->hash}.rub", cryption::encode(json_encode($this->data), $this->hash));
+        file_put_contents("{$this->workDir}{$this->hash}.rub", cryption::encode(json_encode($this->data), $this->hash));
     }
 
     /**
@@ -133,6 +137,6 @@ final class Session
      */
     public function terminate(): void
     {
-        unlink("lib/{$this->hash}.rub");
+        unlink("{$this->workDir}{$this->hash}.rub");
     }
 }

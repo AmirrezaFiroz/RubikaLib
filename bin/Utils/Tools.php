@@ -138,86 +138,95 @@ final class Tools
     }
 
     /**
-     * get metadatas from text
+     * Get All Metadatas From String
      *
-     * @param string $text text with metadatas
-     * @return array|false array of metadatas or false if no metadata found
+     * @param string $text
+     * @return array|false return [$metadata, $cleanText]; or return false; if text is empty
      */
-    public static function loadMetaData(string $text): array
+    public static function loadMetaData(string $text): array|false
     {
-        if ($text === null) {
-            return [[], ""];
+        if (empty($text)) {
+            return false;
         }
 
-        $real_text = preg_replace('/``|\*\*|__|~~|--|@@|##/', '', $text);
         $metadata = [];
-        $conflict = 0;
-        $mentionObjectIndex = 0;
-        $result = [];
-
+        $cleanText = '';
         $patterns = [
-            "Mono" => '/\`\`([^``]*)\`\`/',
-            "Bold" => '/\*\*([^**]*)\*\*/',
-            "Italic" => '/\_\_([^__]*)\_\_/',
-            "Strike" => '/\~\~([^~~]*)\~\~/',
-            "Underline" => '/\-\-([^__]*)\-\-/',
-            "Mention" => '/\@\@([^@@]*)\@\@/',
-            "Spoiler" => '/\#\#([^##]*)\#\#/',
+            "Mono" => '/\`([^`]+)\`/',
+            "Bold" => '/\*\*([^*]+)\*\*/',
+            "Italic" => '/\_\_([^_]+)\_\_/',
+            "Strike" => '/\~\~([^~]+)\~\~/',
+            "Underline" => '/\-\-([^-]+)\-\-/',
+            "Mention" => '/\@\@([^@]+)\@\@/',
+            "Spoiler" => '/\#\#([^#]+)\#\#/',
         ];
+        $offset = 0;
 
-        foreach ($patterns as $style => $pattern) {
-            preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE);
-            foreach ($matches[1] as $match) {
-                $metadata[] = [$match[1], strlen($match[0]), $style];
-            }
-        }
+        $pattern = '/(\`[^`]+\`|\*\*[^*]+\*\*|\_\_[^_]+\_\_|\~\~[^~]+\~\~|\-\-[^-]+\-\-|\@\@[^@]+\@\@|\#\#[^#]+\#\#)/';
+        while (preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $full_match = $match[0][0];
+                $start = mb_strlen(substr($text, 0, (int)$match[0][1]), 'UTF-8');
 
-        usort($metadata, function ($a, $b) {
-            return $a[0] - $b[0];
-        });
+                $cleanText .= mb_substr($text, $offset, $start - $offset, 'UTF-8');
 
-        foreach ($metadata as $item) {
-            list($start, $length, $style) = $item;
-            if ($style !== "Mention") {
-                $result[] = [
-                    "type" => $style,
-                    "from_index" => $start - $conflict,
-                    "length" => $length,
-                ];
-                $conflict += 4;
-            } else {
-                preg_match_all('/\@\(([^(]*)\)/', $text, $mentionObjects);
-                $mentionType = self::ChatTypeByGuid($mentionObjects[1][$mentionObjectIndex]) ?? "Link";
+                foreach ($patterns as $patternName => $pattern) {
+                    if (preg_match($pattern, $full_match, $inner_match)) {
+                        $length = mb_strlen($inner_match[1], 'UTF-8');
+                        $metadata[] = [
+                            "type" => $patternName,
+                            "from_index" => mb_strlen($cleanText, 'UTF-8'),
+                            "length" => $length,
+                        ];
 
-                if ($mentionType === "Link") {
-                    $result[] = [
-                        "from_index" => $start - $conflict,
-                        "length" => $length,
-                        "link" => [
-                            "hyperlink_data" => [
-                                "url" => $mentionObjects[1][$mentionObjectIndex]
-                            ],
-                            "type" => "hyperlink",
-                        ],
-                        "type" => $mentionType,
-                    ];
-                } else {
-                    $result[] = [
-                        "type" => "MentionText",
-                        "from_index" => $start - $conflict,
-                        "length" => $length,
-                        "mention_text_object_guid" => $mentionObjects[1][$mentionObjectIndex],
-                        "mention_text_object_type" => $mentionType
-                    ];
+                        $cleanText .= $inner_match[1];
+                        break;
+                    }
                 }
 
-                $real_text = str_replace("({$mentionObjects[1][$mentionObjectIndex]})", "", $real_text);
-                $conflict += 6 + strlen($mentionObjects[1][$mentionObjectIndex]);
-                $mentionObjectIndex++;
+                $offset = $start + mb_strlen($full_match, 'UTF-8');
+            }
+
+            $text = mb_substr($text, $offset, null, 'UTF-8');
+            $offset = 0;
+        }
+
+        $cleanText .= mb_substr($text, $offset, null, 'UTF-8');
+
+        foreach ($metadata as &$item) {
+            if ($item["type"] === "Mention") {
+                preg_match('/\@\(([^)]+)\)/', $text, $mentionMatch);
+
+                if ($mentionMatch) {
+                    $mentionType = self::ChatTypeByGuid($mentionMatch[1]);
+                    $mentionType = !$mentionType ? 'Link' : $mentionType;
+
+                    if ($mentionType === "Link") {
+                        $item = [
+                            "from_index" => $item["from_index"],
+                            "length" => $item["length"],
+                            "link" => [
+                                "hyperlink_data" => [
+                                    "url" => $mentionMatch[1]
+                                ],
+                                "type" => "hyperlink",
+                            ],
+                            "type" => $mentionType,
+                        ];
+                    } else {
+                        $item = [
+                            "type" => "MentionText",
+                            "from_index" => $item["from_index"],
+                            "length" => $item["length"],
+                            "mention_text_object_guid" => $mentionMatch[1],
+                            "mention_text_object_type" => $mentionType
+                        ];
+                    }
+                }
             }
         }
 
-        return [$result, $real_text];
+        return [$metadata, $cleanText];
     }
 
     /**

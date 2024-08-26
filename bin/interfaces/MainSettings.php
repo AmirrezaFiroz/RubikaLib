@@ -30,6 +30,12 @@ final class MainSettings
      * @var boolean
      */
     public bool $Optimal = true;
+    /**
+     * Where Library Files Will Save And Use
+     *
+     * @var string default: lib/
+     */
+    public string $base = 'lib/';
 
     public function __construct()
     {
@@ -74,6 +80,18 @@ final class MainSettings
     public function setOptimal(bool $Optimal): self
     {
         $this->Optimal = $Optimal;
+        return $this;
+    }
+
+    /**
+     * Set Base Dir
+     *
+     * @param string $base
+     * @return self
+     */
+    public function setBase(string $base): self
+    {
+        $this->base = $base;
         return $this;
     }
 }
