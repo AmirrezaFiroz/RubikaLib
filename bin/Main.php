@@ -28,6 +28,9 @@ use RubikaLib\Utils\{
     Tools
 };
 
+/**
+ * class for working with API
+ */
 final class Main
 {
     private ?Runner $Runner;
@@ -613,6 +616,62 @@ final class Main
                 'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(Tools::createThumbnail($path, $width)),
                 'width' => $width,
                 'height' => $height,
+                'access_hash_rec' => $access_hash_rec
+            ]
+        ];
+        if ($caption != '') {
+            $m = Tools::loadMetaData($caption);
+            if ($m != false) {
+                $d['metadata']['meta_data_parts'] = $m[0];
+            }
+            $d['text'] = ($m == false) ? $caption : $m[1];
+        }
+        if ($reply_to_message_id != '') {
+            $d['reply_to_message_id'] = $reply_to_message_id;
+        }
+
+        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    }
+
+    /**
+     * Send Document To Chat
+     *
+     * @param string $guid
+     * @param string $path file path or link
+     * @param boolean $isLink is $path a link or not
+     * @param string $caption
+     * @param string $reply_to_message_id
+     * @return array API result
+     */
+    public function sendDocument(string $guid, string $path, bool $isLink = false, string $caption = '', string $reply_to_message_id = ''): array
+    {
+        $fn = basename($path);
+        if ($isLink) {
+            if (!$this->settings->Optimal) {
+                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
+            } else {
+                $f = fopen("{$this->settings->base}$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                    fwrite($f, $part);
+                }
+                fclose($f);
+            }
+
+            $path = "{$this->settings->base}$fn";
+        }
+
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+
+        $d = [
+            'object_guid' => $guid,
+            'rnd' => (string)mt_rand(10000000, 999999999),
+            'file_inline' => [
+                'dc_id' => $dc_id,
+                'file_id' => $file_id,
+                'type' => 'File',
+                'file_name' => $fn,
+                'size' => filesize($path),
+                'mime' => explode('.', $fn)[count(explode('.', $fn)) - 1],
                 'access_hash_rec' => $access_hash_rec
             ]
         ];
@@ -1667,13 +1726,13 @@ final class Main
     public function downloadFile(string $access_hash_rec, string $file_id, string $to_path, int $DC): bool
     {
         if ($this->settings->Optimal) {
-            $f = fopen('app.pdf', 'a');
+            $f = fopen($to_path, 'a');
             foreach ($this->req->downloadFile($access_hash_rec, $file_id, $DC) as $data) {
                 if ($data === false) {
                     fclose($f);
                     return false;
                 }
-                fwrite($to_path, $data);
+                fwrite($f, $data);
             }
             fclose($f);
             return true;
@@ -1691,27 +1750,13 @@ final class Main
      * upload file to API
      *
      * @param string $path file path or link
-     * @param boolean $isLink if $path is a link
      * @return array [$file_id, $dc_id, $access_hash_rec]
      */
-    private function sendFileToAPI(string $path, bool $isLink = false): array
+    private function sendFileToAPI(string $path): array
     {
         $fn = basename($path);
-        if ($isLink) {
-            if (!$this->settings->Optimal) {
-                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
-            } else {
-                $f = fopen("{$this->settings->base}$fn", 'a');
-                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
-                    fwrite($f, $part);
-                }
-                fclose($f);
-            }
-
-            $path = "{$this->settings->base}$fn";
-        }
         $ex = explode('.', $fn);
-        $data = $this->requestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
+        $data = $this->RequestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
 
         return [$data['id'], $data['dc_id'], $this->req->uploadFile($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
     }
@@ -1724,7 +1769,7 @@ final class Main
      * @param string $mime
      * @return array API result
      */
-    private function requestSendFile(string $file_name, int $size, string $mime): array
+    private function RequestSendFile(string $file_name, int $size, string $mime): array
     {
         return $this->req->making_request('requestSendFile', [
             'file_name' => $file_name,
@@ -1760,6 +1805,8 @@ final class Main
      */
     public function RunAndLoop(): void
     {
+        if (is_null($this->Runner)) throw new Logger("App Runner Class Isn't Set");
+
         $this->getChatsUpdates();
 
         $loop = Loop::get();

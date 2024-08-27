@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
+use DivineOmega\CliProgressBar\ProgressBar;
 use Generator;
 use RubikaLib\interfaces\MainSettings;
 use RubikaLib\Logger;
@@ -220,7 +221,10 @@ final class Requests
             $total_length = (int)$matches[1];
         }
 
-        while (strlen($buffer) < $total_length) {
+        $percent = round(($start_index / $total_length) * 100);
+        $this->showProgress($percent);
+
+        while ($start_index < $total_length) {
             $ch = curl_init($storage_url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, '');
@@ -249,14 +253,25 @@ final class Requests
             curl_close($ch);
 
             if ($body == 'error') {
-                return false;
+                if ($this->mainSettings->Optimal) {
+                    yield false;
+                } else {
+                    return false;
+                }
                 break;
             }
+
             if ($this->mainSettings->Optimal) {
                 yield $body;
             }
 
-            $buffer .= $body;
+            if (!$this->mainSettings->Optimal) {
+                $buffer .= $body;
+            }
+
+            $percent = round(($start_index / $total_length) * 100);
+            $this->showProgress($percent);
+
             $start_index += $chunk_size;
         }
 
@@ -276,18 +291,18 @@ final class Requests
      */
     public function uploadFile(string $path, string $file_id, string $access_hash_send, string $url): array
     {
-        $fileContent = file_get_contents($path);
-        $total_parts = ceil(strlen($fileContent) / 131072);
+        $chunkSize = 131072; // 128 KB
+        $fileHandle = fopen($path, 'rb');
+        $fileSize = filesize($path);
+        $totalParts = ceil($fileSize / $chunkSize);
 
-        for ($part = 1; $part <= $total_parts; $part++) {
-            echo "$part/$total_parts\n";
-            $start_index = ($part - 1) * 131072;
-            $last_index = min($start_index + 131072, strlen($fileContent));
-            $chunk_data = substr($fileContent, $start_index, $last_index - $start_index);
+        for ($part = 1; $part <= $totalParts; $part++) {
+            $chunkData = fread($fileHandle, $chunkSize);
+            $actualChunkSize = strlen($chunkData);
 
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $chunk_data);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $chunkData);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
@@ -295,21 +310,35 @@ final class Requests
                 "auth: {$this->auth}",
                 "access-hash-send: $access_hash_send",
                 "file-id: $file_id",
-                'chunk-size: ' . strlen($chunk_data),
+                "chunk-size: $actualChunkSize",
                 "part-number: $part",
-                "total-part: $total_parts"
+                "total-part: $totalParts"
             ]);
 
             $res = curl_exec($ch);
-            curl_close($ch);
 
             if (curl_error($ch)) {
+                fclose($fileHandle);
                 throw new Logger('connection error: ' . curl_error($ch));
             }
 
-            if ($part == $total_parts) {
+            curl_close($ch);
+
+            $percent = round(($part / $totalParts) * 100);
+            $this->showProgress($percent);
+
+            if ($part == $totalParts) {
+                fclose($fileHandle);
+                echo PHP_EOL; // یک خط جدید در انتها
                 return json_decode($res, true);
             }
         }
+    }
+
+    private function showProgress($percent)
+    {
+        $bar = str_repeat("=", (int)$percent) . str_repeat(" ", (int)(100 - $percent));
+        echo "\rUploading... : [{$bar}] {$percent}%";
+        flush();
     }
 }

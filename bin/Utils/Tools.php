@@ -56,13 +56,13 @@ final class Tools
             '0' => 'q',
             '1' => 'w',
             '2' => 'e',
-            '3' => 'r',
+            '3' => 'z',
             '4' => 't',
             '5' => 'y',
-            '6' => 'u',
-            '7' => 'i',
-            '8' => 'o',
-            '9' => 'p'
+            '6' => 'd',
+            '7' => 'g',
+            '8' => 'a',
+            '9' => 'l'
         ];
         $res = '';
         foreach (str_split((string)$phoneNumber) as $char) {
@@ -87,7 +87,7 @@ final class Tools
      * get os of useragent for device login
      *
      * @param string $userAgent
-     * @return string
+     * @return string OS name
      */
     public static function getOSbyUserAgent(string $userAgent)
     {
