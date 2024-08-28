@@ -37,7 +37,7 @@ final class Main
     private ?int $phone_number;
     private ?Requests $req;
     private ?Session $session;
-    public static $VERSION = '1.2.2';
+    public static $VERSION = '2.0.0';
     private ?Cryption $crypto;
 
     /**

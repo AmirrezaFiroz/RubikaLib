@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use DivineOmega\CliProgressBar\ProgressBar;
 use Generator;
 use RubikaLib\interfaces\MainSettings;
 use RubikaLib\Logger;
@@ -14,7 +13,7 @@ use RubikaLib\Logger;
  */
 final class Requests
 {
-    private string $getdcmessURL = 'https://getdcmess.iranlms.ir/';
+    private string $getdcmessURL = 'https://shgetdcmess.iranlms.ir/';
     /**
      * all DC URLs
      *
@@ -57,9 +56,9 @@ final class Requests
             'api_version' => '4',
             'client' => json_encode([
                 'app_name' => 'Main',
-                'app_version' => '4.4.15',
+                'app_version' => '4.5.0',
                 'lang_code' => 'fa',
-                'package' => 'web.rubika.ir',
+                'package' => 'web.shad.ir',
                 'platform' => 'Web'
             ]),
             'method' => 'getDCs'
@@ -109,9 +108,9 @@ final class Requests
             'input' => $data,
             'client' => [
                 'app_name' => "Main",
-                'app_version' => "4.4.15",
+                'app_version' => "4.5.0",
                 'platform' => "Web",
-                'package' => "web.rubika.ir",
+                'package' => "web.shad.ir",
                 'lang_code' => "fa"
             ]
         ]);
@@ -139,9 +138,9 @@ final class Requests
             'User-Agent: ' . $this->useragent,
             'Accept: application/json, text/plain, */*',
             'Content-Type: text/plain',
-            'Origin: https://web.rubika.ir',
+            'Origin: https://web.shad.ir',
             'Connection: keep-alive',
-            'Referer: https://web.rubika.ir/',
+            'Referer: https://web.shad.ir/',
         ]);
         curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
 
