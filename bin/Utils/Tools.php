@@ -12,23 +12,21 @@ use RubikaLib\Logger;
 final class Tools
 {
     /**
-     * make sure about phone number
-     *
      * @param int $phoneNumber
-     * @throws Logger throws an error when phone number is incorrect
+     * @throws Failure throws an error when phone number is incorrect
      * @return int true phone number in this format: 989123456789
      */
-    public static function parse_true_phone_number(int $phoneNumber): int
+    public static function ReplaceTruePhoneNumber(int $phoneNumber): int
     {
         $phoneNumber = preg_replace('/[^\d+]/', '', (string)$phoneNumber);
 
         $length = strlen($phoneNumber);
         if ($length < 10 || $length > 13) {
-            throw new Logger("the is an error with phone number format: " . $phoneNumber);
+            throw new Failure("the is an error with phone number format: " . $phoneNumber);
         }
 
         $patterns = [
-            // '/^0[9]\d{9}$/',    // 09123456789
+            // '/^0[9]\d{9}$/',    // 09123456789 =====> not needed for now
             '/^\+98[9]\d{9}$/', // +989123456789
             '/^98[9]\d{9}$/',   // 989123456789
             '/^[9]\d{9}$/'      // 9123456789
@@ -41,16 +39,16 @@ final class Tools
             }
         }
 
-        throw new Logger("the is an error with phone number format: " . $phoneNumber);
+        throw new Failure("the is an error with phone number format: " . $phoneNumber);
     }
 
     /**
-     * this will use to hash phone number sessions
-     *
+     * Will Used For Sessions
+     * 
      * @param integer $phoneNumber 989123456789
      * @return string
      */
-    public static function generate_phone_hash(int $phoneNumber): string
+    public static function GeneratePhoneHash(int $phoneNumber): string
     {
         $array = [
             '0' => 'q',
@@ -72,19 +70,19 @@ final class Tools
     }
 
     /**
-     * get hash of useragent for device registering
+     * Get Hash From UserAgent For Device Registering
      *
      * @param string $userAgent
-     * @return string
+     * @return string device hash
      */
-    public static function generate_device_hash(string $userAgent): string
+    public static function GenerateDeviceHash(string $userAgent): string
     {
         $userAgent = preg_replace('/\D+/', '', $userAgent);
         return $userAgent;
     }
 
     /**
-     * get os of useragent for device login
+     * Get OS From UserAgent For Device Registering
      *
      * @param string $userAgent
      * @return string OS name
@@ -120,7 +118,7 @@ final class Tools
      * find chat type by looking at guid
      *
      * @param string $guid
-     * @return string|false 'Group', 'Channel', 'User', 'Service' or false
+     * @return string|false 'Group', 'Channel', 'User', 'Service' or false on no-one
      */
     public static function ChatTypeByGuid(string $guid): string|false
     {
@@ -143,7 +141,7 @@ final class Tools
      * @param string $text
      * @return array|false return [$metadata, $cleanText]; or return false; if text is empty
      */
-    public static function loadMetaData(string $text): array|false
+    public static function ProccessMetaDatas(string $text): array|false
     {
         if (empty($text)) {
             return false;
@@ -153,12 +151,12 @@ final class Tools
         $cleanText = '';
         $patterns = [
             "Mono" => '/\`([^`]+)\`/',
-            "Bold" => '/\*\*([^*]+)\*\*/',
-            "Italic" => '/\_\_([^_]+)\_\_/',
-            "Strike" => '/\~\~([^~]+)\~\~/',
-            "Underline" => '/\-\-([^-]+)\-\-/',
-            "Mention" => '/\@\@([^@]+)\@\@/',
-            "Spoiler" => '/\#\#([^#]+)\#\#/',
+            "Bold" => '/\*([^*]+)\*/',
+            "Italic" => '/\_([^_]+)\_/',
+            "Strike" => '/\~([^~]+)\~/',
+            "Underline" => '/\_\_([^-]+)\_\_/',
+            // "Mention" => '/\@\@([^@]+)\@\@/',
+            "Spoiler" => '/||([^#]+)||/',
         ];
         $offset = 0;
 
@@ -230,13 +228,13 @@ final class Tools
     }
 
     /**
-     * craate photo thumbnail
+     * Craate Photo Thumbnail
      *
      * @param string $file_path
      * @param integer $thumb_width
      * @return string thumbnail data
      */
-    public static function createThumbnail(string $file_path, int $thumb_width): string
+    public static function CreateThumbnail(string $file_path, int $thumb_width): string
     {
         $image_info = getimagesize($file_path);
         if ($image_info === false) {
@@ -288,7 +286,7 @@ final class Tools
     }
 
     /**
-     * get image data
+     * Get Image Datas
      *
      * @param string $file_path
      * @return array return [$Width, $Height, $Mime]

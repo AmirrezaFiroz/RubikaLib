@@ -1,8 +1,8 @@
-# vendor/
-# composer.lock
-# update.json
-# lib/
-# file.php
-# .rnd
-# todo/
-# .phpunit.result.cache
+vendor/
+composer.lock
+update.json
+lib/
+file.php
+.rnd
+todo/
+.phpunit.result.cache

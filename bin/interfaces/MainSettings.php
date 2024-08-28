@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib\interfaces;
 
 use RubikaLib\Cryption;
+use RubikaLib\enums\AppType;
 use RubikaLib\Utils\userAgent;
 
 /**
@@ -13,66 +14,76 @@ use RubikaLib\Utils\userAgent;
 final class MainSettings
 {
     /**
-     * default useragent for library (it just used in login and will save in session for next uses)
+     * Default UserAgent For Library (it just used in login and will save in session for next uses)
      *
-     * @var string|null
+     * @var string you can generate one by using RubikaLib\Utils\userAgent::generate()
      */
-    public ?string $userAgent;
+    public ?string $UserAgent;
+
     /**
-     * auth for sign up (it will be changes with API)
+     * tmp_session For Sign In (it will be changes with API)
      *
-     * @var string|null
+     * @var string
      */
-    public ?string $auth;
+    public ?string $tmp_session;
+
     /**
-     * use optimal mode
+     * Use Optimal Mode For CPU and RAM Sources
      *
      * @var boolean
      */
     public bool $Optimal = true;
+
     /**
      * Where Library Files Will Save And Use
      *
      * @var string default: lib/
      */
-    public string $base = 'lib/';
+    public string $Base = 'lib/';
+
+    /**
+     * App Type
+     *
+     * @var AppType Rubika or Shad
+     */
+    public AppType $AppType = AppType::Rubika;
 
     public function __construct()
     {
         $this->setUserAgent(
             userAgent::generate()
         );
-        $this->setAuth(
-            Cryption::azRand()
+        $this->setTmp_session(
+            Cryption::GenerateRandom_tmp_ession()
         );
     }
 
     /**
-     * set default useragent for library
+     * Set Default UserAgent For Library (just for login)
      *
-     * @param string $userAgent you can generate one by using RubikaLib\Utils\userAgent::generate()
+     * @param string $UserAgent you can generate one by using RubikaLib\Utils\userAgent::generate()
      * @return self
      */
-    public function setUserAgent(string $userAgent): self
+    public function setUserAgent(string $UserAgent): self
     {
-        $this->userAgent = $userAgent;
+        $this->UserAgent = $UserAgent;
         return $this;
     }
 
     /**
-     * set default auth for library as tmp_session in login step
+     * Set tmp_session For Sign In (just for login)
      *
-     * @param string $auth you can generate one by using RubikaLib\Cryption::azRand() 
+     * @param string $tmp_session you can generate one by using RubikaLib\Cryption::GenerateRandom_tmp_ession() 
      * @return self
      */
-    public function setAuth(string $auth): self
+    public function setTmp_session(string $tmp_session): self
     {
-        $this->auth = $auth;
+        $this->tmp_session = $tmp_session;
         return $this;
     }
 
     /**
-     * set optimal mode
+     * Turn Optimal Mode On Or Off
      *
      * @param boolean $Optimal
      * @return self
@@ -86,12 +97,24 @@ final class MainSettings
     /**
      * Set Base Dir
      *
-     * @param string $base
+     * @param string $Base
      * @return self
      */
-    public function setBase(string $base): self
+    public function setBase(string $Base): self
     {
-        $this->base = $base;
+        $this->Base = $Base;
+        return $this;
+    }
+
+    /**
+     * Set App Type
+     *
+     * @param AppType $AppType
+     * @return self
+     */
+    public function setAppType(AppType $AppType): self
+    {
+        $this->$AppType = $AppType;
         return $this;
     }
 }

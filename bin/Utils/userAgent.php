@@ -388,7 +388,7 @@ final class userAgent
                 'max' => 55
             ]) . ' Mobile Safari/' . (random_int(1, 100) > 50 ? random_int(533, 537) : random_int(600, 603)) . '.' . random_int(0, 9);
         } else {
-            new Logger('Unable to determine user agent to generate');
+            new Failure('Unable to determine user agent to generate');
         }
     }
 }

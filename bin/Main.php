@@ -19,7 +19,7 @@ use RubikaLib\enums\{
     pollType
 };
 use RubikaLib\interfaces\{
-    groupDefaultAccesses,
+    GroupDefaultAccesses,
     MainSettings,
     Runner
 };
@@ -46,15 +46,19 @@ final class Main
      * @param MainSettings $settings by default = (new MainSettings)
      */
     public function __construct(
-        int $phone_number,
+        int $phone_number = 0,
         string $app_name = '',
         private MainSettings $settings = new MainSettings
     ) {
-        $this->phone_number = Tools::parse_true_phone_number($phone_number);
+        while (!in_array(strlen((string)$phone_number), [10, 12])) {
+            $phone_number = (int)readline("Enter Phone Number: ");
+        }
+
+        $this->phone_number = Tools::ReplaceTruePhoneNumber($phone_number);
 
         if (!Session::is_session($this->phone_number)) {
-            $this->req = new Requests($settings->userAgent, $settings->auth, mainSettings: $settings);
-            $this->session = new Session($this->phone_number, workDir: $settings->base);
+            $this->req = new Requests($settings->UserAgent, $settings->tmp_session, mainSettings: $settings);
+            $this->session = new Session($this->phone_number, workDir: $settings->Base);
             $send_code = $this->sendCode();
 
             if ($send_code['status'] == 'SendPassKey') {
@@ -84,7 +88,7 @@ final class Main
                 }
             }
 
-            $auth = Cryption::decrypt_RSA_by_key($private_key, $signIn['auth']);
+            $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
             unset($signIn['user']['online_time']);
             $this->session->regenerate_session();
             $this->session
@@ -92,14 +96,15 @@ final class Main
                 ->changeData('user', $signIn['user'])
                 ->changeData('private_key', $private_key)
                 ->changeData('useragent', $this->req->useragent)
-                ->auth = $auth;
+                ->setAuth($auth);
             $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, mainSettings: $settings);
 
             $this->registerDevice($app_name);
         } else {
-            $this->session = new Session($this->phone_number, workDir: $settings->base);
+            $this->session = new Session($this->phone_number, workDir: $settings->Base);
+            $p = $this->session->getPartOfSessionKey();
             $this->req = new Requests(
-                auth: $this->session->auth,
+                auth: Cryption::Decode($p[0], $p[1]),
                 private_key: $this->session->data['private_key'] ?? '',
                 useragent: $this->session->data['useragent'],
                 mainSettings: $settings
@@ -117,14 +122,14 @@ final class Main
                         }
                     }
 
-                    $auth = Cryption::decrypt_RSA_by_key($private_key, $signIn['auth']);
+                    $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
                     unset($signIn['online_time']);
                     $this->session->regenerate_session();
                     $this->session
                         ->changeData('auth', $auth)
                         ->changeData('user', $signIn['user'])
                         ->changeData('private_key', $private_key)
-                        ->auth = $auth;
+                        ->setAuth($auth);
                     $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, mainSettings: $settings);
 
                     $this->registerDevice($app_name);
@@ -132,7 +137,8 @@ final class Main
             }
         }
 
-        $this->crypto = new Cryption($this->req->auth, $this->session->data['private_key']);
+        $p = $this->req->getPartOfSessionKey();
+        $this->crypto = new Cryption(Cryption::Decode($p[0], $p[1]), $this->session->data['private_key']);
         $this->session->changeData('user', $this->getChatInfo($this->getMySelf()['user_guid'])['user']);
     }
 
@@ -140,7 +146,7 @@ final class Main
      * send login code to phone number
      *
      * @param string $pass_key if account have password
-     * @throws Logger INVALID_INPUT
+     * @throws Failure INVALID_INPUT
      * @return array API result
      */
     private function sendCode(string $pass_key = ''): array
@@ -153,10 +159,10 @@ final class Main
             $d['pass_key'] = $pass_key;
         }
 
-        $r = $this->req->making_request('sendCode', $d, $this->session, true)['data'];
+        $r = $this->req->SendRequest('sendCode', $d, $this->session, true)['data'];
 
         if (!in_array($r['status'], ['OK', 'SendPassKey'])) {
-            throw new Logger('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
+            throw new Failure('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
         } else {
             return $r;
         }
@@ -167,14 +173,14 @@ final class Main
      *
      * @param string $phone_code_hash
      * @param integer $code
-     * @throws Logger CodeIsExpired, CodeIsInvalid, CodeIsUsed
+     * @throws Failure CodeIsExpired, CodeIsInvalid, CodeIsUsed
      * @return array [API result, private_key]
      */
     private function signIn(string $phone_code_hash, int $code): array
     {
-        list($publicKey, $privateKey) = cryption::RSA_KeyGenerate();
+        list($publicKey, $privateKey) = cryption::Generate_RSAkey();
 
-        $r = $this->req->making_request('signIn', [
+        $r = $this->req->SendRequest('signIn', [
             "phone_number" =>            (string)$this->phone_number,
             "phone_code_hash" => $phone_code_hash,
             "phone_code" => $code,
@@ -182,7 +188,7 @@ final class Main
         ], $this->session, true)['data'];
 
         if ($r['status'] != 'OK') {
-            throw new Logger('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
+            throw new Failure('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
         } else {
             return [$r, $privateKey];
         }
@@ -207,12 +213,12 @@ final class Main
             'lang_code' => 'fa',
             'system_version' => Tools::getOSbyUserAgent($this->req->useragent),
             'device_model' => ($app_name != '' ? "Rubika-lib($app_name) " . self::$VERSION : 'Rubika-lib ' . self::$VERSION),
-            'device_hash' => Tools::generate_device_hash($this->req->useragent)
+            'device_hash' => Tools::GenerateDeviceHash($this->req->useragent)
         ];
-        $r = $this->req->making_request('registerDevice', $d, $this->session);
+        $r = $this->req->SendRequest('registerDevice', $d, $this->session);
 
         if ($r['status'] != 'OK') {
-            throw new Logger('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
+            throw new Failure('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
         } else {
             return $r;
         }
@@ -232,7 +238,7 @@ final class Main
     public function logout(): array
     {
         $this->session->terminate();
-        return $this->req->making_request('logout', array(), $this->session)['data'];
+        return $this->req->SendRequest('logout', array(), $this->session)['data'];
     }
 
     /**
@@ -242,7 +248,7 @@ final class Main
      */
     public function getMySessions(): array
     {
-        return $this->req->making_request('getMySessions', array(), $this->session)['data'];
+        return $this->req->SendRequest('getMySessions', array(), $this->session)['data'];
     }
 
     /**
@@ -253,7 +259,7 @@ final class Main
      */
     public function TerminateSession(string $session_key): array
     {
-        return $this->req->making_request('terminateSession', [
+        return $this->req->SendRequest('terminateSession', [
             'session_key' => $session_key
         ], $this->session)['data'];
     }
@@ -276,7 +282,7 @@ final class Main
      */
     public function ChangeUsername(string $newUserName): array
     {
-        $d = $this->req->making_request('updateUsername', [
+        $d = $this->req->SendRequest('updateUsername', [
             'username' => str_replace('@', '', $newUserName)
         ], $this->session)['data'];
 
@@ -313,7 +319,7 @@ final class Main
             $d['updated_parameters'][] = 'bio';
         }
 
-        $d = $this->req->making_request('updateProfile', $d, $this->session)['data'];
+        $d = $this->req->SendRequest('updateProfile', $d, $this->session)['data'];
 
         if (isset($d['chat_update'])) {
             $this->session->changeData('user', $d['user']);
@@ -329,7 +335,7 @@ final class Main
      */
     public function RequestDeleteAccount(): array
     {
-        return $this->req->making_request('requestDeleteAccount', [], $this->session)['data'];
+        return $this->req->SendRequest('requestDeleteAccount', [], $this->session)['data'];
     }
 
     /**
@@ -342,7 +348,7 @@ final class Main
     {
         list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
 
-        return $this->req->making_request('uploadAvatar', [
+        return $this->req->SendRequest('uploadAvatar', [
             'thumbnail_file_id' => $file_id,
             'main_file_id' => $file_id
         ], $this->session)['data'];
@@ -356,7 +362,7 @@ final class Main
      */
     public function DeleteMyAvatar(string $avatar_id): array
     {
-        return $this->req->making_request('deleteAvatar', [
+        return $this->req->SendRequest('deleteAvatar', [
             'object_guid' => $this->getMySelf()['user_guid'],
             'avatar_id' => $avatar_id
         ], $this->session)['data'];
@@ -369,7 +375,7 @@ final class Main
      */
     public function getMyGifSet(): array
     {
-        return $this->req->making_request('getMyGifSet', [], $this->session)['data'];
+        return $this->req->SendRequest('getMyGifSet', [], $this->session)['data'];
     }
 
     /**
@@ -379,7 +385,7 @@ final class Main
      */
     public function getFolders(): array
     {
-        return $this->req->making_request('getFolders', [], $this->session)['data'];
+        return $this->req->SendRequest('getFolders', [], $this->session)['data'];
     }
 
 
@@ -395,7 +401,7 @@ final class Main
      */
     public function getMyStickerSets(): array
     {
-        return $this->req->making_request('getMyStickerSets', [], $this->session)['data'];
+        return $this->req->SendRequest('getMyStickerSets', [], $this->session)['data'];
     }
 
     /**
@@ -406,7 +412,7 @@ final class Main
      */
     public function getStickersBySetIDs(string $sticker_set_ids): array
     {
-        return $this->req->making_request('getStickersBySetIDs', [
+        return $this->req->SendRequest('getStickersBySetIDs', [
             'sticker_set_ids' => $sticker_set_ids
         ], $this->session)['data'];
     }
@@ -431,7 +437,7 @@ final class Main
     //             "sticker_set_id" => "5e0cb9f4345de9b18b4ba1ae"
     //         ]
     //     ];
-    //     return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+    //     return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     // }
 
 
@@ -450,7 +456,7 @@ final class Main
      */
     public function sendMessage(string $guid, string $text, int $reply_to_message_id = 0): array
     {
-        $m = Tools::loadMetaData($text);
+        $m = Tools::ProccessMetaDatas($text);
         $d = [
             'object_guid' => $guid,
             'rnd' => (string)mt_rand(10000000, 999999999),
@@ -462,7 +468,7 @@ final class Main
         if ($m != false) {
             $d['metadata']['meta_data_parts'] = $m[0];
         }
-        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -475,7 +481,7 @@ final class Main
      */
     public function EditMessage(string $guid, string $NewText, int $message_id): array
     {
-        $m = Tools::loadMetaData($NewText);
+        $m = Tools::ProccessMetaDatas($NewText);
         $d = [
             'object_guid' => $guid,
             'text' => $m == false ? $NewText : $m[1],
@@ -484,7 +490,7 @@ final class Main
         if ($m != false) {
             $d['metadata']['meta_data_parts'] = $m[0];
         }
-        return $this->req->making_request('EditMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('EditMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -497,7 +503,7 @@ final class Main
      */
     public function forwardMessages(string $from_object_guid, array $message_ids, string $to_object_guid): array
     {
-        return $this->req->making_request('forwardMessages', [
+        return $this->req->SendRequest('forwardMessages', [
             'from_object_guid' => $from_object_guid,
             'message_ids' => $message_ids,
             'rnd' => (string)mt_rand(10000000, 999999999),
@@ -515,7 +521,7 @@ final class Main
      */
     public function deleteMessages(string $object_guid, array $message_ids, deleteType $type = deleteType::Local): array
     {
-        return $this->req->making_request('deleteMessages', [
+        return $this->req->SendRequest('deleteMessages', [
             'object_guid' => $object_guid,
             'message_ids' => $message_ids,
             'type' => $type->value
@@ -531,7 +537,7 @@ final class Main
      */
     public function sendChatActivity(string $guid, chatActivities $activity): array
     {
-        return $this->req->making_request('sendChatActivity', [
+        return $this->req->SendRequest('sendChatActivity', [
             'object_guid' => $guid,
             'activity' => $activity->value
         ], $this->session)['data'];
@@ -546,7 +552,7 @@ final class Main
      */
     public function seenChats(string $guid, string $last_message_id): array
     {
-        return $this->req->making_request('seenChats', [
+        return $this->req->SendRequest('seenChats', [
             'seen_list' => [
                 $guid => $last_message_id
             ]
@@ -568,7 +574,7 @@ final class Main
         for ($i = 0; $i < count($guids); $i++) {
             $list[] = ['guid' => $guids[$i], 'msg_id' => $last_message_ids[$i]];
         }
-        return $this->req->making_request('seenChats', [
+        return $this->req->SendRequest('seenChats', [
             'seen_list' => $list
         ], $this->session)['data'];
     }
@@ -588,16 +594,16 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->Base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("{$this->settings->base}$fn", 'a');
-                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                $f = fopen("{$this->settings->Base}$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->UserAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "{$this->settings->base}$fn";
+            $path = "{$this->settings->Base}$fn";
         }
 
         list($width, $height, $mime) = Tools::getImageDetails($path);
@@ -613,14 +619,14 @@ final class Main
                 'file_name' => $fn,
                 'size' => filesize($path),
                 'mime' => explode('/', $mime)[1],
-                'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(Tools::createThumbnail($path, $width)),
+                'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(Tools::CreateThumbnail($path, $width)),
                 'width' => $width,
                 'height' => $height,
                 'access_hash_rec' => $access_hash_rec
             ]
         ];
         if ($caption != '') {
-            $m = Tools::loadMetaData($caption);
+            $m = Tools::ProccessMetaDatas($caption);
             if ($m != false) {
                 $d['metadata']['meta_data_parts'] = $m[0];
             }
@@ -630,7 +636,7 @@ final class Main
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
 
-        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -648,16 +654,16 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->Base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("{$this->settings->base}$fn", 'a');
-                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                $f = fopen("{$this->settings->Base}$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->UserAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "{$this->settings->base}$fn";
+            $path = "{$this->settings->Base}$fn";
         }
 
         list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
@@ -676,7 +682,7 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $m = Tools::loadMetaData($caption);
+            $m = Tools::ProccessMetaDatas($caption);
             if ($m != false) {
                 $d['metadata']['meta_data_parts'] = $m[0];
             }
@@ -686,7 +692,7 @@ final class Main
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
 
-        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -704,22 +710,22 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->Base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("{$this->settings->base}$fn", 'a');
-                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                $f = fopen("{$this->settings->Base}$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->UserAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "{$this->settings->base}$fn";
+            $path = "{$this->settings->Base}$fn";
         }
 
         $getID3 = new getID3;
         $file = $getID3->analyze($path);
         if (isset($file['error'])) {
-            throw new Logger("Error: " . implode("\n", $file['error']));
+            throw new Failure("Error: " . implode("\n", $file['error']));
         }
 
         list($width, $height, $mime) = Tools::getImageDetails(__DIR__ . '/video.png');
@@ -743,7 +749,7 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $m = Tools::loadMetaData($caption);
+            $m = Tools::ProccessMetaDatas($caption);
             if ($m != false) {
                 $d['metadata']['meta_data_parts'] = $m[0];
             }
@@ -753,7 +759,7 @@ final class Main
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
 
-        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -771,22 +777,22 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->Base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("{$this->settings->base}$fn", 'a');
-                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                $f = fopen("{$this->settings->Base}$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->UserAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "{$this->settings->base}$fn";
+            $path = "{$this->settings->Base}$fn";
         }
 
         $getID3 = new getID3;
         $file = $getID3->analyze($path);
         if (isset($file['error'])) {
-            throw new Logger("Error: " . implode("\n", $file['error']));
+            throw new Failure("Error: " . implode("\n", $file['error']));
         }
 
         list($width, $height, $mime) = Tools::getImageDetails(__DIR__ . '/video.png');
@@ -810,7 +816,7 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $m = Tools::loadMetaData($caption);
+            $m = Tools::ProccessMetaDatas($caption);
             if ($m != false) {
                 $d['metadata']['meta_data_parts'] = $m[0];
             }
@@ -820,7 +826,7 @@ final class Main
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
 
-        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -839,22 +845,22 @@ final class Main
         $fn = basename($path);
         if ($isLink) {
             if (!$this->settings->Optimal) {
-                file_put_contents("{$this->settings->base}$fn", file_get_contents($path));
+                file_put_contents("{$this->settings->Base}$fn", file_get_contents($path));
             } else {
-                $f = fopen("{$this->settings->base}$fn", 'a');
-                foreach (Optimal::getFile($path, $this->settings->userAgent) as $part) {
+                $f = fopen("{$this->settings->Base}$fn", 'a');
+                foreach (Optimal::getFile($path, $this->settings->UserAgent) as $part) {
                     fwrite($f, $part);
                 }
                 fclose($f);
             }
 
-            $path = "{$this->settings->base}$fn";
+            $path = "{$this->settings->Base}$fn";
         }
 
         $getID3 = new getID3;
         $file = $getID3->analyze($path);
         if (isset($file['error'])) {
-            throw new Logger("Error: " . implode("\n", $file['error']));
+            throw new Failure("Error: " . implode("\n", $file['error']));
         }
 
         list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
@@ -876,7 +882,7 @@ final class Main
             ]
         ];
         if ($caption != '') {
-            $m = Tools::loadMetaData($caption);
+            $m = Tools::ProccessMetaDatas($caption);
             if ($m != false) {
                 $d['metadata']['meta_data_parts'] = $m[0];
             }
@@ -886,7 +892,7 @@ final class Main
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
 
-        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -899,7 +905,7 @@ final class Main
      */
     public function addMessageReaction(string $guid, string $message_id, ReactionsEmoji|ReactionsString $reaction): array
     {
-        return $this->req->making_request('actionOnMessageReaction', [
+        return $this->req->SendRequest('actionOnMessageReaction', [
             'action' => 'Add',
             'reaction_id' => $reaction->value,
             'message_id' => $message_id,
@@ -916,7 +922,7 @@ final class Main
      */
     public function removeMessageReaction(string $guid, string $message_id): array
     {
-        return $this->req->making_request('actionOnMessageReaction', [
+        return $this->req->SendRequest('actionOnMessageReaction', [
             'action' => 'Remove',
             'message_id' => $message_id,
             'object_guid' => $guid
@@ -968,7 +974,7 @@ final class Main
         if ($reply_to_message_id != '') {
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
-        return $this->req->making_request('createPoll', $d, $this->session)['data'];
+        return $this->req->SendRequest('createPoll', $d, $this->session)['data'];
     }
 
     /**
@@ -979,7 +985,7 @@ final class Main
      */
     public function getPollStatus(string $poll_id): array
     {
-        return $this->req->making_request('createPoll', [
+        return $this->req->SendRequest('createPoll', [
             'poll_id' => $poll_id
         ], $this->session)['data'];
     }
@@ -993,7 +999,7 @@ final class Main
      */
     public function getPollOptionVoters(string $poll_id, int $selection_index): array
     {
-        return $this->req->making_request('getPollOptionVoters', [
+        return $this->req->SendRequest('getPollOptionVoters', [
             'poll_id' => $poll_id,
             'selection_index' => $selection_index
         ], $this->session)['data'];
@@ -1009,7 +1015,7 @@ final class Main
      */
     public function sendLocation(string $guid, float $latitude, float $longitude): array
     {
-        return $this->req->making_request('sendmessage', [
+        return $this->req->SendRequest('sendmessage', [
             'object_guid' => $guid,
             'rnd' => (string)mt_rand(10000000, 999999999),
             'location' => [
@@ -1035,7 +1041,7 @@ final class Main
         foreach ($selection_indexs as $selection) {
             $list .= ',' . (string)$selection;
         }
-        return $this->req->making_request('votePoll', [
+        return $this->req->SendRequest('votePoll', [
             'poll_id' => $poll_id,
             'selection_index' => $list
         ], $this->session)['data'];
@@ -1067,7 +1073,7 @@ final class Main
             $method = 'joinChannelAction';
         }
         $t = explode('/', $enterKey);
-        return $this->req->making_request($method, filter_var($enterKey, FILTER_VALIDATE_URL) ? [
+        return $this->req->SendRequest($method, filter_var($enterKey, FILTER_VALIDATE_URL) ? [
             'hash_link' => $t[count($t) - 1]
         ] : [
             'channel_guid' => $enterKey,
@@ -1090,7 +1096,7 @@ final class Main
         if ($chatType == 'Channel') {
             $d['action'] = 'Leave';
         }
-        return $this->req->making_request($chatType == 'group' ? 'leaveGroup' : 'joinChannelAction', $d, $this->session)['data'];
+        return $this->req->SendRequest($chatType == 'group' ? 'leaveGroup' : 'joinChannelAction', $d, $this->session)['data'];
     }
 
     /**
@@ -1101,7 +1107,7 @@ final class Main
      */
     public function deleteGroup(string $group_guid): array
     {
-        return $this->req->making_request('removeGroup', [
+        return $this->req->SendRequest('removeGroup', [
             'group_guid' => $group_guid
         ], $this->session)['data'];
     }
@@ -1115,7 +1121,7 @@ final class Main
      */
     public function createGroup(string $title, array $members): array
     {
-        return $this->req->making_request('addGroup', [
+        return $this->req->SendRequest('addGroup', [
             'title' => $title,
             'member_guids' => $members
         ], $this->session)['data'];
@@ -1137,7 +1143,7 @@ final class Main
      */
     public function addGroupMembers(string $group_guid, array $members): array
     {
-        return $this->req->making_request('addGroupMembers', [
+        return $this->req->SendRequest('addGroupMembers', [
             'group_guid' => $group_guid,
             'member_guids' => $members
         ], $this->session)['data'];
@@ -1151,7 +1157,7 @@ final class Main
      */
     public function getGroupOnlineCount(string $group_guid): array
     {
-        return $this->req->making_request('getGroupOnlineCount', [
+        return $this->req->SendRequest('getGroupOnlineCount', [
             'group_guid' => $group_guid
         ], $this->session)['data'];
     }
@@ -1174,7 +1180,7 @@ final class Main
         if ($start_id != 0) {
             $d['start$start_id'] = $start_id;
         }
-        return $this->req->making_request('getGroupAllMembers', $d, $this->session)['data'];
+        return $this->req->SendRequest('getGroupAllMembers', $d, $this->session)['data'];
     }
 
     /**
@@ -1187,14 +1193,14 @@ final class Main
     public function uploadNewGroupAvatar(string $group_guid, string $file_path): array
     {
         list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
-        return $this->req->making_request('uploadAvatar', [
+        return $this->req->SendRequest('uploadAvatar', [
             'object_guid' => $group_guid,
             'thumbnail_file_id' => $file_id,
             'main_file_id' => $file_id
         ], $this->session)['data'];
     }
 
-    public function setGroupDefaultAccess(string $group_guid, groupDefaultAccesses $settings = new groupDefaultAccesses): array
+    public function setGroupDefaultAccess(string $group_guid, GroupDefaultAccesses $settings = new GroupDefaultAccesses): array
     {
         $d = [
             'group_guid' => $group_guid
@@ -1211,7 +1217,7 @@ final class Main
         if ($settings->AddMember) {
             $d[] = 'AddMember';
         }
-        return $this->req->making_request('setGroupDefaultAccess', $d, $this->session)['data'];
+        return $this->req->SendRequest('setGroupDefaultAccess', $d, $this->session)['data'];
     }
 
     /**
@@ -1223,7 +1229,7 @@ final class Main
      */
     public function deleteGroupAvatar(string $group_guid, string $avatar_id): array
     {
-        return $this->req->making_request('deleteAvatar', [
+        return $this->req->SendRequest('deleteAvatar', [
             'object_guid' => $group_guid,
             'avatar_id' => $avatar_id
         ], $this->session)['data'];
@@ -1237,7 +1243,7 @@ final class Main
      */
     public function getGroupLink(string $group_guid): array
     {
-        return $this->req->making_request('getGroupLink', [
+        return $this->req->SendRequest('getGroupLink', [
             'object_guid' => $group_guid,
         ], $this->session)['data'];
     }
@@ -1250,7 +1256,7 @@ final class Main
      */
     public function getNewGroupLink(string $group_guid): array
     {
-        return $this->req->making_request('setGroupLink', [
+        return $this->req->SendRequest('setGroupLink', [
             'object_guid' => $group_guid,
         ], $this->session)['data'];
     }
@@ -1263,7 +1269,7 @@ final class Main
      */
     public function getGroupAdminMembers(string $group_guid): array
     {
-        return $this->req->making_request('getGroupAdminMembers', [
+        return $this->req->SendRequest('getGroupAdminMembers', [
             'object_guid' => $group_guid,
         ], $this->session)['data'];
     }
@@ -1277,7 +1283,7 @@ final class Main
      */
     public function editGroupHistoryForNewMembers(string $group_guid, HistoryForNewMembers $chat_history_for_new_members): array
     {
-        return $this->req->making_request('setGroupLink', [
+        return $this->req->SendRequest('setGroupLink', [
             'object_guid' => $group_guid,
             'chat_history_for_new_members' => $chat_history_for_new_members->value,
             'updated_parameters' => ['chat_history_for_new_members']
@@ -1293,7 +1299,7 @@ final class Main
      */
     public function setGroupEventMessages(string $group_guid, bool $EventMssages): array
     {
-        return $this->req->making_request('setGroupLink', [
+        return $this->req->SendRequest('setGroupLink', [
             'object_guid' => $group_guid,
             'event_messages' => $EventMssages,
             'updated_parameters' => ['event_messages']
@@ -1324,7 +1330,7 @@ final class Main
             "description"
         ];
 
-        $d = $this->req->making_request('editGroupInfo', $d, $this->session)['data'];
+        $d = $this->req->SendRequest('editGroupInfo', $d, $this->session)['data'];
 
         return $d;
     }
@@ -1338,7 +1344,7 @@ final class Main
      */
     public function banGroupMember(string $group_guid, string $member_guid): array
     {
-        return $this->req->making_request('banGroupMember', [
+        return $this->req->SendRequest('banGroupMember', [
             'group_guid' => $group_guid,
             'member_guid' => $member_guid,
             'action' => 'Set'
@@ -1354,7 +1360,7 @@ final class Main
      */
     public function unBanGroupMember(string $group_guid, string $member_guid): array
     {
-        return $this->req->making_request('banGroupMember', [
+        return $this->req->SendRequest('banGroupMember', [
             'group_guid' => $group_guid,
             'member_guid' => $member_guid,
             'action' => 'Unset'
@@ -1382,7 +1388,7 @@ final class Main
                 $d['access_list'][] = (string)$access->value;
             }
         }
-        return $this->req->making_request('setGroupAdmin', $d, $this->session)['data'];
+        return $this->req->SendRequest('setGroupAdmin', $d, $this->session)['data'];
     }
 
     /**
@@ -1394,7 +1400,7 @@ final class Main
      */
     public function removeGroupAdmin(string $group_guid, string $member_guid): array
     {
-        return $this->req->making_request('setGroupAdmin', [
+        return $this->req->SendRequest('setGroupAdmin', [
             'group_guid' => $group_guid,
             'member_guid' => $member_guid,
             'action' => 'UnsetAdmin'
@@ -1410,7 +1416,7 @@ final class Main
      */
     public function getGroupAdminAccessList(string $group_guid, string $admin_guid): array
     {
-        return $this->req->making_request('getGroupAdminAccessList', [
+        return $this->req->SendRequest('getGroupAdminAccessList', [
             'group_guid' => $group_guid,
             'member_guid' => $admin_guid,
         ], $this->session)['data'];
@@ -1425,7 +1431,7 @@ final class Main
      */
     public function setGroupSlowModeTime(string $group_guid, int $time): array
     {
-        return $this->req->making_request('editGroupInfo', [
+        return $this->req->SendRequest('editGroupInfo', [
             'group_guid' => $group_guid,
             'slow_mode' => $time,
             'updated_parameters' => ['slow_mode']
@@ -1440,7 +1446,7 @@ final class Main
      */
     public function getBannedGroupMembers(string $group_guid): array
     {
-        return $this->req->making_request('getBannedGroupMembers', [
+        return $this->req->SendRequest('getBannedGroupMembers', [
             'group_guid' => $group_guid
         ], $this->session)['data'];
     }
@@ -1470,7 +1476,7 @@ final class Main
                 }
             }
         }
-        return $this->req->making_request('editGroupInfo', $d, $this->session)['data'];
+        return $this->req->SendRequest('editGroupInfo', $d, $this->session)['data'];
     }
 
 
@@ -1488,7 +1494,7 @@ final class Main
      */
     public function requestChangeObjectOwner(string $group_guid, string $new_owner_user_guid): array
     {
-        return $this->req->making_request('editGroupInfo', [
+        return $this->req->SendRequest('editGroupInfo', [
             'group_guid' => $group_guid,
             'new_owner_user_guid' => $new_owner_user_guid
         ], $this->session)['data'];
@@ -1502,7 +1508,7 @@ final class Main
      */
     public function AcceptRequestObjectOwning(string $object_guid): array
     {
-        return $this->req->making_request('editGroupInfo', [
+        return $this->req->SendRequest('editGroupInfo', [
             'object_guid' => $object_guid,
             'action' => 'Accept'
         ], $this->session)['data'];
@@ -1516,7 +1522,7 @@ final class Main
      */
     public function RejectRequestObjectOwning(string $object_guid): array
     {
-        return $this->req->making_request('editGroupInfo', [
+        return $this->req->SendRequest('editGroupInfo', [
             'object_guid' => $object_guid,
             'action' => 'Reject'
         ], $this->session)['data'];
@@ -1530,7 +1536,7 @@ final class Main
      */
     public function getChats(int $start_id = 0): array
     {
-        return $this->req->making_request('getChats', [
+        return $this->req->SendRequest('getChats', [
             'start_id' => $start_id
         ], $this->session)['data'];
     }
@@ -1543,7 +1549,7 @@ final class Main
      */
     public function getChatsUpdates(int $state = 0): array
     {
-        return $this->req->making_request('getChatsUpdates', [
+        return $this->req->SendRequest('getChatsUpdates', [
             'state' => $state
         ], $this->session)['data'];
     }
@@ -1557,7 +1563,7 @@ final class Main
      */
     public function getMessagesInterval(string $guid, int $middle_message_id): array
     {
-        return $this->req->making_request('getMessagesInterval', [
+        return $this->req->SendRequest('getMessagesInterval', [
             'object_guid' => $guid,
             'middle_message_id' => $middle_message_id
         ], $this->session)['data'];
@@ -1573,7 +1579,7 @@ final class Main
      */
     // public function getMessages(string $guid, int $message_id, Sort $sort = Sort::FromMax): array
     // {
-    //     return $this->req->making_request('getMessages', [
+    //     return $this->req->SendRequest('getMessages', [
     //         'object_guid' => $guid,
     //         'sort' => $sort->value,
     //         str_replace('from', '', strtolower($sort->value)) . '_id' => $message_id
@@ -1595,11 +1601,11 @@ final class Main
     public function getContacts(string $start_id = ''): array
     {
         if ($start_id != '') {
-            return $this->req->making_request('getContacts', [
+            return $this->req->SendRequest('getContacts', [
                 'start_id' => $start_id
             ], $this->session)['data'];
         }
-        return $this->req->making_request('getContacts', [], $this->session)['data'];
+        return $this->req->SendRequest('getContacts', [], $this->session)['data'];
     }
 
     /**
@@ -1612,8 +1618,8 @@ final class Main
      */
     public function addContact(int $phone_number, string $first_name, string $last_name = ''): array
     {
-        return $this->req->making_request('addAddressBook', [
-            'phone' => '+' . Tools::parse_true_phone_number($phone_number),
+        return $this->req->SendRequest('addAddressBook', [
+            'phone' => '+' . Tools::ReplaceTruePhoneNumber($phone_number),
             'first_name' => $first_name,
             'last_name' => $last_name
         ], $this->session)['data'];
@@ -1627,7 +1633,7 @@ final class Main
      */
     public function deleteContact(string $user_guid): array
     {
-        return $this->req->making_request('deleteContact', [
+        return $this->req->SendRequest('deleteContact', [
             'user_guid' => $user_guid
         ], $this->session)['data'];
     }
@@ -1651,7 +1657,7 @@ final class Main
             'message_contact' => [
                 'first_name' => $first_name,
                 'last_name' => $last_name,
-                'phone_number' => Tools::parse_true_phone_number($phone_number)
+                'phone_number' => Tools::ReplaceTruePhoneNumber($phone_number)
             ]
         ];
         if ($contact_guid != '') {
@@ -1660,7 +1666,7 @@ final class Main
         if ($reply_to_message_id != '0') {
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
-        return $this->req->making_request('sendMessage', $d, $this->session)['data'];
+        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
     }
 
 
@@ -1677,7 +1683,7 @@ final class Main
      */
     public function getChatInfo(string $guid): array
     {
-        return $this->req->making_request('get' . Tools::ChatTypeByGuid($guid) . 'Info', [
+        return $this->req->SendRequest('get' . Tools::ChatTypeByGuid($guid) . 'Info', [
             strtolower(Tools::ChatTypeByGuid($guid)) . '_guid' => $guid
         ], $this->session)['data'];
     }
@@ -1690,7 +1696,7 @@ final class Main
      */
     public function getChatInfoByUsername(string $username): array
     {
-        return $this->req->making_request('getObjectInfoByUsername', [
+        return $this->req->SendRequest('getObjectInfoByUsername', [
             'username' => str_replace('@', '', $username)
         ], $this->session)['data'];
     }
@@ -1703,7 +1709,7 @@ final class Main
      */
     public function getAvatars(string $object_guid): array
     {
-        return $this->req->making_request('getAvatars', [
+        return $this->req->SendRequest('getAvatars', [
             'object_guid' => $object_guid
         ], $this->session)['data'];
     }
@@ -1723,11 +1729,11 @@ final class Main
      * @param integer $DC
      * @return boolean false if file not found on server or true if file has saved
      */
-    public function downloadFile(string $access_hash_rec, string $file_id, string $to_path, int $DC): bool
+    public function DownloadFile(string $access_hash_rec, string $file_id, string $to_path, int $DC): bool
     {
         if ($this->settings->Optimal) {
             $f = fopen($to_path, 'a');
-            foreach ($this->req->downloadFile($access_hash_rec, $file_id, $DC) as $data) {
+            foreach ($this->req->DownloadFileFromAPI($access_hash_rec, $file_id, $DC) as $data) {
                 if ($data === false) {
                     fclose($f);
                     return false;
@@ -1737,7 +1743,7 @@ final class Main
             fclose($f);
             return true;
         } else {
-            $r = $this->req->downloadFile($access_hash_rec, $file_id, $DC);
+            $r = $this->req->DownloadFileFromAPI($access_hash_rec, $file_id, $DC);
             if ($r === false) {
                 return false;
             }
@@ -1758,7 +1764,7 @@ final class Main
         $ex = explode('.', $fn);
         $data = $this->RequestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
 
-        return [$data['id'], $data['dc_id'], $this->req->uploadFile($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
+        return [$data['id'], $data['dc_id'], $this->req->SendFileToAPI($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
     }
 
     /**
@@ -1771,7 +1777,7 @@ final class Main
      */
     private function RequestSendFile(string $file_name, int $size, string $mime): array
     {
-        return $this->req->making_request('requestSendFile', [
+        return $this->req->SendRequest('requestSendFile', [
             'file_name' => $file_name,
             'size' => $size,
             'mime' => $mime
@@ -1780,7 +1786,7 @@ final class Main
 
 
 
-    // ======================================================= MAin class methods ===================================================================
+    // ======================================================= Main class methods ===================================================================
 
 
 
@@ -1805,7 +1811,7 @@ final class Main
      */
     public function RunAndLoop(): void
     {
-        if (is_null($this->Runner)) throw new Logger("App Runner Class Isn't Set");
+        if (is_null($this->Runner)) throw new Failure("App Runner Class Isn't Set");
 
         $this->getChatsUpdates();
 
@@ -1837,9 +1843,10 @@ final class Main
                     }
                 });
 
+                $p = $this->req->getPartOfSessionKey();
                 $conn->send(json_encode([
                     'api_version' => '6',
-                    'auth' => $this->req->auth,
+                    'auth' => Cryption::Decode($p[0], $p[1]),
                     'data' => '',
                     'method' => 'handShake'
                 ]));
@@ -1849,7 +1856,7 @@ final class Main
                 });
             },
             function ($e) {
-                throw new Logger("error on socket connection: {$e->getMessage()}");
+                throw new Failure("error on socket connection: {$e->getMessage()}");
             }
         );
 

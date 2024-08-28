@@ -12,7 +12,7 @@ use Generator;
 final class Optimal
 {
     /**
-     * get file chuncks as Generator funciton
+     * GetFfile Chuncks As \Generator Funciton
      *
      * @param string $url
      * @param string $useragent

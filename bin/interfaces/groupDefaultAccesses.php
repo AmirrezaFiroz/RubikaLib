@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace RubikaLib\interfaces;
 
-use RubikaLib\Cryption;
-use RubikaLib\Utils\userAgent;
-
 /**
- * settings for group users default accesses
+ * settings for group-users-default-accesses
  */
-final class groupDefaultAccesses
+final class GroupDefaultAccesses
 {
     public bool $ViewAdmins = true;
     public bool $SendMessages = true;

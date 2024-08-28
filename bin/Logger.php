@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use Exception;
+use Throwable;
 
 /**
  * special Exception class
  */
-final class Logger extends Exception
+final class Failure extends Exception
 {
     /**
      * if there is need full datas
@@ -18,7 +19,7 @@ final class Logger extends Exception
      */
     public array|object $obj = [];
 
-    public function __construct(string $message = "", int $code = 0, \Throwable|null $previous = null, array|object|null $data = null)
+    public function __construct(string $message = "", int $code = 0, Throwable|null $previous = null, array|object|null $data = null)
     {
         parent::__construct($message, $code, $previous);
 

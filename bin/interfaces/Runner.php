@@ -13,7 +13,7 @@ use RubikaLib\Main;
 interface Runner
 {
     /**
-     * this function will call when Runner class is set and starts to get updates
+     * This Function Will Call When \Runner Class Is Set And Starts To Get Updates
      *
      * @param array $mySelf account info
      * @return void
@@ -21,7 +21,7 @@ interface Runner
     public function onStart(array $mySelf): void;
 
     /**
-     * this function will call when a new update got from API
+     * This Function Will Call When A New Update Got From API
      *
      * @param array $update
      * @param Main $class to working with methods
@@ -30,7 +30,7 @@ interface Runner
     public function onMessage(array $update, Main $class): void;
 
     /**
-     * when a chat activitie catched
+     * When A Chat Activitie Catched
      *
      * @param chatActivities $activitie
      * @param string $guid this chat which update is from (group, chat, ...)
