@@ -353,7 +353,7 @@ or you can find phone-hash by library:
 use RubikaLib\Session;
 use RubikaLib\Cryption;
 
-$hash = Session::generatePhoneHash(989123456789); # 98 must be entered before phone number
+$hash = Session::GeneratePhoneHash(989123456789); # 98 must be entered before phone number
 $session_data = json_decode(Cryption::Decode(file_get_contents("lib/$hash.rub"), $hash), true);
 var_dump($session_data);
 

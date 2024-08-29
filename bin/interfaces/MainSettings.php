@@ -54,7 +54,7 @@ final class MainSettings
             userAgent::generate()
         );
         $this->setTmp_session(
-            Cryption::GenerateRandom_tmp_ession()
+            Cryption::GenerateRandom_tmp_session()
         );
     }
 
@@ -73,7 +73,7 @@ final class MainSettings
     /**
      * Set tmp_session For Sign In (just for login)
      *
-     * @param string $tmp_session you can generate one by using RubikaLib\Cryption::GenerateRandom_tmp_ession() 
+     * @param string $tmp_session you can generate one by using RubikaLib\Cryption::GenerateRandom_tmp_session() 
      * @return self
      */
     public function setTmp_session(string $tmp_session): self

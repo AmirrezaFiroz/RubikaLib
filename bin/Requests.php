@@ -7,8 +7,6 @@ namespace RubikaLib;
 use Generator;
 use RubikaLib\enums\AppType;
 use RubikaLib\interfaces\MainSettings;
-use RubikaLib\Logger;
-use RubikaLib\Utils\Tools;
 
 /**
  * special Exception class
@@ -25,6 +23,7 @@ final class Requests
     private ?Cryption $crypto;
     private ?string $re_auth;
     private ?string $k;
+    private ?string $url;
 
     /**
      * @param string $useragent useragent for request sending
@@ -38,17 +37,20 @@ final class Requests
         private MainSettings $mainSettings,
         string $private_key = ''
     ) {
-        $this->k = md5(sha1(Cryption::GenerateRandom_tmp_ession(5)));
+        $this->k = md5(sha1(Cryption::GenerateRandom_tmp_session(5)));
         $this->getDCMessURL = ($mainSettings->AppType == AppType::Shad) ? 'https://shgetDCMess.iranlms.ir/' : 'https://getDCMess.iranlms.ir/';
         $this->crypto = new Cryption($this->auth, $private_key);
         $this->re_auth = $auth != '' ? cryption::re_auth($this->auth) : '';
 
-        if (file_exists("{$mainSettings->Base}api-links.json")) {
-            $this->links = json_decode(file_get_contents("{$mainSettings->Base}api-links.json"), true);
+        if (file_exists("{$mainSettings->Base}api-links-shad.json") or file_exists("{$mainSettings->Base}api-links-rubika.json")) {
+            $this->links = json_decode(file_get_contents(($this->mainSettings->AppType == AppType::Shad) ? "{$mainSettings->Base}api-links-shad.json" : "{$mainSettings->Base}api-links-rubika.json"), true);
         } else {
             !is_dir($mainSettings->Base) ? mkdir($mainSettings->Base) : null;
-            file_put_contents("{$mainSettings->Base}api-links.json", json_encode($this->getDCMess()));
+            file_put_contents(($this->mainSettings->AppType == AppType::Shad) ? "{$mainSettings->Base}api-links-shad.json" : "{$mainSettings->Base}api-links-rubika.json", json_encode($this->getDCMess()));
         }
+
+        $default_api_urls = $this->links['default_api_urls'];
+        $this->url = $default_api_urls[mt_rand(0, count($default_api_urls) - 1)];
     }
 
     /**
@@ -121,23 +123,22 @@ final class Requests
                 $gen_time = $session->data['date'];
             }
             if ((time() - $gen_time) >= 86400) {
-                $user = $this->SendRequest('getUserInfo', ['user_guid' => $session->data['user']['user_guid']], $session)['data']['user'];
-                $session->changeData('user', $user);
+                $session->changeData('user', $this->SendRequest('getUserInfo', ['user_guid' => $session->data['user']['user_guid']], $session)['data']['user']);
                 $this->links = json_decode(file_get_contents("{$this->mainSettings->Base}api-links.json"), true);
             }
         }
-
         $data = json_encode([
             'method' => $method,
             'input' => $data,
             'client' => [
-                'app_name' => "Main",
-                'app_version' => "4.5.0",
-                'platform' => "Web",
-                'package' => "web.shad.ir",
-                'lang_code' => "fa"
+                'app_name' => 'Main',
+                'app_version' => ($this->mainSettings->AppType == AppType::Shad) ? '4.5.0' : '4.4.15',
+                'lang_code' => 'fa',
+                'package' => ($this->mainSettings->AppType == AppType::Shad) ? 'web.shad.ir' : 'web.rubika.ir',
+                'platform' => 'Web'
             ]
         ]);
+
         $data1 = $this->crypto->enc($data);
         $data = [
             'api_version' => '6',
@@ -149,22 +150,19 @@ final class Requests
             $data['sign'] = $this->crypto->GenerateSign($data1);
         }
 
-        $default_api_urls = $this->links['default_api_urls'];
-        $url = $default_api_urls[mt_rand(0, count($default_api_urls) - 1)];
-
-        $ch = curl_init($url);
+        $ch = curl_init($this->url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Host: ' . str_replace('https://', '', $url),
+            'Host: ' . str_replace('https://', '', $this->url),
             'User-Agent: ' . $this->useragent,
             'Accept: application/json, text/plain, */*',
             'Content-Type: text/plain',
-            'Origin: https://web.shad.ir',
+            'Origin: https://web.' . ($this->mainSettings->AppType == AppType::Shad ? 'shad' : 'rubika') . '.ir',
             'Connection: keep-alive',
-            'Referer: https://web.shad.ir/',
+            'Referer: https://web.' . ($this->mainSettings->AppType == AppType::Shad ? 'shad' : 'rubika') . '.ir/',
         ]);
         curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
 
@@ -174,7 +172,11 @@ final class Requests
         if (curl_error($ch)) {
             throw new Failure('connection error: ' . curl_error($ch));
         } else {
-            $res = json_decode($this->crypto->dec(json_decode($res, true)['data_enc']), true);
+            $b = json_decode($res, true);
+            if (!isset($b['data_enc'])) {
+                throw new Failure('there is an error in result: ' . json_encode($b));
+            }
+            $res = json_decode($this->crypto->dec($b['data_enc']), true);
 
             // INVALID_AUTH
             // NOT_REGISTERED
@@ -371,7 +373,7 @@ final class Requests
      */
     private function showProgress(int $percent): void
     {
-        $bar = str_repeat("=", $percent) . ($percent != 100 ? '>' : '') . str_repeat(" ", (100 - $percent) - ($percent != 100 ? 1 : 0));
+        $bar = str_repeat("=", $percent - ($percent != 0 ? 1 : 0)) . ($percent != 0 ? '>' : '') . str_repeat(" ", (100 - $percent));
         echo "\rUploading... : [{$bar}] {$percent}%";
         flush();
     }

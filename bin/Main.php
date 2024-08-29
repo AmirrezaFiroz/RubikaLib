@@ -6,7 +6,9 @@ namespace RubikaLib;
 
 use getID3;
 use Ratchet\Client\WebSocket;
+use RubikaLib\Utils\Tools;
 use React\EventLoop\Loop;
+use RubikaLib\Tools\Optimal;
 use RubikaLib\enums\{
     chatActivities,
     deleteType,
@@ -22,10 +24,6 @@ use RubikaLib\interfaces\{
     GroupDefaultAccesses,
     MainSettings,
     Runner
-};
-use RubikaLib\Utils\{
-    Optimal,
-    Tools
 };
 
 /**
@@ -58,7 +56,8 @@ final class Main
 
         if (!Session::is_session($this->phone_number)) {
             $this->req = new Requests($settings->UserAgent, $settings->tmp_session, mainSettings: $settings);
-            $this->session = new Session($this->phone_number, workDir: $settings->Base);
+            $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base);
+            $this->session->changeData('useragent', $this->req->useragent);
             $send_code = $this->sendCode();
 
             if ($send_code['status'] == 'SendPassKey') {
@@ -75,8 +74,7 @@ final class Main
             $this->session
                 ->changeData('step', 'getCode')
                 ->changeData('phone_code_hash', $send_code['phone_code_hash'])
-                ->changeData('code_digits_count', $send_code['code_digits_count'])
-                ->changeData('useragent', $this->req->useragent);
+                ->changeData('code_digits_count', $send_code['code_digits_count']);
 
             list($signIn, $private_key) = [[], ''];
             while (true) {
@@ -90,7 +88,7 @@ final class Main
 
             $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
             unset($signIn['user']['online_time']);
-            $this->session->regenerate_session();
+            $this->session->ReGenerateSession();
             $this->session
                 ->changeData('auth', $auth)
                 ->changeData('user', $signIn['user'])
@@ -124,11 +122,12 @@ final class Main
 
                     $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
                     unset($signIn['online_time']);
-                    $this->session->regenerate_session();
+                    $this->session->ReGenerateSession();
                     $this->session
                         ->changeData('auth', $auth)
                         ->changeData('user', $signIn['user'])
                         ->changeData('private_key', $private_key)
+                        ->changeData('useragent', $this->req->useragent)
                         ->setAuth($auth);
                     $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, mainSettings: $settings);
 
@@ -181,7 +180,7 @@ final class Main
         list($publicKey, $privateKey) = cryption::Generate_RSAkey();
 
         $r = $this->req->SendRequest('signIn', [
-            "phone_number" =>            (string)$this->phone_number,
+            "phone_number" => (string)$this->phone_number,
             "phone_code_hash" => $phone_code_hash,
             "phone_code" => $code,
             "public_key" => $publicKey

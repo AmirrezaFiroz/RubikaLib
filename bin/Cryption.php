@@ -173,15 +173,15 @@ final class Cryption
     /**
      * Generate Random 'tmp_session'
      *
-     * @param integer $e length
+     * @param integer $len length
      * @return string
      */
-    public static function GenerateRandom_tmp_ession(int $e = 32): string
+    public static function GenerateRandom_tmp_session(int $len = 32): string
     {
         $r = 'abcdefghijklmnopqrstuvwxyz';
         $t = '';
         $i = strlen($r);
-        for ($n = 0; $n < $e; $n++) {
+        for ($n = 0; $n < $len; $n++) {
             $t .= $r[mt_rand(0, $i - 1)];
         }
         return $t;
