@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RubikaLib\Utils;
 
-use RubikaLib\Logger;
+use RubikaLib\enums\ChatTypes;
+use RubikaLib\Failure;
 
 /**
  * library tool functions
@@ -118,18 +119,18 @@ final class Tools
      * find chat type by looking at guid
      *
      * @param string $guid
-     * @return string|false 'Group', 'Channel', 'User', 'Service' or false on no-one
+     * @return ChatTypes|false 'Group', 'Channel', 'User', 'Service' or false on no-one
      */
-    public static function ChatTypeByGuid(string $guid): string|false
+    public static function ChatTypeByGuid(string $guid): ChatTypes|false
     {
         if (str_starts_with($guid, 'g0')) {
-            return 'Group';
+            return ChatTypes::Group;
         } elseif (str_starts_with($guid, 'u0')) {
-            return 'User';
+            return ChatTypes::User;
         } elseif (str_starts_with($guid, 'c0')) {
-            return 'Channel';
+            return ChatTypes::Channel;
         } elseif (str_starts_with($guid, 's0')) {
-            return 'Service';
+            return ChatTypes::Service;
         } else {
             return false;
         }
@@ -196,7 +197,7 @@ final class Tools
                 preg_match('/\@\(([^)]+)\)/', $text, $mentionMatch);
 
                 if ($mentionMatch) {
-                    $mentionType = self::ChatTypeByGuid($mentionMatch[1]);
+                    $mentionType = self::ChatTypeByGuid($mentionMatch[1])->value;
                     $mentionType = !$mentionType ? 'Link' : $mentionType;
 
                     if ($mentionType === "Link") {

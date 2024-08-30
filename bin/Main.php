@@ -11,6 +11,7 @@ use React\EventLoop\Loop;
 use RubikaLib\Tools\Optimal;
 use RubikaLib\enums\{
     chatActivities,
+    ChatTypes,
     deleteType,
     Sort,
     HistoryForNewMembers,
@@ -37,6 +38,7 @@ final class Main
     private ?Session $session;
     public static $VERSION = '2.0.0';
     private ?Cryption $crypto;
+    public ?Folders $Folders;
 
     /**
      * @param integer $phone_number 989123456789 or 9123456789
@@ -139,6 +141,8 @@ final class Main
         $p = $this->req->getPartOfSessionKey();
         $this->crypto = new Cryption(Cryption::Decode($p[0], $p[1]), $this->session->data['private_key']);
         $this->session->changeData('user', $this->getChatInfo($this->getMySelf()['user_guid'])['user']);
+
+        $this->Folders = new Folders($this->req, $this->session);
     }
 
     /**
@@ -378,13 +382,76 @@ final class Main
     }
 
     /**
-     * get folders list
+     * check login password
+     *
+     * @param string $password
+     * @return array API result
+     */
+    public function checkTwoStepPasscode(string $password): array
+    {
+        return $this->req->SendRequest('checkTwoStepPasscode', [
+            'password' => $password
+        ], $this->session)['data'];
+    }
+
+    // TODO
+    /**
+     * change account verify email
+     *
+     * @param string $password
+     * @param string $email
+     * @throws Failure if not correct email address
+     * @return array API result
+     */
+    private function requestRecoveryEmail(string $password, string $email): array
+    {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Failure('not valid email address');
+
+        return $this->req->SendRequest('requestRecoveryEmail', [
+            'password' => $password
+        ], $this->session)['data'];
+    }
+
+    /**
+     * verify email code
+     *
+     * @param string $password
+     * @param integer $code
+     * @return array API result
+     */
+    private function verifyRecoveryEmail(string $password, int $code): array
+    {
+        return $this->req->SendRequest('verifyRecoveryEmail', [
+            'password' => $password,
+            'code' => (string)$code
+        ], $this->session)['data'];
+    }
+
+    /**
+     * chnage account password
+     *
+     * @param string $current_password
+     * @param string $new_password
+     * @param string $hint
+     * @return array API result
+     */
+    public function changePassword(string $current_password, string $new_password, string $hint = 'password hint'): array
+    {
+        return $this->req->SendRequest('changePassword', [
+            'password' => $current_password,
+            'new_password' => $new_password,
+            'hint' => $hint
+        ], $this->session)['data'];
+    }
+
+    /**
+     * turn off account passwrod
      *
      * @return array API result
      */
-    public function getFolders(): array
+    public function turnOffTwoStep(): array
     {
-        return $this->req->SendRequest('getFolders', [], $this->session)['data'];
+        return $this->req->SendRequest('turnOffTwoStep', [], $this->session)['data'];
     }
 
 
@@ -1088,7 +1155,7 @@ final class Main
      */
     public function leaveChat(string $guid): array
     {
-        $chatType = strtolower((string)Tools::ChatTypeByGuid($guid));
+        $chatType = strtolower((string)Tools::ChatTypeByGuid($guid)->value);
         $d = [
             "{$chatType}_guid" => $guid
         ];
@@ -1682,8 +1749,8 @@ final class Main
      */
     public function getChatInfo(string $guid): array
     {
-        return $this->req->SendRequest('get' . Tools::ChatTypeByGuid($guid) . 'Info', [
-            strtolower(Tools::ChatTypeByGuid($guid)) . '_guid' => $guid
+        return $this->req->SendRequest('get' . Tools::ChatTypeByGuid($guid)->value . 'Info', [
+            strtolower(Tools::ChatTypeByGuid($guid)->value) . '_guid' => $guid
         ], $this->session)['data'];
     }
 

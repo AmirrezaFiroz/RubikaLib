@@ -6,9 +6,11 @@ use RubikaLib\Session;
 
 class LoginTEst extends TestCase
 {
+    const int PHONE = 9123456789;
+
     public function testLogin()
     {
-        new Main(9123456789);
-        $this->assertTrue(Session::is_session(9123456789));
+        new Main(self::PHONE);
+        $this->assertTrue(Session::is_session(self::PHONE));
     }
 }

@@ -2,14 +2,4 @@
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     colors="true"
     processIsolation="true">
-    <testsuites>
-        <testsuite name="Main">
-            <directory>tests</directory>
-        </testsuite>
-    </testsuites>
-    <source>
-        <include>
-            <directory suffix=".php">src</directory>
-        </include>
-    </source>
 </phpunit>
