@@ -7,7 +7,7 @@ namespace RubikaLib\enums;
 /**
  * group reactions mode
  */
-enum setGroupReactions: string
+enum SetGroupReactions: string
 {
     case Disabled = 'Disabled';
     case All = 'All';

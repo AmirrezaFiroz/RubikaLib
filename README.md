@@ -30,10 +30,10 @@ for getting updates, you must create new class with a name and call it
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 
-use RubikaLib\enums\chatActivities;
+use RubikaLib\enums\ChatActivities;
 use RubikaLib\interfaces\Runner;
 use RubikaLib\{
-    Logger,
+    Failure,
     Main
 };
 
@@ -54,14 +54,14 @@ try {
             }
 
             # All action updates (Typing, Recording, uploading) will pass to this method
-            public function onAction(chatActivities $activitie, string $guid, string $from, Main $class): void
+            public function onAction(ChatActivities $activitie, string $guid, string $from, Main $class): void
             {
             }
         }
     );
 
     $app->RunAndLoop();
-} catch (Logger $e) {
+} catch (Failure $e) {
     echo $e->getMessage() . "\n";
 }
 ```
@@ -141,8 +141,8 @@ try {
 |                                                                              sendMessage(string $guid, string $text, int $reply_to_message_id = 0)                                                                               |                                                 send text message to guid                                                 |                   [sendMessage.json](examples/sendMessage.json)                   |
 |                                                                                  EditMessage(string $guid, string $NewText, string $message_id)                                                                                  |                                                 edit message in guid chat                                                 |                   [EditMessage.json](examples/EditMessage.json)                   |
 |                                                                      forwardMessages(string $from_object_guid, array $message_ids, string $to_object_guid)                                                                       |                   forward message to guid ----> array of message-ids: ['11916516161', '85626232', ...]                    |               [forwardMessages.json](examples/forwardMessages.json)               |
-|                                                                  deleteMessages(string $object_guid, array $message_ids, deleteType $type = deleteType::Local)                                                                   |                                delete message in guid ---->  deleteType = {Global, Local}                                 |                [deleteMessages.json](examples/deleteMessages.json)                |
-|                                                                                     sendChatActivity(string $guid, chatActivities $activity)                                                                                     |                  send an activitie on top of chat ---->  chatActivities = {Typing, Uploading,Recording}                   |              [sendChatActivity.json](examples/sendChatActivity.json)              |
+|                                                                  deleteMessages(string $object_guid, array $message_ids, DeleteType $type = DeleteType::Local)                                                                   |                                delete message in guid ---->  DeleteType = {Global, Local}                                 |                [deleteMessages.json](examples/deleteMessages.json)                |
+|                                                                                     sendChatActivity(string $guid, ChatActivities $activity)                                                                                     |                  send an activitie on top of chat ---->  ChatActivities = {Typing, Uploading,Recording}                   |              [sendChatActivity.json](examples/sendChatActivity.json)              |
 |                                                                                                   getChats(int $start_id = 0)                                                                                                    |                                                     get list of chats                                                     |                                not researched yet                                 |
 |                                                                                                    joinChat(string $enterKey)                                                                                                    |                                     join to channel or group using guid or join link                                      |                      [joinChat.json](examples/joinChat.json)                      |
 |                                                                                                     leaveChat(string $guid)                                                                                                      |                                             leave channel or group using guid                                             |                     [leaveChat.json](examples/leaveChat.json)                     |
@@ -184,14 +184,14 @@ try {
 |                                                                        editGroupProfile(string $group_guid, string $title = '', string $description = '')                                                                        |                                                  edit group profile info                                                  |              [editGroupProfile.json](examples/editGroupProfile.json)              |
 |                                                                                     banGroupMember(string $group_guid, string $member_guid)                                                                                      |                                                     ban group member                                                      |                [banGroupMember.json](examples/banGroupMember.json)                |
 |                                                                                    unBanGroupMember(string $group_guid, string $member_guid)                                                                                     |                               unban group member (delete from group block list to joining)                                |              [unBanGroupMember.json](examples/unBanGroupMember.json)              |
-|                                                                            setGroupAdmin(string $group_guid, string $member_guid, array $access_list)                                                                            | set member as group admin : example -> setGroupAdmin('g0UBD989...', 'u0YUB78...', [groupAdminAccessList::BanMember, ...]) |                 [setGroupAdmin.json](examples/setGroupAdmin.json)                 |
+|                                                                            setGroupAdmin(string $group_guid, string $member_guid, array $access_list)                                                                            | set member as group admin : example -> setGroupAdmin('g0UBD989...', 'u0YUB78...', [GroupAdminAccessList::BanMember, ...]) |                 [setGroupAdmin.json](examples/setGroupAdmin.json)                 |
 |                                                                                    removeGroupAdmin(string $group_guid, string $member_guid)                                                                                     |                                          remove group admin (set as just member)                                          |              [removeGroupAdmin.json](examples/removeGroupAdmin.json)              |
 |                                                                                 getGroupAdminAccessList(string $group_guid, string $admin_guid)                                                                                  |                                                get group admin access list                                                |       [getGroupAdminAccessList.json](examples/getGroupAdminAccessList.json)       |
 |                                                                                       setGroupSlowModeTime(string $group_guid, int $time)                                                                                        |                    set group slow time --->(in seconds). just allowed -> 0, 10, 30, 60, 300, 900, 3600                    |          [setGroupSlowModeTime.json](examples/setGroupSlowModeTime.json)          |
 |                                                                                          AcceptRequestObjectOwning(string $object_guid)                                                                                          |                                                   accept owning a chat                                                    |     [AcceptRequestObjectOwning.json](examples/AcceptRequestObjectOwning.json)     |
 |                                                                                          RejectRequestObjectOwning(string $object_guid)                                                                                          |                                                   reject owning a chat                                                    |     [RejectRequestObjectOwning.json](examples/RejectRequestObjectOwning.json)     |
 |                                                                                            getBannedGroupMembers(string $group_guid)                                                                                             |                                             get group block list for joining                                              |         [getBannedGroupMembers.json](examples/getBannedGroupMembers.json)         |
-|                                                                       setGroupReactions(string $group_guid, setGroupReactions $mode, array $selects = [])                                                                        |                                           set group's which reactions can used                                            |             [setGroupReactions.json](examples/setGroupReactions.json)             |
+|                                                                       SetGroupReactions(string $group_guid, SetGroupReactions $mode, array $selects = [])                                                                        |                                           set group's which reactions can used                                            |             [SetGroupReactions.json](examples/SetGroupReactions.json)             |
 |                                                                            requestChangeObjectOwner(string $group_guid, string $new_owner_user_guid)                                                                             |                                             set another admin to group owner                                              |      [requestChangeObjectOwner.json](examples/requestChangeObjectOwner.json)      |
 |                                           sendVideo(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = '')                                            |                                                        send video                                                         |                     [sendVideo.json](examples/sendVideo.json)                     |
 |                                            sendGif(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = '')                                             |                                                         send gif                                                          |                       [sendGif.json](examples/sendGif.json)                       |
@@ -212,10 +212,10 @@ here as base of one bot you can run
 declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
-use RubikaLib\enums\chatActivities;
+use RubikaLib\enums\ChatActivities;
 use RubikaLib\interfaces\Runner;
 use RubikaLib\{
-    Logger,
+    Failure,
     Main
 };
 
@@ -256,7 +256,7 @@ $app->proccess(
             }
         }
 
-        public function onAction(chatActivities $activitie, string $guid, string $from, Main $class): void
+        public function onAction(ChatActivities $activitie, string $guid, string $from, Main $class): void
         {
         }
 
@@ -277,7 +277,7 @@ see more about methods result: [here](examples)
 
 # Error Handling
 
-we wrote an Exceptions class called **Logger** that specialy used for library errors.
+we wrote an Exceptions class called **Failure** that specialy used for library errors.
 here is an example of some futures:
 
 ```php
@@ -287,7 +287,7 @@ try {
     // ...
 
     $app->RunAndLoop();
-} catch (Logger $error) {
+} catch (Failure $error) {
     echo $error->getMessage() . "\n";
 
     if ($error->obj != array()) {

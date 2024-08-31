@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Tools;
+namespace RubikaLib\Helpers;
 
 use ParagonIE\Sodium\Compat;
 
@@ -19,7 +19,7 @@ final class Security
      * @param string $key
      * @return string the $key
      */
-    public static function encryptFile(string $data, string $path, string $key = ''): string
+    public static function EncryptFile(string $data, string $path, string $key = ''): string
     {
         $key = $key != '' ? substr($key, 0, 32) : random_bytes(32);
         $nonce = random_bytes(24);
@@ -36,7 +36,7 @@ final class Security
      * @param string $key
      * @return string decoded file data
      */
-    public static function decryptFile(string $filePath, string $key): string
+    public static function DecryptFile(string $filePath, string $key): string
     {
         $fileContent = file_get_contents($filePath);
         $nonce = mb_substr($fileContent, 0, 24, '8bit');

@@ -7,7 +7,7 @@ namespace RubikaLib\enums;
 /**
  * chat activities (on top of chats)
  */
-enum chatActivities: string
+enum ChatActivities: string
 {
     case Typing = 'Typing';
     case Uploading = 'Uploading';

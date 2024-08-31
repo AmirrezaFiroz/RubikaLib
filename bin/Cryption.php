@@ -82,7 +82,7 @@ final class Cryption
      * @throws Failure throws error on failer
      * @return string decoded data (may be json string)
      */
-    public function dec(string $data_enc): string
+    public function Open(string $data_enc): string
     {
         $data_enc = base64_decode($data_enc);
         if ($data_enc === false) {
@@ -215,7 +215,7 @@ final class Cryption
      * @throws Failure throws error on failer
      * @return string encoded data
      */
-    public function enc(string $data): string
+    public function Close(string $data): string
     {
         $iv = str_repeat("\0", 16);
         $encrypted = openssl_encrypt($data, 'AES-256-CBC', $this->auth, OPENSSL_RAW_DATA, $iv);
@@ -225,6 +225,12 @@ final class Cryption
         return base64_encode($encrypted);
     }
 
+    /**
+     * ReGenerate Auth From Auth For Data Sending
+     *
+     * @param string $auth
+     * @return string new auth
+     */
     public static function re_auth(string $auth): string
     {
         $n = '';

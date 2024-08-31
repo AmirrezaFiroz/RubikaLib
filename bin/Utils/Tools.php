@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib\Utils;
 
-use RubikaLib\enums\ChatTypes;
-use RubikaLib\Failure;
+use RubikaLib\enums\ChatTypes, RubikaLib\Failure;
 
 /**
  * library tool functions
@@ -116,7 +115,7 @@ final class Tools
     }
 
     /**
-     * find chat type by looking at guid
+     * Find Chat Type By Looking At Guid
      *
      * @param string $guid
      * @return ChatTypes|false 'Group', 'Channel', 'User', 'Service' or false on no-one

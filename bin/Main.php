@@ -4,21 +4,20 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use getID3;
 use Ratchet\Client\WebSocket;
-use RubikaLib\Utils\Tools;
 use React\EventLoop\Loop;
-use RubikaLib\Tools\Optimal;
+use getID3;
+use RubikaLib\Utils\Tools;
+use RubikaLib\Helpers\Optimal;
 use RubikaLib\enums\{
-    chatActivities,
-    ChatTypes,
-    deleteType,
+    ChatActivities,
+    DeleteType,
     Sort,
     HistoryForNewMembers,
     ReactionsEmoji,
     ReactionsString,
-    setGroupReactions,
-    groupAdminAccessList,
+    SetGroupReactions,
+    GroupAdminAccessList,
     pollType
 };
 use RubikaLib\interfaces\{
@@ -142,7 +141,7 @@ final class Main
         $this->crypto = new Cryption(Cryption::Decode($p[0], $p[1]), $this->session->data['private_key']);
         $this->session->changeData('user', $this->getChatInfo($this->getMySelf()['user_guid'])['user']);
 
-        $this->Folders = new Folders($this->req, $this->session);
+        $this->Folders = new Folders($this->req, $this->session, $this);
     }
 
     /**
@@ -582,10 +581,10 @@ final class Main
      *
      * @param string $object_guid
      * @param array $message_ids
-     * @param deleteType $type local or global
+     * @param DeleteType $type local or global
      * @return array API result
      */
-    public function deleteMessages(string $object_guid, array $message_ids, deleteType $type = deleteType::Local): array
+    public function deleteMessages(string $object_guid, array $message_ids, DeleteType $type = DeleteType::Local): array
     {
         return $this->req->SendRequest('deleteMessages', [
             'object_guid' => $object_guid,
@@ -598,10 +597,10 @@ final class Main
      * send chat action (on top of page)
      *
      * @param string $guid
-     * @param chatActivities $activity
+     * @param ChatActivities $activity
      * @return array API result
      */
-    public function sendChatActivity(string $guid, chatActivities $activity): array
+    public function sendChatActivity(string $guid, ChatActivities $activity): array
     {
         return $this->req->SendRequest('sendChatActivity', [
             'object_guid' => $guid,
@@ -1439,7 +1438,7 @@ final class Main
      * @param string $group_guid
      * @param string $member_guid
      * @param array $access_list
-     * @example . setGroupAdmin('g0UBD989...', 'u0YUB78...', [groupAdminAccessList::BanMember, ...])
+     * @example . setGroupAdmin('g0UBD989...', 'u0YUB78...', [GroupAdminAccessList::BanMember, ...])
      * @return array API result
      */
     public function setGroupAdmin(string $group_guid, string $member_guid, array $access_list): array
@@ -1450,7 +1449,7 @@ final class Main
             'action' => 'SetAdmin'
         ];
         foreach ($access_list as $access) {
-            if ($access instanceof groupAdminAccessList) {
+            if ($access instanceof GroupAdminAccessList) {
                 $d['access_list'][] = (string)$access->value;
             }
         }
@@ -1521,12 +1520,12 @@ final class Main
      * set group allowed reactions
      *
      * @param string $group_guid
-     * @param setGroupReactions $mode all or diabled or selected
+     * @param SetGroupReactions $mode all or diabled or selected
      * @param array $selects if mode is set to Selected
-     * @example . setGroupReactions('g0UBD989...', setGroupReactions::Selected, [ReactionsEmoji::❤️, ReactionsEmoji::👍])
+     * @example . SetGroupReactions('g0UBD989...', SetGroupReactions::Selected, [ReactionsEmoji::❤️, ReactionsEmoji::👍])
      * @return array API result
      */
-    public function setGroupReactions(string $group_guid, setGroupReactions $mode, array $selects = []): array
+    public function SetGroupReactions(string $group_guid, SetGroupReactions $mode, array $selects = []): array
     {
         $d = [
             'group_guid' => $group_guid,
@@ -1535,7 +1534,7 @@ final class Main
             ],
             'updated_parameters' => ['chat_reaction_setting']
         ];
-        if ($mode == setGroupReactions::Selected) {
+        if ($mode == SetGroupReactions::Selected) {
             foreach ($selects as $reaction) {
                 if ($reaction instanceof ReactionsEmoji or $reaction instanceof ReactionsString) {
                     $d['chat_reaction_setting']['selected_reactions'][] = (string)$reaction->value;
@@ -1895,13 +1894,13 @@ final class Main
                     $cleanData = trim($rawData, " \t\n\r\0\x0B\"");
                     $h = json_decode($cleanData, true);
                     if (isset($h['data_enc'])) {
-                        $update = json_decode($this->crypto->dec($h['data_enc']), true);
+                        $update = json_decode($this->crypto->Open($h['data_enc']), true);
                         if (isset($update['show_activities'])) {
                             $update = $update['show_activities'][0];
                             $this->Runner->onAction(match ($update['type']) {
-                                'Typing' => chatActivities::Typing,
-                                'Recording' => chatActivities::Recording,
-                                'Uploading' => chatActivities::Uploading
+                                'Typing' => ChatActivities::Typing,
+                                'Recording' => ChatActivities::Recording,
+                                'Uploading' => ChatActivities::Uploading
                             }, $update['object_guid'], $update['user_activity_guid'], $this);
                         } else {
                             $this->Runner->onMessage($update, $this);

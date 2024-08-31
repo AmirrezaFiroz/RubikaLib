@@ -7,7 +7,7 @@ namespace RubikaLib\enums;
 /**
  * group admin list
  */
-enum groupAdminAccessList: string
+enum GroupAdminAccessList: string
 {
     case PinMessages = 'PinMessages';
     case DeleteGlobalAllMessages = 'DeleteGlobalAllMessages';

@@ -139,7 +139,7 @@ final class Requests
             ]
         ]);
 
-        $data1 = $this->crypto->enc($data);
+        $data1 = $this->crypto->Close($data);
         $data = [
             'api_version' => '6',
             'data_enc' => $data1,
@@ -176,7 +176,7 @@ final class Requests
             if (!isset($b['data_enc'])) {
                 throw new Failure('there is an error in result: ' . json_encode($b));
             }
-            $res = json_decode($this->crypto->dec($b['data_enc']), true);
+            $res = json_decode($this->crypto->Open($b['data_enc']), true);
 
             // INVALID_AUTH
             // NOT_REGISTERED

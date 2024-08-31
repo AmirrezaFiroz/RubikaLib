@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib\interfaces;
 
-use RubikaLib\enums\chatActivities;
-use RubikaLib\Main;
+use RubikaLib\enums\ChatActivities, RubikaLib\Main;
 
 /**
  * interface for Main class to pass updates
@@ -32,11 +31,11 @@ interface Runner
     /**
      * When A Chat Activitie Catched
      *
-     * @param chatActivities $activitie
+     * @param ChatActivities $activitie
      * @param string $guid this chat which update is from (group, chat, ...)
      * @param string $from the activitie maker person (user)
      * @param Main $class to working with methods
      * @return void
      */
-    public function onAction(chatActivities $activitie, string $guid, string $from, Main $class): void;
+    public function onAction(ChatActivities $activitie, string $guid, string $from, Main $class): void;
 }

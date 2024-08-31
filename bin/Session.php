@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use RubikaLib\Cryption;
-use RubikaLib\Tools\Security;
+use RubikaLib\Helpers\Security;
 use RubikaLib\Utils\Tools;
 
 /**
@@ -99,6 +99,11 @@ final class Session
         return md5(Tools::GeneratePhoneHash($phone_number));
     }
 
+    public function getPartOfSessionKey(): array
+    {
+        return [Cryption::Encode($this->auth, $this->k), $this->k];
+    }
+
     /**
      * check is there a session for phone number
      *
@@ -119,7 +124,7 @@ final class Session
     {
         if (file_exists("{$this->workDir}{$this->hash}.rub")) {
             $this->data = json_decode(Cryption::Decode(
-                Security::decryptFile("{$this->workDir}{$this->hash}.rub", $this->hash),
+                Security::DecryptFile("{$this->workDir}{$this->hash}.rub", $this->hash),
                 sha1(md5($this->hash))
             ), true);
             $this->auth = $this->data['tmp_session'] ?? $this->data['auth'];
@@ -144,16 +149,11 @@ final class Session
      */
     private function saveData(): void
     {
-        Security::encryptFile(
+        Security::EncryptFile(
             cryption::Encode(json_encode($this->data), sha1(md5($this->hash))),
             "{$this->workDir}{$this->hash}.rub",
             $this->hash
         );
-    }
-
-    public function getPartOfSessionKey(): array
-    {
-        return [Cryption::Encode($this->auth, $this->k), $this->k];
     }
 
     /**

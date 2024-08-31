@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use Exception;
-use Throwable;
+use Exception, Throwable;
 
 /**
  * special Exception class

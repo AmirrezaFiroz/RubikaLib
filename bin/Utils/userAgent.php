@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib\Utils;
 
-use RubikaLib\enums\devices;
-use RubikaLib\Logger;
+use RubikaLib\enums\devices, RubikaLib\Failure;
 
 /**
  * https://github.com/phpfail/UserAgentGenerator/ with some edits
@@ -69,9 +68,9 @@ final class userAgent
     /**
      * Android devices and for specific android versions
      * 
-     * @var array $androidDevices
+     * @var array $androiddevices
      */
-    public static $androidDevices = [
+    public static $androiddevices = [
         '4.3' => [
             'GT-I9:number2-5:00 Build/JDQ39',
             'Nokia 3:number1-3:[10|15] Build/IMM76D',
@@ -300,7 +299,7 @@ final class userAgent
      */
     public static function addAndroidDevice(array|string $selected_os): array|string|null
     {
-        $devices = self::$androidDevices[substr(self::$androidVersion, 0, 3)];
+        $devices = self::$androiddevices[substr(self::$androidVersion, 0, 3)];
         $device  = $devices[array_rand($devices)];
 
         $device = self::processSpinSyntax($device);
