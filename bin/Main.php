@@ -38,6 +38,7 @@ final class Main
     public static $VERSION = '2.0.0';
     private ?Cryption $crypto;
     public ?Folders $Folders;
+    public ?Account $Account;
 
     /**
      * @param integer $phone_number 989123456789 or 9123456789
@@ -139,9 +140,9 @@ final class Main
 
         $p = $this->req->getPartOfSessionKey();
         $this->crypto = new Cryption(Cryption::Decode($p[0], $p[1]), $this->session->data['private_key']);
-        $this->session->changeData('user', $this->getChatInfo($this->getMySelf()['user_guid'])['user']);
-
+        $this->Account = new Account($this->session, $this->req, $settings);
         $this->Folders = new Folders($this->req, $this->session, $this);
+        $this->session->changeData('user', $this->getChatInfo($this->Account->getMySelf()['user_guid'])['user']);
     }
 
     /**
@@ -228,233 +229,6 @@ final class Main
 
 
 
-    // ======================================================= account methods ===================================================================
-
-
-
-    /**
-     * Terminate This Session
-     *
-     * @return array API result
-     */
-    public function logout(): array
-    {
-        $this->session->terminate();
-        return $this->req->SendRequest('logout', array(), $this->session)['data'];
-    }
-
-    /**
-     * get Account Sessions List
-     *
-     * @return array API result
-     */
-    public function getMySessions(): array
-    {
-        return $this->req->SendRequest('getMySessions', array(), $this->session)['data'];
-    }
-
-    /**
-     * Terminate a Session
-     *
-     * @param string $session_key session key
-     * @return array API result
-     */
-    public function TerminateSession(string $session_key): array
-    {
-        return $this->req->SendRequest('terminateSession', [
-            'session_key' => $session_key
-        ], $this->session)['data'];
-    }
-
-    /**
-     * get Session Data
-     *
-     * @return array user data of session
-     */
-    public function getMySelf(): array
-    {
-        return $this->session->data['user'];
-    }
-
-    /**
-     * Set Account Username
-     *
-     * @param string $newUserName example: @rubika_lib or rubika_lib
-     * @return array API result
-     */
-    public function ChangeUsername(string $newUserName): array
-    {
-        $d = $this->req->SendRequest('updateUsername', [
-            'username' => str_replace('@', '', $newUserName)
-        ], $this->session)['data'];
-
-        if ($d['status'] == 'OK') {
-            $this->session->changeData('user', $d['user']);
-        }
-
-        return $d;
-    }
-
-    /**
-     * Edit Account Info
-     *
-     * @param string $first_name new first name (if want to change)
-     * @param string $last_name new last name (if want to change)
-     * @param string $bio new bio (if want to change)
-     * @return array API result
-     */
-    public function EditProfile(string $first_name = '', string $last_name = '', string $bio = ''): array
-    {
-        $d = [
-            'updated_parameters' => []
-        ];
-        if ($first_name != '') {
-            $d['first_name'] = mb_substr($first_name, 0, 32);
-            $d['updated_parameters'][] = 'first_name';
-        }
-        if ($last_name != '') {
-            $d['last_name'] = mb_substr($last_name, 0, 32);
-            $d['updated_parameters'][] = 'last_name';
-        }
-        if ($bio != '') {
-            $d['bio'] = $bio;
-            $d['updated_parameters'][] = 'bio';
-        }
-
-        $d = $this->req->SendRequest('updateProfile', $d, $this->session)['data'];
-
-        if (isset($d['chat_update'])) {
-            $this->session->changeData('user', $d['user']);
-        }
-
-        return $d;
-    }
-
-    /**
-     * Request Delete Account
-     *
-     * @return array API result
-     */
-    public function RequestDeleteAccount(): array
-    {
-        return $this->req->SendRequest('requestDeleteAccount', [], $this->session)['data'];
-    }
-
-    /**
-     * Upload New Profile Picture
-     *
-     * @param string $file_path must be a picture (png/jpg/jpeg)
-     * @return array API result
-     */
-    public function UploadNewProfileAvatar(string $file_path): array
-    {
-        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
-
-        return $this->req->SendRequest('uploadAvatar', [
-            'thumbnail_file_id' => $file_id,
-            'main_file_id' => $file_id
-        ], $this->session)['data'];
-    }
-
-    /**
-     * Delete Profile Picture
-     *
-     * @param string $avatar_id
-     * @return void API result
-     */
-    public function DeleteMyAvatar(string $avatar_id): array
-    {
-        return $this->req->SendRequest('deleteAvatar', [
-            'object_guid' => $this->getMySelf()['user_guid'],
-            'avatar_id' => $avatar_id
-        ], $this->session)['data'];
-    }
-
-    /**
-     * get account gifs list
-     *
-     * @return array API result
-     */
-    public function getMyGifSet(): array
-    {
-        return $this->req->SendRequest('getMyGifSet', [], $this->session)['data'];
-    }
-
-    /**
-     * check login password
-     *
-     * @param string $password
-     * @return array API result
-     */
-    public function checkTwoStepPasscode(string $password): array
-    {
-        return $this->req->SendRequest('checkTwoStepPasscode', [
-            'password' => $password
-        ], $this->session)['data'];
-    }
-
-    // TODO
-    /**
-     * change account verify email
-     *
-     * @param string $password
-     * @param string $email
-     * @throws Failure if not correct email address
-     * @return array API result
-     */
-    private function requestRecoveryEmail(string $password, string $email): array
-    {
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Failure('not valid email address');
-
-        return $this->req->SendRequest('requestRecoveryEmail', [
-            'password' => $password
-        ], $this->session)['data'];
-    }
-
-    /**
-     * verify email code
-     *
-     * @param string $password
-     * @param integer $code
-     * @return array API result
-     */
-    private function verifyRecoveryEmail(string $password, int $code): array
-    {
-        return $this->req->SendRequest('verifyRecoveryEmail', [
-            'password' => $password,
-            'code' => (string)$code
-        ], $this->session)['data'];
-    }
-
-    /**
-     * chnage account password
-     *
-     * @param string $current_password
-     * @param string $new_password
-     * @param string $hint
-     * @return array API result
-     */
-    public function changePassword(string $current_password, string $new_password, string $hint = 'password hint'): array
-    {
-        return $this->req->SendRequest('changePassword', [
-            'password' => $current_password,
-            'new_password' => $new_password,
-            'hint' => $hint
-        ], $this->session)['data'];
-    }
-
-    /**
-     * turn off account passwrod
-     *
-     * @return array API result
-     */
-    public function turnOffTwoStep(): array
-    {
-        return $this->req->SendRequest('turnOffTwoStep', [], $this->session)['data'];
-    }
-
-
-
     // ======================================================= stickers methods ===================================================================
 
 
@@ -466,7 +240,7 @@ final class Main
      */
     public function getMyStickerSets(): array
     {
-        return $this->req->SendRequest('getMyStickerSets', [], $this->session)['data'];
+        return $this->req->SendRequest('getMyStickerSets', array(), $this->session)['data'];
     }
 
     /**
@@ -825,6 +599,16 @@ final class Main
         }
 
         return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+    }
+
+    /**
+     * get account gifs list
+     *
+     * @return array API result
+     */
+    public function getMyGifSet(): array
+    {
+        return $this->req->SendRequest('getMyGifSet', array(), $this->session)['data'];
     }
 
     /**
@@ -1670,7 +1454,7 @@ final class Main
                 'start_id' => $start_id
             ], $this->session)['data'];
         }
-        return $this->req->SendRequest('getContacts', [], $this->session)['data'];
+        return $this->req->SendRequest('getContacts', array(), $this->session)['data'];
     }
 
     /**
@@ -1864,7 +1648,7 @@ final class Main
     public function proccess(Runner $class): self
     {
         $this->Runner = $class;
-        $class->onStart($this->getMySelf());
+        $class->onStart($this->Account->getMySelf());
 
         return $this;
     }

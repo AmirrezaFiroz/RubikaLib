@@ -48,6 +48,13 @@ final class MainSettings
      */
     public AppType $AppType = AppType::Rubika;
 
+    /**
+     * show progress bar on file uploading to API
+     *
+     * @var boolean
+     */
+    public bool $ShowProgressBar = true;
+
     public function __construct()
     {
         $this->setUserAgent(
@@ -115,6 +122,18 @@ final class MainSettings
     public function setAppType(AppType $AppType): self
     {
         $this->$AppType = $AppType;
+        return $this;
+    }
+
+    /**
+     * Set Show Progress Bar
+     *
+     * @param bool $ShowProgressBar
+     * @return self
+     */
+    public function setShowProgressBar(bool $ShowProgressBar): self
+    {
+        $this->ShowProgressBar = $ShowProgressBar;
         return $this;
     }
 }

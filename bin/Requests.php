@@ -373,6 +373,8 @@ final class Requests
      */
     private function showProgress(int $percent): void
     {
+        if (!$this->mainSettings->ShowProgressBar) return;
+
         $bar = str_repeat("=", $percent - ($percent != 0 ? 1 : 0)) . ($percent != 0 ? '>' : '') . str_repeat(" ", (100 - $percent));
         echo "\rUploading... : [{$bar}] {$percent}%";
         flush();

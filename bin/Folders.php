@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use RubikaLib\enums\ChatTypes, RubikaLib\Utils\SuggestedFolders;
-use RubikaLib\Utils\Tools;
 
 /**
- * class for working with folders in rubika or shad
+ * folders object
  */
 final class Folders
 {
@@ -29,7 +28,7 @@ final class Folders
      */
     public function getFolders(): array
     {
-        return $this->req->SendRequest('getFolders', [], $this->session)['data'];
+        return $this->req->SendRequest('getFolders', array(), $this->session)['data'];
     }
 
     /**
