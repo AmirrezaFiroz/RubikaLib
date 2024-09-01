@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\interfaces;
+namespace RubikaLib\Interfaces;
 
 use RubikaLib\enums\ChatActivities, RubikaLib\Main;
 

@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use RubikaLib\enums\AppType;
-use RubikaLib\interfaces\MainSettings;
+use RubikaLib\Interfaces\MainSettings;
 use RubikaLib\Main;
 use RubikaLib\Session;
 

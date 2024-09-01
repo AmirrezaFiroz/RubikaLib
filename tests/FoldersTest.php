@@ -65,8 +65,7 @@ class FoldersTest extends TestCase
     {
         $app = new Main(self::PHONE);
         $folders = $app->Folders->AddFolder('manuel folder1', guids: [
-            // TODO
-            $app->getMySelf()['user_guid'], // saved messages
+            $app->Account->getMySelf()['user_guid'], // saved messages
             'c0CNO9G00048b5b09ebc63be0181686a' // our channel
         ]);
 

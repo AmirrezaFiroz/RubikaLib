@@ -6,7 +6,7 @@ namespace RubikaLib;
 
 use Generator;
 use RubikaLib\enums\AppType;
-use RubikaLib\interfaces\MainSettings;
+use RubikaLib\Interfaces\MainSettings;
 
 /**
  * special Exception class
@@ -127,6 +127,7 @@ final class Requests
                 $this->links = json_decode(file_get_contents("{$this->mainSettings->Base}api-links.json"), true);
             }
         }
+
         $data = json_encode([
             'method' => $method,
             'input' => $data,

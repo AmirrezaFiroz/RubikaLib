@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use RubikaLib\Helpers\Optimal;
-use RubikaLib\interfaces\MainSettings;
+use RubikaLib\Interfaces\MainSettings;
 
 /**
  * account object

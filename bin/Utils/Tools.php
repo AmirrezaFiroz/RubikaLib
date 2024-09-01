@@ -151,12 +151,12 @@ final class Tools
         $cleanText = '';
         $patterns = [
             "Mono" => '/\`([^`]+)\`/',
-            "Bold" => '/\*([^*]+)\*/',
-            "Italic" => '/\_([^_]+)\_/',
-            "Strike" => '/\~([^~]+)\~/',
-            "Underline" => '/\_\_([^-]+)\_\_/',
+            "Bold" => '/\*\*([^*]+)\*\*/',
+            "Italic" => '/\_\_([^_]+)\_\_/',
+            // "Strike" => '/\~\~([^~]+)\~\~/',
+            // "Underline" => '/\_\_([^-]+)\_\_/',
             // "Mention" => '/\@\@([^@]+)\@\@/',
-            "Spoiler" => '/||([^#]+)||/',
+            "Spoiler" => '/\|\|([^#]+)\|\|/',
         ];
         $offset = 0;
 
@@ -224,6 +224,7 @@ final class Tools
             }
         }
 
+        var_dump([$metadata, $cleanText]);
         return [$metadata, $cleanText];
     }
 

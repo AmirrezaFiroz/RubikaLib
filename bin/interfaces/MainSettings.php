@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\interfaces;
+namespace RubikaLib\Interfaces;
 
 use RubikaLib\Cryption;
 use RubikaLib\enums\AppType;
@@ -53,7 +53,7 @@ final class MainSettings
      *
      * @var boolean
      */
-    public bool $ShowProgressBar = true;
+    public bool $ShowProgressBar = false;
 
     public function __construct()
     {
