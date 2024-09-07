@@ -13,20 +13,19 @@ class LoginTEst extends TestCase
     public function testLogin()
     {
         new Main(self::PHONE);
-        // TODO
-        $this->assertTrue(Session::is_session(self::PHONE));
+        $this->assertTrue(Session::is_session(self::PHONE, AppType::Rubika));
     }
 
     public function testLoginWithAppName()
     {
         new Main(self::PHONE, 'NewApp');
-        $this->assertTrue(Session::is_session(self::PHONE));
+        $this->assertTrue(Session::is_session(self::PHONE, AppType::Rubika));
     }
 
     public function testLoginWithCLI()
     {
         new Main('NewApp');
-        $this->assertTrue(Session::is_session(self::PHONE));
+        $this->assertTrue(Session::is_session(self::PHONE, AppType::Rubika));
     }
 
     public function testLoginToShad()
@@ -35,7 +34,6 @@ class LoginTEst extends TestCase
             self::PHONE,
             settings: (new MainSettings)->setAppType(AppType::Shad)
         );
-        // TODO
-        $this->assertTrue(Session::is_session(self::PHONE));
+        $this->assertTrue(Session::is_session(self::PHONE, AppType::Rubika));
     }
 }

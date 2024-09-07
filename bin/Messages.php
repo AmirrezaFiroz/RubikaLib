@@ -755,20 +755,72 @@ final class Messages
      * @param string $file_id
      * @param string $to_path the path to file tath will be writen
      * @param integer $DC
+     * @throws Failure on downloading error (like file not found)
      * @return boolean false if file not found on server or true if file has saved
      */
-    public function DownloadFile(string $access_hash_rec, string $file_id, string $to_path, int $DC): bool
+    public function DownloadFile(string $access_hash_rec, string $file_id, int $DC, string $to_path): bool
     {
         if ($this->settings->Optimal) {
+            if (file_exists($to_path . '.lock')) {
+                $lines = explode("\n", file_get_contents($to_path . '.lock'));
+                $last_line = $lines[count($lines) - 1];
+                $last_line = $last_line == '' ? $lines[count($lines) - 2] : $last_line;
+                $ex = explode(' --- ', $last_line);
+
+                if ($ex[1] == $access_hash_rec && $ex[2] == $file_id && (int)$ex[3] == $DC) {
+                    $f = fopen($to_path, 'a');
+                    $f2 = fopen($to_path . '.lock', 'a');
+                    foreach ($this->req->DownloadFileFromAPI($access_hash_rec, $file_id, $DC, (int)$ex[4]) as $data) {
+                        if ($data === false) {
+                            fclose($f);
+                            throw new Failure('an error occured.');
+                            return false;
+                        }
+                        fwrite($f2, "writing --- $access_hash_rec --- $file_id --- $DC --- {$data[1]} (countinue downloading).");
+                        fwrite($f, $data[0]);
+                        fwrite($f2, " --- done.\n");
+                    }
+                    fclose($f);
+                    fclose($f2);
+                    unlink($to_path . '.lock');
+                } else {
+                    $f = fopen($to_path, 'a');
+                    unlink($to_path . '.lock');
+                    $f2 = fopen($to_path . '.lock', 'a');
+                    foreach ($this->req->DownloadFileFromAPI($access_hash_rec, $file_id, $DC) as $data) {
+                        if ($data === false) {
+                            fclose($f);
+                            throw new Failure('an error occured.');
+                            return false;
+                        }
+                        fwrite($f2, "writing --- $access_hash_rec --- $file_id --- $DC --- {$data[1]}");
+                        fwrite($f, $data[0]);
+                        fwrite($f2, "--- done.\n");
+                    }
+                    fclose($f);
+                    fclose($f2);
+                    unlink($to_path . '.lock');
+                }
+
+                return true;
+            }
+
             $f = fopen($to_path, 'a');
+            $f2 = fopen($to_path . '.lock', 'a');
             foreach ($this->req->DownloadFileFromAPI($access_hash_rec, $file_id, $DC) as $data) {
                 if ($data === false) {
                     fclose($f);
+                    throw new Failure('an error occured.');
                     return false;
                 }
-                fwrite($f, $data);
+                fwrite($f2, "writing --- $access_hash_rec --- $file_id --- $DC --- {$data[1]}");
+                fwrite($f, $data[0]);
+                fwrite($f2, "--- done.\n");
             }
             fclose($f);
+            fclose($f2);
+            unlink($to_path . '.lock');
+
             return true;
         } else {
             $r = $this->req->DownloadFileFromAPI($access_hash_rec, $file_id, $DC);

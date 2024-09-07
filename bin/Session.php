@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use RubikaLib\Cryption;
+use RubikaLib\enums\AppType;
 use RubikaLib\Helpers\Security;
+use RubikaLib\Interfaces\MainSettings;
 use RubikaLib\Utils\Tools;
 
 /**
@@ -32,7 +34,8 @@ final class Session
     public function __construct(
         private int $phone_number,
         private string $auth = '',
-        private string $workDir = 'lib/'
+        private string $workDir = 'lib/',
+        private MainSettings $settings = new MainSettings
     ) {
         if ($workDir != 'lib/') self::$workDirStatic = $workDir;
 
@@ -110,9 +113,9 @@ final class Session
      * @param int $phone_number must be like 989123456789 or 9123456789
      * @return boolean true if there is a session or false if session not exists
      */
-    public static function is_session(int $phone_number): bool
+    public static function is_session(int $phone_number, AppType $app_type): bool
     {
-        return file_exists(self::$workDirStatic . self::GeneratePhoneHash(strlen((string)$phone_number) == 10 ? 98 . $phone_number : $phone_number) . ".rub");
+        return file_exists(self::$workDirStatic. "{$app_type->value}---" . self::GeneratePhoneHash(strlen((string)$phone_number) == 10 ? 98 . $phone_number : $phone_number) . ".rub");
     }
 
     /**
@@ -122,9 +125,9 @@ final class Session
      */
     public function GenerateSession(): void
     {
-        if (file_exists("{$this->workDir}{$this->hash}.rub")) {
+        if (file_exists("{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub")) {
             $this->data = json_decode(Cryption::Decode(
-                Security::DecryptFile("{$this->workDir}{$this->hash}.rub", $this->hash),
+                Security::DecryptFile("{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub", $this->hash),
                 sha1(md5($this->hash))
             ), true);
             $this->auth = $this->data['tmp_session'] ?? $this->data['auth'];
@@ -151,7 +154,7 @@ final class Session
     {
         Security::EncryptFile(
             cryption::Encode(json_encode($this->data), sha1(md5($this->hash))),
-            "{$this->workDir}{$this->hash}.rub",
+            "{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub",
             $this->hash
         );
     }
@@ -163,6 +166,6 @@ final class Session
      */
     public function terminate(): void
     {
-        unlink("{$this->workDir}{$this->hash}.rub");
+        unlink("{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub");
     }
 }

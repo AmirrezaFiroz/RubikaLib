@@ -116,18 +116,19 @@ final class Requests
      */
     public function SendRequest(string $method, array $data, Session $session, bool $tmp_session = false): array
     {
-        if (isset($session->data['private_key'])) {
+        /*if (isset($session->data['private_key'])) {
             if (is_array($session->data['date'])) {
                 $gen_time = $session->data['date']['generated'];
             } elseif (is_int($session->data['date'])) {
                 $gen_time = $session->data['date'];
             }
+
             if ((time() - $gen_time) >= 86400) {
                 $session->ChangeData('user', $this->SendRequest('getUserInfo', ['user_guid' => $session->data['user']['user_guid']], $session)['data']['user']);
                 $this->links = json_decode(file_get_contents("{$this->MainSettings->Base}api-links.json"), true);
                 $this->MainSettings->KeepUpdated ? file_put_contents(($this->MainSettings->AppType == AppType::Shad) ? "{$this->MainSettings->Base}api-links-shad.json" : "{$this->MainSettings->Base}api-links-rubika.json", json_encode($this->getDCMess())) : null;
             }
-        }
+        }*/
 
         $data = json_encode([
             'method' => $method,
@@ -207,13 +208,13 @@ final class Requests
      * @param string $access_hash_rec
      * @param string $file_id
      * @param integer $DC
-     * @return string|Generator|false false if file not found, string if (MainSettings)->optimal is off or Generator if it is on
+     * @return array|Generator|false false if file not found, string if (MainSettings)->optimal is off or Generator if it is on
      */
-    public function DownloadFileFromAPI(string $access_hash_rec, string $file_id, int $DC): string|Generator|false
+    public function DownloadFileFromAPI(string $access_hash_rec, string $file_id, int $DC, int $start_index = 0): array|Generator|false
     {
         $storage_url = $this->links['storages'][(string)$DC];
-        $start_index = 0;
         $chunk_size = 262144;
+        if ($start_index != 0) $start_index += $chunk_size;
         $buffer = '';
         $total_length = 0;
 
@@ -233,13 +234,11 @@ final class Requests
             "start-index: $start_index",
             "last-index: " . ($start_index + $chunk_size - 1),
         ]);
-
         $res = curl_exec($ch);
         curl_close($ch);
         if (curl_error($ch)) {
             throw new Failure('connection error: ' . curl_error($ch));
         }
-
         $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $headers = substr($res, 0, $header_size);
 
@@ -268,17 +267,14 @@ final class Requests
                 "start-index: $start_index",
                 "last-index: " . ($start_index + $chunk_size - 1),
             ]);
-
             $res = curl_exec($ch);
             if (curl_error($ch)) {
                 curl_close($ch);
                 throw new Failure('connection error: ' . curl_error($ch));
             }
-
             $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
             $body = substr($res, $header_size);
             curl_close($ch);
-
             if ($body == 'error') {
                 if ($this->MainSettings->Optimal) {
                     yield false;
@@ -288,16 +284,15 @@ final class Requests
                 break;
             }
 
-            if ($this->MainSettings->Optimal) {
-                yield $body;
-            }
+            $percent = $total_length > $chunk_size ? round(($start_index / $total_length) * 100) : 100;
+            $this->showProgress((int)$percent);
 
+            if ($this->MainSettings->Optimal) {
+                yield [$body, $start_index];
+            }
             if (!$this->MainSettings->Optimal) {
                 $buffer .= $body;
             }
-
-            $percent = round(($start_index / $total_length) * 100);
-            $this->showProgress((int)$percent);
 
             $start_index += $chunk_size;
         }

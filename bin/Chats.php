@@ -9,7 +9,8 @@ use RubikaLib\enums\{
     GroupAdminAccessList,
     SetGroupReactions,
     ReactionsString,
-    ReactionsEmoji
+    ReactionsEmoji,
+    Sort
 };
 use RubikaLib\Interfaces\GroupDefaultAccesses;
 use RubikaLib\Utils\Tools;
@@ -538,21 +539,19 @@ final class chats
     }
 
     /**
-     * get all messages from chat (recommanded use it in async mode)
-     *
      * @param string $guid
      * @param integer $message_id max_id or min_id
      * @param Sort $sort
      * @return array API result
      */
-    // public function getMessages(string $guid, int $message_id, Sort $sort = Sort::FromMax): array
-    // {
-    //     return $this->req->SendRequest('getMessages', [
-    //         'object_guid' => $guid,
-    //         'sort' => $sort->value,
-    //         str_replace('from', '', strtolower($sort->value)) . '_id' => $message_id
-    //     ], $this->session)['data'];
-    // }
+    public function getMessages(string $guid, int $message_id, Sort $sort = Sort::FromMax): array
+    {
+        return $this->req->SendRequest('getMessages', [
+            'object_guid' => $guid,
+            'sort' => $sort->value,
+            str_replace('from', '', strtolower($sort->value)) . '_id' => $message_id
+        ], $this->session)['data'];
+    }
 
     /**
      * upload file to API

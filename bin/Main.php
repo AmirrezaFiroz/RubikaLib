@@ -67,9 +67,9 @@ final class Main
                             @$d[basename($_SERVER['SCRIPT_FILENAME'])] = $this->phone_number;
                             file_put_contents($settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $settings->Base));
 
-                            if (!Session::is_session($this->phone_number)) {
+                            if (!Session::is_session($this->phone_number, $settings->AppType)) {
                                 $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], $settings->tmp_session, MainSettings: $settings);
-                                $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base);
+                                $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base, $settings);
                                 $this->session
                                     ->ChangeData('useragent', $this->req->useragent)
                                     ->ChangeData('step', 'setup');
@@ -103,7 +103,7 @@ final class Main
                                     exit;
                                 }
                             } else {
-                                $this->session = new Session($this->phone_number, workDir: $settings->Base);
+                                $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
                                 $this->req = new Requests(
                                     auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
                                     private_key: $this->session->data['private_key'] ?? '',
@@ -181,7 +181,7 @@ final class Main
                 }
             } elseif (isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])])) {
                 $this->phone_number = Tools::ReplaceTruePhoneNumber(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])]);
-                $this->session = new Session($this->phone_number, workDir: $settings->Base);
+                $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
 
                 if (isset($_POST['PassKey']) && $this->session->data['step'] == 'getPassKey') {
                     $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), MainSettings: $settings);
@@ -302,7 +302,7 @@ final class Main
                 exit;
             }
 
-            $this->session = new Session($this->phone_number, workDir: $settings->Base);
+            $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
             $this->req = new Requests(
                 auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
                 private_key: $this->session->data['private_key'] ?? '',
@@ -330,9 +330,9 @@ final class Main
 
             $this->phone_number = Tools::ReplaceTruePhoneNumber($phone_number);
 
-            if (!Session::is_session($this->phone_number)) {
+            if (!Session::is_session($this->phone_number, $settings->AppType)) {
                 $this->req = new Requests($settings->UserAgent, $settings->tmp_session, MainSettings: $settings);
-                $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base);
+                $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base, settings: $settings);
                 $this->session
                     ->ChangeData('useragent', $this->req->useragent)
                     ->ChangeData('step', 'setup');
@@ -381,7 +381,7 @@ final class Main
 
                 $this->RegisterDevice($app_name);
             } else {
-                $this->session = new Session($this->phone_number, workDir: $settings->Base);
+                $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
                 $this->req = new Requests(
                     auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
                     private_key: $this->session->data['private_key'] ?? '',
