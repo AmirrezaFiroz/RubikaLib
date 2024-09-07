@@ -1,0 +1,18 @@
+{
+    "folders": [
+        {
+            "folder_id": "66d1d2d...",
+            "name": "...",
+            "include_objects": [
+                {
+                    "type": "User",
+                    "object_guid": "u0HMRZ..."
+                }
+            ],
+            "order": "1",
+            "type": "Normal"
+        }
+    ],
+    "is_changed": true,
+    "new_state": "17"
+}

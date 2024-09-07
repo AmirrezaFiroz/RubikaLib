@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Utils;
+namespace RubikaLib\Helpers;
 
 use Generator;
 
@@ -12,11 +12,10 @@ use Generator;
 final class Optimal
 {
     /**
-     * get file chuncks as Generator funciton
+     * Get File Chunks As \Generator Funciton
      *
      * @param string $url
-     * @param string $useragent
-     * @return Generator
+     * @return Generator file chunks (262 KB)
      */
     public static function getFile(string $url): Generator
     {

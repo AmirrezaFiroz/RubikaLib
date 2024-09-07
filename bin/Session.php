@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use RubikaLib\Cryption;
+use RubikaLib\enums\AppType;
+use RubikaLib\Helpers\Security;
+use RubikaLib\Interfaces\MainSettings;
 use RubikaLib\Utils\Tools;
 
 /**
@@ -13,12 +16,14 @@ use RubikaLib\Utils\Tools;
 final class Session
 {
     /**
-     * session hash that created with Tools::generate_phone_hash()
+     * session hash that created with Tools::GeneratePhoneHash()
      *
      * @var string|null
      */
     public ?string $hash;
     public array $data = [];
+    private static string $workDirStatic = 'lib/';
+    private ?string $k;
 
     /**
      * construct the object
@@ -28,11 +33,27 @@ final class Session
      */
     public function __construct(
         private int $phone_number,
-        public string $auth = ''
+        private string $auth = '',
+        private string $workDir = 'lib/',
+        private MainSettings $settings = new MainSettings
     ) {
-        $this->hash = self::generatePhoneHash($phone_number);
+        if ($workDir != 'lib/') self::$workDirStatic = $workDir;
 
-        $this->generate_session();
+        $this->hash = self::GeneratePhoneHash($phone_number);
+        $this->k = md5(sha1(Cryption::GenerateRandom_tmp_session(5)));
+        $this->GenerateSession();
+    }
+
+    /**
+     * Set Auth
+     *
+     * @param string $auth
+     * @return self
+     */
+    public function setAuth(string $auth): self
+    {
+        $this->auth = $auth;
+        return $this;
     }
 
     /**
@@ -40,7 +61,7 @@ final class Session
      *
      * @return boolean
      */
-    public function regenerate_session(): void
+    public function ReGenerateSession(): void
     {
         date_default_timezone_set('Asia/Tehran');
 
@@ -48,7 +69,7 @@ final class Session
             'phone-number' => $this->phone_number,
             'date' => [
                 'generated' => $this->data['date'],
-                'login' => date('Y/M/d H:m')
+                'login' => time()
             ],
             'step' => 'none',
         );
@@ -62,7 +83,7 @@ final class Session
      * @param string|integer|array $to_what new value
      * @return self
      */
-    public function changeData(string $which_data, string|int|array $to_what): self
+    public function ChangeData(string $which_data, string|int|array $to_what): self
     {
         $this->data[$which_data] = $to_what;
         $this->saveData();
@@ -76,20 +97,25 @@ final class Session
      * @param integer $phone_number 989123456789
      * @return string phone hash
      */
-    public static function generatePhoneHash(int $phone_number): string
+    public static function GeneratePhoneHash(int $phone_number): string
     {
-        return md5(Tools::generate_phone_hash($phone_number));
+        return md5(Tools::GeneratePhoneHash($phone_number));
+    }
+
+    public function getPartOfSessionKey(): array
+    {
+        return [Cryption::Encode($this->auth, $this->k), $this->k];
     }
 
     /**
      * check is there a session for phone number
      *
-     * @param int $phone_number
+     * @param int $phone_number must be like 989123456789 or 9123456789
      * @return boolean true if there is a session or false if session not exists
      */
-    public static function is_session(int $phone_number): bool
+    public static function is_session(int $phone_number, AppType $app_type): bool
     {
-        return file_exists("lib/" . self::generatePhoneHash($phone_number) . ".rub");
+        return file_exists(self::$workDirStatic. "{$app_type->value}---" . self::GeneratePhoneHash(strlen((string)$phone_number) == 10 ? 98 . $phone_number : $phone_number) . ".rub");
     }
 
     /**
@@ -97,17 +123,20 @@ final class Session
      *
      * @return boolean
      */
-    public function generate_session(): void
+    public function GenerateSession(): void
     {
-        if (file_exists("lib/{$this->hash}.rub")) {
-            $this->data = json_decode(Cryption::decode(file_get_contents("lib/{$this->hash}.rub"), $this->hash), true);
+        if (file_exists("{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub")) {
+            $this->data = json_decode(Cryption::Decode(
+                Security::DecryptFile("{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub", $this->hash),
+                sha1(md5($this->hash))
+            ), true);
             $this->auth = $this->data['tmp_session'] ?? $this->data['auth'];
         } else {
             date_default_timezone_set('Asia/Tehran');
 
             $this->data = array(
                 'phone-number' => $this->phone_number,
-                'date' => date('Y/M/d H:m'),
+                'date' => time(),
                 'step' => 'none',
                 'tmp_session' => $this->auth
             );
@@ -123,7 +152,11 @@ final class Session
      */
     private function saveData(): void
     {
-        file_put_contents("lib/{$this->hash}.rub", cryption::encode(json_encode($this->data), $this->hash));
+        Security::EncryptFile(
+            cryption::Encode(json_encode($this->data), sha1(md5($this->hash))),
+            "{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub",
+            $this->hash
+        );
     }
 
     /**
@@ -133,6 +166,6 @@ final class Session
      */
     public function terminate(): void
     {
-        unlink("lib/{$this->hash}.rub");
+        unlink("{$this->workDir}{$this->settings->AppType->value}---{$this->hash}.rub");
     }
 }

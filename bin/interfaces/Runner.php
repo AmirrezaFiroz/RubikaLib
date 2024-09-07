@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\interfaces;
+namespace RubikaLib\Interfaces;
 
-use RubikaLib\enums\chatActivities;
-use RubikaLib\Main;
+use RubikaLib\enums\ChatActivities, RubikaLib\Main;
 
 /**
  * interface for Main class to pass updates
  */
-interface runner
+interface Runner
 {
     /**
-     * this function will call when runner class is set and starts to get updates
+     * This Function Will Call When \Runner Class Is Set And Starts To Get Updates
      *
      * @param array $mySelf account info
      * @return void
@@ -21,7 +20,7 @@ interface runner
     public function onStart(array $mySelf): void;
 
     /**
-     * this function will call when a new update got from API
+     * This Function Will Call When A New Update Got From API
      *
      * @param array $update
      * @param Main $class to working with methods
@@ -30,13 +29,13 @@ interface runner
     public function onMessage(array $update, Main $class): void;
 
     /**
-     * when a chat activitie catched
+     * When A Chat Activitie Catched
      *
-     * @param chatActivities $activitie
+     * @param ChatActivities $activitie
      * @param string $guid this chat which update is from (group, chat, ...)
      * @param string $from the activitie maker person (user)
      * @param Main $class to working with methods
      * @return void
      */
-    public function onAction(chatActivities $activitie, string $guid, string $from, Main $class): void;
+    public function onAction(ChatActivities $activitie, string $guid, string $from, Main $class): void;
 }

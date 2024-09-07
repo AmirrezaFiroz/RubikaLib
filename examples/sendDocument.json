@@ -1,0 +1,63 @@
+{
+    "message_update": {
+        "message_id": "1093875670885631",
+        "action": "New",
+        "message": {
+            "message_id": "1093875670885631",
+            "file_inline": {
+                "file_id": 50370385017586,
+                "mime": "php",
+                "dc_id": 882,
+                "access_hash_rec": "3256883704958745470344984904052024082701",
+                "file_name": "file.php",
+                "size": 8991,
+                "type": "File"
+            },
+            "time": "1724708377",
+            "is_edited": false,
+            "type": "FileInline",
+            "author_type": "User",
+            "author_object_guid": "u0HMRYa0b1e6fe648e9d99eb53ebf406",
+            "allow_transcription": false
+        },
+        "updated_parameters": [],
+        "timestamp": "1724708379",
+        "prev_message_id": "1093873668713631",
+        "object_guid": "u0HMRYa0b1e6fe648e9d99eb53ebf406",
+        "type": "User",
+        "state": "1724708319"
+    },
+    "status": "OK",
+    "chat_update": {
+        "object_guid": "u0HMRYa0b1e6fe648e9d99eb53ebf406",
+        "action": "Edit",
+        "chat": {
+            "time_string": "172470837700001093875670885631",
+            "last_message": {
+                "message_id": "1093875670885631",
+                "type": "Other",
+                "text": "file.php",
+                "author_object_guid": "u0HMRYa0b1e6fe648e9d99eb53ebf406",
+                "is_mine": true,
+                "author_title": "شما",
+                "author_type": "User"
+            },
+            "last_seen_my_mid": "1093875670885631",
+            "last_seen_peer_mid": "0",
+            "status": "Active",
+            "time": 1724708377,
+            "last_message_id": "1093875670885631"
+        },
+        "updated_parameters": [
+            "last_message_id",
+            "last_message",
+            "status",
+            "time_string",
+            "last_seen_my_mid",
+            "last_seen_peer_mid",
+            "time"
+        ],
+        "timestamp": "1724708379",
+        "type": "User"
+    }
+}

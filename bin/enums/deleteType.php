@@ -7,7 +7,7 @@ namespace RubikaLib\enums;
 /**
  * delete types
  */
-enum deleteType: string
+enum DeleteType: string
 {
     /**
      * delete for all

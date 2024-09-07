@@ -1,0 +1,14 @@
+{
+    "folder": {
+        "folder_id": "66d1d3...",
+        "name": "...",
+        "include_chat_types": [
+            "Contacts",
+            "NonConatcts"
+        ],
+        "order": "1",
+        "type": "Normal"
+    },
+    "old_state": "17",
+    "new_state": "18"
+}

@@ -1,7 +1,8 @@
 vendor/
 composer.lock
-update.json
+update*.json
 lib/
 file.php
-TODO.txt
 .rnd
+todo/
+.phpunit.result.cache

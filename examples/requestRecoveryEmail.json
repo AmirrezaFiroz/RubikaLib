@@ -1,0 +1,10 @@
+{
+    "two_step_status": {
+        "sign_in_type": "TwoStep",
+        "has_pending_recovery_email": true,
+        "has_confirmed_recovery_email": true,
+        "confirmed_recovery_email": "a***3@gmail.com",
+        "pending_recovery_email": "a***3@gmail.com",
+        "hint": "hint..."
+    }
+}

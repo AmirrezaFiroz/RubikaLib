@@ -1,7 +1,7 @@
 {
     "name": "rubikalib/rubikalib",
-    "description": "A library for working with rubika API from PHP source",
-    "version": "v1.2.2",
+    "description": "A library for working with rubika API from PHP source code",
+    "version": "v2.0.0test",
     "keywords": [
         "rubika",
         "rubikalib",
@@ -27,14 +27,18 @@
         "issues": "https://github.com/AmirrezaFiroz/RubikaLib/issues"
     },
     "require": {
-        "phpseclib/phpseclib": "^3.0",
         "php": ">= 8.1.0",
         "ext-mbstring": "*",
         "ext-openssl": "*",
+        "ext-gd": "*",
+        "ext-json": "*",
+        "ext-pdo": "*",
         "ratchet/pawl": "^0.4.1",
-        "james-heinrich/getid3": "^1.9"
+        "james-heinrich/getid3": "^1.9",
+        "phpseclib/phpseclib": "^3.0",
+        "paragonie/sodium_compat": "^2.0.1"
     },
     "require-dev": {
-        "spatie/async": "^1.6"
+        "phpunit/phpunit": "^11.3"
     }
 }

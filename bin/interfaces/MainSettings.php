@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\interfaces;
+namespace RubikaLib\Interfaces;
 
 use RubikaLib\Cryption;
+use RubikaLib\enums\AppType;
 use RubikaLib\Utils\userAgent;
 
 /**
@@ -13,60 +14,90 @@ use RubikaLib\Utils\userAgent;
 final class MainSettings
 {
     /**
-     * default useragent for library (it just used in login and will save in session for next uses)
+     * Default UserAgent For Library (it just used in login and will save in session for next uses)
      *
-     * @var string|null
+     * @var string you can generate one by using RubikaLib\Utils\userAgent::generate()
      */
-    public ?string $userAgent;
+    public ?string $UserAgent;
+
     /**
-     * auth for sign up (it will be changes with API)
+     * tmp_session For Sign In (it will be changes with API)
      *
-     * @var string|null
+     * @var string
      */
-    public ?string $auth;
+    public ?string $tmp_session;
+
     /**
-     * use optimal mode
+     * Use Optimal Mode For CPU and RAM Sources
      *
      * @var boolean
      */
     public bool $Optimal = true;
+
+    /**
+     * Where Library Files Will Save And Use
+     *
+     * @var string default: lib/
+     */
+    public string $Base = 'lib/';
+
+    /**
+     * App Type
+     *
+     * @var AppType Rubika or Shad
+     */
+    public AppType $AppType = AppType::Rubika;
+
+    /**
+     * show progress bar on file uploading to API
+     *
+     * @var boolean
+     */
+    public bool $ShowProgressBar = false;
+
+    /**
+     * Keep Everything Updated
+     *
+     * @var boolean
+     */
+    public bool $KeepUpdated = true;
 
     public function __construct()
     {
         $this->setUserAgent(
             userAgent::generate()
         );
-        $this->setAuth(
-            Cryption::azRand()
+        $this->setTmp_session(
+            Cryption::GenerateRandom_tmp_session()
         );
     }
 
     /**
-     * set default useragent for library
+     * Set Default UserAgent For Library (just for login)
      *
-     * @param string $userAgent you can generate one by using RubikaLib\Utils\userAgent::generate()
+     * @param string $UserAgent you can generate one by using RubikaLib\Utils\userAgent::generate()
      * @return self
      */
-    public function setUserAgent(string $userAgent): self
+    public function setUserAgent(string $UserAgent): self
     {
-        $this->userAgent = $userAgent;
+        $this->UserAgent = $UserAgent;
         return $this;
     }
 
     /**
-     * set default auth for library as tmp_session in login step
+     * Set tmp_session For Sign In (just for login)
      *
-     * @param string $auth you can generate one by using RubikaLib\Cryption::azRand() 
+     * @param string $tmp_session you can generate one by using RubikaLib\Cryption::GenerateRandom_tmp_session() 
      * @return self
      */
-    public function setAuth(string $auth): self
+    public function setTmp_session(string $tmp_session): self
     {
-        $this->auth = $auth;
+        $this->tmp_session = $tmp_session;
         return $this;
     }
 
     /**
-     * set optimal mode
+     * Turn Optimal Mode On Or Off
      *
      * @param boolean $Optimal
      * @return self
@@ -74,6 +105,54 @@ final class MainSettings
     public function setOptimal(bool $Optimal): self
     {
         $this->Optimal = $Optimal;
+        return $this;
+    }
+
+    /**
+     * Set Base Dir
+     *
+     * @param string $Base
+     * @return self
+     */
+    public function setBase(string $Base): self
+    {
+        $this->Base = $Base;
+        return $this;
+    }
+
+    /**
+     * Set App Type
+     *
+     * @param AppType $AppType
+     * @return self
+     */
+    public function setAppType(AppType $AppType): self
+    {
+        $this->$AppType = $AppType;
+        return $this;
+    }
+
+    /**
+     * Set Show Progress Bar
+     *
+     * @param bool $ShowProgressBar
+     * @return self
+     */
+    public function setShowProgressBar(bool $ShowProgressBar): self
+    {
+        $this->ShowProgressBar = $ShowProgressBar;
+        return $this;
+    }
+
+    /**
+     * Set Keep Everything Updated
+     *
+     * @param bool $KeepUpdated
+     * @return self
+     */
+    public function setKeepUpdated(bool $KeepUpdated): self
+    {
+        $this->KeepUpdated = $KeepUpdated;
         return $this;
     }
 }
