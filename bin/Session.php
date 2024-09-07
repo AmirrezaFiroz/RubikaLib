@@ -80,7 +80,7 @@ final class Session
      * @param string|integer|array $to_what new value
      * @return self
      */
-    public function changeData(string $which_data, string|int|array $to_what): self
+    public function ChangeData(string $which_data, string|int|array $to_what): self
     {
         $this->data[$which_data] = $to_what;
         $this->saveData();

@@ -36,6 +36,11 @@ final class Account
     public function logout(): array
     {
         $this->session->terminate();
+
+        $d = file_exists($this->settings->Base . 'sessions.rub') ? json_decode(Cryption::Decode(file_get_contents($this->settings->Base . 'sessions.rub'), $this->settings->Base), true) : array();
+        unset($d[basename($_SERVER['SCRIPT_FILENAME'])]);
+        file_put_contents($this->settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $this->settings->Base));
+
         return $this->req->SendRequest('logout', array(), $this->session)['data'];
     }
 
@@ -78,7 +83,7 @@ final class Account
         ], $this->session)['data'];
 
         if ($d['status'] == 'OK') {
-            $this->session->changeData('user', $d['user']);
+            $this->session->ChangeData('user', $d['user']);
         }
 
         return $d;
@@ -117,7 +122,7 @@ final class Account
         $d = $this->req->SendRequest('updateProfile', $d, $this->session)['data'];
 
         if (isset($d['chat_update'])) {
-            $this->session->changeData('user', $d['user']);
+            $this->session->ChangeData('user', $d['user']);
         }
 
         return $d;

@@ -55,6 +55,13 @@ final class MainSettings
      */
     public bool $ShowProgressBar = false;
 
+    /**
+     * Keep Everything Updated
+     *
+     * @var boolean
+     */
+    public bool $KeepUpdated = true;
+
     public function __construct()
     {
         $this->setUserAgent(
@@ -134,6 +141,18 @@ final class MainSettings
     public function setShowProgressBar(bool $ShowProgressBar): self
     {
         $this->ShowProgressBar = $ShowProgressBar;
+        return $this;
+    }
+
+    /**
+     * Set Keep Everything Updated
+     *
+     * @param bool $KeepUpdated
+     * @return self
+     */
+    public function setKeepUpdated(bool $KeepUpdated): self
+    {
+        $this->KeepUpdated = $KeepUpdated;
         return $this;
     }
 }

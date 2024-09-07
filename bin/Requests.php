@@ -28,25 +28,25 @@ final class Requests
     /**
      * @param string $useragent useragent for request sending
      * @param string $auth
-     * @param MainSettings $mainSettings
+     * @param MainSettings $MainSettings
      * @param string $private_key
      */
     public function __construct(
         public readonly string $useragent,
         private string $auth,
-        private MainSettings $mainSettings,
+        private MainSettings $MainSettings,
         string $private_key = ''
     ) {
         $this->k = md5(sha1(Cryption::GenerateRandom_tmp_session(5)));
-        $this->getDCMessURL = ($mainSettings->AppType == AppType::Shad) ? 'https://shgetDCMess.iranlms.ir/' : 'https://getDCMess.iranlms.ir/';
+        $this->getDCMessURL = ($MainSettings->AppType == AppType::Shad) ? 'https://shgetDCMess.iranlms.ir/' : 'https://getDCMess.iranlms.ir/';
         $this->crypto = new Cryption($this->auth, $private_key);
         $this->re_auth = $auth != '' ? cryption::re_auth($this->auth) : '';
 
-        if (file_exists("{$mainSettings->Base}api-links-shad.json") or file_exists("{$mainSettings->Base}api-links-rubika.json")) {
-            $this->links = json_decode(file_get_contents(($this->mainSettings->AppType == AppType::Shad) ? "{$mainSettings->Base}api-links-shad.json" : "{$mainSettings->Base}api-links-rubika.json"), true);
+        if (file_exists("{$MainSettings->Base}api-links-shad.json") or file_exists("{$MainSettings->Base}api-links-rubika.json")) {
+            $this->links = json_decode(file_get_contents(($MainSettings->AppType == AppType::Shad) ? "{$MainSettings->Base}api-links-shad.json" : "{$MainSettings->Base}api-links-rubika.json"), true);
         } else {
-            !is_dir($mainSettings->Base) ? mkdir($mainSettings->Base) : null;
-            file_put_contents(($this->mainSettings->AppType == AppType::Shad) ? "{$mainSettings->Base}api-links-shad.json" : "{$mainSettings->Base}api-links-rubika.json", json_encode($this->getDCMess()));
+            !is_dir($MainSettings->Base) ? mkdir($MainSettings->Base) : null;
+            file_put_contents(($MainSettings->AppType == AppType::Shad) ? "{$MainSettings->Base}api-links-shad.json" : "{$MainSettings->Base}api-links-rubika.json", json_encode($this->getDCMess()));
         }
 
         $default_api_urls = $this->links['default_api_urls'];
@@ -64,9 +64,9 @@ final class Requests
             'api_version' => '4',
             'client' => json_encode([
                 'app_name' => 'Main',
-                'app_version' => ($this->mainSettings->AppType == AppType::Shad) ? '4.5.0' : '4.4.15',
+                'app_version' => ($this->MainSettings->AppType == AppType::Shad) ? '4.5.0' : '4.4.15',
                 'lang_code' => 'fa',
-                'package' => ($this->mainSettings->AppType == AppType::Shad) ? 'web.shad.ir' : 'web.rubika.ir',
+                'package' => ($this->MainSettings->AppType == AppType::Shad) ? 'web.shad.ir' : 'web.rubika.ir',
                 'platform' => 'Web'
             ]),
             'method' => 'getDCs'
@@ -123,8 +123,9 @@ final class Requests
                 $gen_time = $session->data['date'];
             }
             if ((time() - $gen_time) >= 86400) {
-                $session->changeData('user', $this->SendRequest('getUserInfo', ['user_guid' => $session->data['user']['user_guid']], $session)['data']['user']);
-                $this->links = json_decode(file_get_contents("{$this->mainSettings->Base}api-links.json"), true);
+                $session->ChangeData('user', $this->SendRequest('getUserInfo', ['user_guid' => $session->data['user']['user_guid']], $session)['data']['user']);
+                $this->links = json_decode(file_get_contents("{$this->MainSettings->Base}api-links.json"), true);
+                $this->MainSettings->KeepUpdated ? file_put_contents(($this->MainSettings->AppType == AppType::Shad) ? "{$this->MainSettings->Base}api-links-shad.json" : "{$this->MainSettings->Base}api-links-rubika.json", json_encode($this->getDCMess())) : null;
             }
         }
 
@@ -133,9 +134,9 @@ final class Requests
             'input' => $data,
             'client' => [
                 'app_name' => 'Main',
-                'app_version' => ($this->mainSettings->AppType == AppType::Shad) ? '4.5.0' : '4.4.15',
+                'app_version' => ($this->MainSettings->AppType == AppType::Shad) ? '4.5.0' : '4.4.15',
                 'lang_code' => 'fa',
-                'package' => ($this->mainSettings->AppType == AppType::Shad) ? 'web.shad.ir' : 'web.rubika.ir',
+                'package' => ($this->MainSettings->AppType == AppType::Shad) ? 'web.shad.ir' : 'web.rubika.ir',
                 'platform' => 'Web'
             ]
         ]);
@@ -161,9 +162,9 @@ final class Requests
             'User-Agent: ' . $this->useragent,
             'Accept: application/json, text/plain, */*',
             'Content-Type: text/plain',
-            'Origin: https://web.' . ($this->mainSettings->AppType == AppType::Shad ? 'shad' : 'rubika') . '.ir',
+            'Origin: https://web.' . ($this->MainSettings->AppType == AppType::Shad ? 'shad' : 'rubika') . '.ir',
             'Connection: keep-alive',
-            'Referer: https://web.' . ($this->mainSettings->AppType == AppType::Shad ? 'shad' : 'rubika') . '.ir/',
+            'Referer: https://web.' . ($this->MainSettings->AppType == AppType::Shad ? 'shad' : 'rubika') . '.ir/',
         ]);
         curl_setopt($ch, CURLOPT_USERAGENT, $this->useragent);
 
@@ -279,7 +280,7 @@ final class Requests
             curl_close($ch);
 
             if ($body == 'error') {
-                if ($this->mainSettings->Optimal) {
+                if ($this->MainSettings->Optimal) {
                     yield false;
                 } else {
                     return false;
@@ -287,11 +288,11 @@ final class Requests
                 break;
             }
 
-            if ($this->mainSettings->Optimal) {
+            if ($this->MainSettings->Optimal) {
                 yield $body;
             }
 
-            if (!$this->mainSettings->Optimal) {
+            if (!$this->MainSettings->Optimal) {
                 $buffer .= $body;
             }
 
@@ -301,7 +302,7 @@ final class Requests
             $start_index += $chunk_size;
         }
 
-        if (!$this->mainSettings->Optimal) {
+        if (!$this->MainSettings->Optimal) {
             return $buffer;
         }
     }
@@ -374,7 +375,7 @@ final class Requests
      */
     private function showProgress(int $percent): void
     {
-        if (!$this->mainSettings->ShowProgressBar) return;
+        if (!$this->MainSettings->ShowProgressBar) return;
 
         $bar = str_repeat("=", $percent - ($percent != 0 ? 1 : 0)) . ($percent != 0 ? '>' : '') . str_repeat(" ", (100 - $percent));
         echo "\rUploading... : [{$bar}] {$percent}%";
