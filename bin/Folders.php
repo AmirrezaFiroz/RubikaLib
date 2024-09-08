@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use RubikaLib\enums\ChatTypes, RubikaLib\Utils\SuggestedFolders;
+use RubikaLib\Enums\ChatTypes, RubikaLib\Utils\SuggestedFolders;
 
 /**
  * folders object

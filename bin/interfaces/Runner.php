@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib\Interfaces;
 
-use RubikaLib\enums\ChatActivities, RubikaLib\Main;
+use RubikaLib\Enums\ChatActivities, RubikaLib\Main;
 
 /**
  * interface for Main class to pass updates

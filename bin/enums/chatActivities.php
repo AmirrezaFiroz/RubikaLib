@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\enums;
+namespace RubikaLib\Enums;
 
 /**
  * chat activities (on top of chats)

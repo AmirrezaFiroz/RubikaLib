@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use Generator;
-use RubikaLib\enums\AppType;
+use RubikaLib\Enums\AppType;
 use RubikaLib\Interfaces\MainSettings;
 
 /**
@@ -116,6 +116,7 @@ final class Requests
      */
     public function SendRequest(string $method, array $data, Session $session, bool $tmp_session = false): array
     {
+        // TODO
         /*if (isset($session->data['private_key'])) {
             if (is_array($session->data['date'])) {
                 $gen_time = $session->data['date']['generated'];
