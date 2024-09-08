@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib\Interfaces;
 
 use RubikaLib\Cryption;
-use RubikaLib\enums\AppType;
+use RubikaLib\Enums\AppType;
 use RubikaLib\Utils\userAgent;
 
 /**

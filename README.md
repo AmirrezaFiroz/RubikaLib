@@ -21,7 +21,7 @@ use RubikaLib\Main;
 3. now you can send messages
 ```php
 $bot = new Main(9123456789);
-$bot->SendMessage('u0FFeu...', 'سلام');
+$bot->Messages->SendMessage('u0FFeu...', 'سلام');
 ```
 
 # Get Updates From API
@@ -30,7 +30,7 @@ for getting updates, you must create new class with a name and call it
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 
-use RubikaLib\enums\ChatActivities;
+use RubikaLib\Enums\ChatActivities;
 use RubikaLib\Interfaces\Runner;
 use RubikaLib\{
     Failure,
@@ -58,9 +58,8 @@ try {
             {
             }
         }
-    );
+    )->RunAndLoop();
 
-    $app->RunAndLoop();
 } catch (Failure $e) {
     echo $e->getMessage() . "\n";
 }
@@ -148,7 +147,9 @@ try {
 |                                                                                                     leaveChat(string $guid)                                                                                                      |                                             leave channel or group using guid                                             |                     [leaveChat.json](examples/leaveChat.json)                     |
 |                                                                                                 deleteGroup(string $group_guid)                                                                                                  |                                                delete group for all users                                                 |                                not researched yet                                 |
 |                                                                                                         getMyStickerSets                                                                                                         |                                                     get stickers list                                                     |              [getMyStickerSets.json](examples/getMyStickerSets.json)              |
-|                                                                                                            getFolders                                                                                                            |                                                     get folders list                                                      |                                not researched yet                                 |
+|                                                                                                            getFolders                                                                                                            |                                                     get folders list                                                      |                    [getFolders.json](examples/getFolders.json)                    |
+|                                                                                                           DeleteFolder                                                                                                           |                                                      delete a folder                                                      |                  [DeleteFolder.json](examples/DeleteFolder.json)                  |
+|                                                                                                            AddFolder                                                                                                             |                                                      delete a folder                                                      |                                not researched yet                                 |
 |                                                                                                 getChatsUpdates(int $state = 0)                                                                                                  |                                       get all chat updates from $state time to now                                        |               [getChatsUpdates.json](examples/getChatsUpdates.json)               |
 |                                                                                    getMessagesInterval(string $guid, int $middle_message_id)                                                                                     |                                                    not researched yet                                                     |                                not researched yet                                 |
 |                                                                                             getGroupOnlineCount(string $group_guid)                                                                                              |                                               get group online users count                                                |           [getGroupOnlineCount.json](examples/getGroupOnlineCount.json)           |
@@ -161,7 +162,8 @@ try {
 |                                                                                                    getChatInfo(string $guid)                                                                                                     |                                                       get chat info                                                       |                   [getChatInfo.json](examples/getChatInfo.json)                   |
 |                                                                                             getChatInfoByUsername(string $username)                                                                                              |                                     get chat info by username ---> exmample: @someone                                     |         [getChatInfoByUsername.json](examples/getChatInfoByUsername.json)         |
 |                                                                          EditProfile(string $first_name = '', string $last_name = '', string $bio = '')                                                                          |                                                 change account parameters                                                 |                   [EditProfile.json](examples/EditProfile.json)                   |
-|                                                                                                       RequestDeleteAccount                                                                                                       |                                            send request to delete this account                                            |                                not researched yet                                 |
+|                                                                                                       RequestDeleteAccount                                                                                                       |                                            send request to delete this account                                            |          [RequestDeleteAccount.json](examples/RequestDeleteAccount.json)          |
+|                                                                                                          turnOffTwoStep                                                                                                          |                                            turn off the two-step confirmation                                             |                [turnOffTwoStep.json](examples/turnOffTwoStep.json)                |
 |                                                                                                 getAvatars(string $object_guid)                                                                                                  |                                                     get guid avatars                                                      |                    [getAvatars.json](examples/getAvatars.json)                    |
 |                                                                        getGroupAllMembers(string $group_guid, string $search_for = '', int $start_id = 0)                                                                        |                                                  get group members list                                                   |            [getGroupAllMembers.json](examples/getGroupAllMembers.json)            |
 |                                                                          DownloadFile(string $access_hash_rec, string $file_id, string $path, int $DC)                                                                           |                                                      download a file                                                      |                 `true` or `false` (depended on API file finding)                  |
@@ -204,6 +206,26 @@ try {
 |                                                                                           getStickersBySetIDs(string $sticker_set_ids)                                                                                           |                                                  get stickers by set id                                                   |           [getStickersBySetIDs.json](examples/getStickersBySetIDs.json)           |
 |                                                                                       votePoll(string $poll_id, int ...$selection_indexs)                                                                                        |                                                        vote a poll                                                        |                      [votePoll.json](examples/votePoll.json)                      |
 
+# Use As Shad
+
+you can use library for [Shad](www.shad.ir) API.
+
+```php
+use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\Main;
+use RubikaLib\Enums\AppType;
+
+$settings = new MainSettings();
+$settings->AppType = AppType::Shad;
+
+$app = new Main(9123456789, settings: $settings);
+
+$app->Messages->SendMessage(
+    guid: $app->Account->getMySelf()['user_guid'],
+    text: '**hello wolrd!**'
+);
+```
+
 # Example
 
 here as base of one bot you can run
@@ -212,14 +234,14 @@ here as base of one bot you can run
 declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
-use RubikaLib\enums\ChatActivities;
+use RubikaLib\Enums\ChatActivities;
 use RubikaLib\Interfaces\Runner;
 use RubikaLib\{
     Failure,
     Main
 };
 
-$app = new Main(9123456789);
+$app = new Main(9123456789, 'test-app');
 
 $app->proccess(
     new class implements Runner
@@ -249,7 +271,7 @@ $app->proccess(
 
                         if ($text == 'شروع' && $author_type == 'User' && $from != $this->me['user_guid']) {
                             $this->setUp($from);
-                            $class->SendMessage($guid, "به منوی اصلی خوش آمدید 😎\n\nگزینه مورد نظر را ارسال کنید:\n\nراهنما 📚(5) |  پشتیبانی 🆘(6)", $message_id);
+                            $class->Messages->SendMessage($guid, "به منوی اصلی خوش آمدید 😎\n\nگزینه مورد نظر را ارسال کنید:\n\nراهنما 📚(5) |  پشتیبانی 🆘(6)", $message_id);
                         }
                     }
                 }
@@ -308,7 +330,7 @@ use RubikaLib\Interfaces\MainSettings;
 
 $settings = new MainSettings();
 $settings->userAgent = ...;
-$settings->auth = ...;
+$settings->tmp_session = ...;
 
 $app = new Main(9123456789, $settings);
 ```
@@ -326,48 +348,20 @@ $app = new Main(9123456789, $settings);
 ```
 
 `parameters:`
-| parameter |                                         describtion                                          |
-| :-------: | :------------------------------------------------------------------------------------------: |
-| userAgent | default useragent for library (it just used in login and will save in session for next uses) |
-|   auth    |   default auth for library (it just used in login and will save in session for next uses)    |
+|    parameter    |                                          describtion                                           |
+| :-------------: | :--------------------------------------------------------------------------------------------: |
+|    userAgent    |  default useragent for library (it just used in login and will save in session for next uses)  |
+|   tmp_session   | default tmp_session for library (it just used in login and will save in session for next uses) |
+|     Optimal     |                     lower RAM and CPU usage(true by default (recommanded))                     |
+|      Base       |                                  workDir (by default: 'lib/')                                  |
+|     AppType     |                           which API to use (Shad or Rubika(default))                           |
+| ShowProgressBar |                            show download or upload progress precent                            |
+|   KeepUpdated   |                            keep everythink updated(true by default)                            |
 
-# Sessions
-
-our library saves account info like auth-code, private-key and etc on a file with `.rub` format which is encoded. if you need to read this file you must decode it with its phone-hash. the phone-hash is the name file.
-
-here is example for reading session data:
-
-```php
-use RubikaLib\Cryption;
-
-$file_path = "lib/f4f863d***.rub";
-$hash = str_replace(['lib/', '.rub'], '', $file_path);
-$session_data = json_decode(Cryption::Decode(file_get_contents("lib/$hash.rub"), $hash), true);
-var_dump($session_data);
-
-```
-
-or you can find phone-hash by library:
-
-```php
-use RubikaLib\Session;
-use RubikaLib\Cryption;
-
-$hash = Session::GeneratePhoneHash(989123456789); # 98 must be entered before phone number
-$session_data = json_decode(Cryption::Decode(file_get_contents("lib/$hash.rub"), $hash), true);
-var_dump($session_data);
-
-```
-
-# Some Hints
-
-**!** `don't forget to update user info` use this code to get newest info abount account profile. (this problem will solve on next updates)
-```php
-$this->getChatInfo($this->getMySelf()['user_guid'])['user']
-```
-
-# Join Us
+# Links
 
 [rubika ✅](https://rubika.ir/RubikaLibPHP)
 
 [telegram ✅](https://t.me/rubika_lib)
+
+[documentation🔰](https://Rubikalib-PHP.github.io)

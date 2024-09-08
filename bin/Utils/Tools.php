@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib\Utils;
 
-use RubikaLib\enums\ChatTypes, RubikaLib\Failure;
+use RubikaLib\Enums\ChatTypes, RubikaLib\Failure;
 
 /**
  * library tool functions

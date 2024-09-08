@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use RubikaLib\enums\{
+use RubikaLib\Enums\{
     HistoryForNewMembers,
     GroupAdminAccessList,
     SetGroupReactions,

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\enums;
+namespace RubikaLib\Enums;
 
 /**
  * Reactions list as Emojies

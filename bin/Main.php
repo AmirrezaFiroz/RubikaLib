@@ -7,7 +7,7 @@ namespace RubikaLib;
 use Ratchet\Client\WebSocket;
 use React\EventLoop\Loop;
 use RubikaLib\Utils\Tools;
-use RubikaLib\enums\ChatActivities;
+use RubikaLib\Enums\ChatActivities;
 use RubikaLib\Interfaces\{
     MainSettings,
     Runner

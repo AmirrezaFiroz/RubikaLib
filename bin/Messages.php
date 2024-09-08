@@ -6,7 +6,7 @@ namespace RubikaLib;
 
 use Generator;
 use getID3;
-use RubikaLib\enums\{
+use RubikaLib\Enums\{
     ChatActivities,
     DeleteType,
     PollType,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use RubikaLib\Cryption;
-use RubikaLib\enums\AppType;
+use RubikaLib\Enums\AppType;
 use RubikaLib\Helpers\Security;
 use RubikaLib\Interfaces\MainSettings;
 use RubikaLib\Utils\Tools;
@@ -115,7 +115,7 @@ final class Session
      */
     public static function is_session(int $phone_number, AppType $app_type): bool
     {
-        return file_exists(self::$workDirStatic. "{$app_type->value}---" . self::GeneratePhoneHash(strlen((string)$phone_number) == 10 ? 98 . $phone_number : $phone_number) . ".rub");
+        return file_exists(self::$workDirStatic . "{$app_type->value}---" . self::GeneratePhoneHash(strlen((string)$phone_number) == 10 ? 98 . $phone_number : $phone_number) . ".rub");
     }
 
     /**
