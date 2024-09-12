@@ -22,7 +22,7 @@ final class Tools
 
         $length = strlen($phoneNumber);
         if ($length < 10 || $length > 13) {
-            throw new Failure("the is an error with phone number format: " . $phoneNumber);
+            throw new Failure("there is an error with phone number format: " . $phoneNumber);
         }
 
         $patterns = [
@@ -39,7 +39,7 @@ final class Tools
             }
         }
 
-        throw new Failure("the is an error with phone number format: " . $phoneNumber);
+        throw new Failure("there is an error with phone number format: " . $phoneNumber);
     }
 
     /**
