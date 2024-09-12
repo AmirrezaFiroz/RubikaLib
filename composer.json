@@ -1,7 +1,7 @@
 {
     "name": "rubikalib/rubikalib",
     "description": "A library for working with rubika API from PHP source code",
-    "version": "v2.0.0",
+    "version": "v2.0.1",
     "keywords": [
         "rubika",
         "rubikalib",
@@ -32,7 +32,6 @@
         "ext-openssl": "*",
         "ext-gd": "*",
         "ext-json": "*",
-        "ext-pdo": "*",
         "ratchet/pawl": "^0.4.1",
         "james-heinrich/getid3": "^1.9",
         "phpseclib/phpseclib": "^3.0",

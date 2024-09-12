@@ -24,7 +24,7 @@ final class Main
     private ?Session $session;
     private ?Cryption $crypto;
 
-    public static $VERSION = '2.0.0';
+    public static $VERSION = '2.0.1';
 
     public ?Folders $Folders;
     public ?Account $Account;
@@ -318,17 +318,18 @@ final class Main
             $this->Messages = new Messages($this->session, $this->req, $settings);
             $this->Contacts = new Contacts($this->session, $this->req);
         } else {
-            while (!in_array(strlen((string)$phone_number), [10, 12]) && !isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])])) {
+            while (!in_array(strlen((string)$phone_number), [10, 12]) && (!file_exists($settings->Base . 'sessions.rub') or !isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])]))) {
                 $phone_number = (int)readline("Enter Phone Number: ");
 
                 if (in_array(strlen((string)$phone_number), [10, 12])) {
                     $d = file_exists($settings->Base . 'sessions.rub') ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true) : array();
                     @$d[basename($_SERVER['SCRIPT_FILENAME'])] = $phone_number;
+                    if (!is_dir($settings->Base)) mkdir($settings->Base);
                     file_put_contents($settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $settings->Base));
                 }
             }
 
-            $this->phone_number = Tools::ReplaceTruePhoneNumber($phone_number);
+            $this->phone_number = Tools::ReplaceTruePhoneNumber($phone_number == 0 ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])] : $phone_number);
 
             if (!Session::is_session($this->phone_number, $settings->AppType)) {
                 $this->req = new Requests($settings->UserAgent, $settings->tmp_session, MainSettings: $settings);
