@@ -208,7 +208,7 @@ try {
 
 # Use As Shad
 
-you can use library for [Shad](www.shad.ir) API.
+you can use library for [Shad](https://shad.ir) API.
 
 ```php
 use RubikaLib\Interfaces\MainSettings;
