@@ -153,10 +153,10 @@ final class Tools
             "Mono" => '/\`([^`]+)\`/',
             "Bold" => '/\*\*([^*]+)\*\*/',
             "Italic" => '/\_\_([^_]+)\_\_/',
+            "Spoiler" => '/\|\|([^#]+)\|\|/',
             // "Strike" => '/\~\~([^~]+)\~\~/',
             // "Underline" => '/\_\_([^-]+)\_\_/',
-            // "Mention" => '/\@\@([^@]+)\@\@/',
-            "Spoiler" => '/\|\|([^#]+)\|\|/',
+            // "Mention" => '/\@\@([^@]+)\@\@/'
         ];
         $offset = 0;
 
@@ -224,7 +224,6 @@ final class Tools
             }
         }
 
-        var_dump([$metadata, $cleanText]);
         return [$metadata, $cleanText];
     }
 

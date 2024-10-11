@@ -16,6 +16,7 @@ use RubikaLib\Enums\{
 use RubikaLib\Helpers\Optimal;
 use RubikaLib\Interfaces\Gif;
 use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\Interfaces\MusicFile;
 use RubikaLib\Utils\Tools;
 
 /**
@@ -36,7 +37,7 @@ final class Messages
      */
     public function getMyStickerSets(): array
     {
-        return $this->req->SendRequest('getMyStickerSets', array(), $this->session)['data'];
+        return $this->req->sendRequest('getMyStickerSets', array(), $this->session)['data'];
     }
 
     /**
@@ -47,7 +48,7 @@ final class Messages
      */
     public function getStickerSetByID(string $sticker_set_id): array
     {
-        return $this->req->SendRequest('getStickerSetByID', [
+        return $this->req->sendRequest('getStickerSetByID', [
             'sticker_set_id' => $sticker_set_id
         ], $this->session)['data'];
     }
@@ -73,7 +74,7 @@ final class Messages
     //             "sticker_set_id" => "5e0cb9f4345de9b18b4ba1ae"
     //         ]
     //     ];
-    //     return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+    //     return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     // }
 
     /**
@@ -84,7 +85,7 @@ final class Messages
      * @param int $reply_to_message_id if you have to reply
      * @return array API result
      */
-    public function SendMessage(string $guid, string $text, int $reply_to_message_id = 0): array
+    public function sendMessage(string $guid, string $text, int $reply_to_message_id = 0): array
     {
         $m = Tools::ProccessMetaDatas($text);
         $d = [
@@ -98,29 +99,29 @@ final class Messages
         if ($m != false && $m[0] != []) {
             $d['metadata']['meta_data_parts'] = $m[0];
         }
-        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
      * Edit Message Text
      *
      * @param string $guid object_guid
-     * @param string $NewText message
+     * @param string $newText message
      * @param int $message_id
      * @return array API result
      */
-    public function EditMessage(string $guid, string $NewText, int $message_id): array
+    public function EditMessage(string $guid, string $newText, int $message_id): array
     {
-        $m = Tools::ProccessMetaDatas($NewText);
+        $m = Tools::ProccessMetaDatas($newText);
         $d = [
             'object_guid' => $guid,
-            'text' => $m == false ? $NewText : $m[1],
+            'text' => $m == false ? $newText : $m[1],
             'message_id' => (string)$message_id
         ];
         if ($m != false && $m[0] != []) {
             $d['metadata']['meta_data_parts'] = $m[0];
         }
-        return $this->req->SendRequest('EditMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('editMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -133,7 +134,7 @@ final class Messages
      */
     public function ForwardMessages(string $from_object_guid, array $message_ids, string $to_object_guid): array
     {
-        return $this->req->SendRequest('forwardMessages', [
+        return $this->req->sendRequest('forwardMessages', [
             'from_object_guid' => $from_object_guid,
             'message_ids' => $message_ids,
             'rnd' => (string)mt_rand(10000000, 999999999),
@@ -149,11 +150,11 @@ final class Messages
      * @param DeleteType $type local or global
      * @return array API result
      */
-    public function DeleteMessages(string $object_guid, array $message_ids, DeleteType $type = DeleteType::Local): array
+    public function deleteMessages(string $object_guid, array|int $message_id, DeleteType $type = DeleteType::Local): array
     {
-        return $this->req->SendRequest('deleteMessages', [
+        return $this->req->sendRequest('deleteMessages', [
             'object_guid' => $object_guid,
-            'message_ids' => $message_ids,
+            'message_ids' => gettype($message_id) == 'integer' ? [$message_id] : $message_id,
             'type' => $type->value
         ], $this->session)['data'];
     }
@@ -165,9 +166,9 @@ final class Messages
      * @param ChatActivities $activity
      * @return array API result
      */
-    public function SendChatActivity(string $guid, ChatActivities $activity): array
+    public function sendChatActivity(string $guid, ChatActivities $activity): array
     {
-        return $this->req->SendRequest('sendChatActivity', [
+        return $this->req->sendRequest('sendChatActivity', [
             'object_guid' => $guid,
             'activity' => $activity->value
         ], $this->session)['data'];
@@ -182,7 +183,7 @@ final class Messages
      */
     public function seenChats(string $guid, string $last_message_id): array
     {
-        return $this->req->SendRequest('seenChats', [
+        return $this->req->sendRequest('seenChats', [
             'seen_list' => [
                 $guid => $last_message_id
             ]
@@ -204,7 +205,7 @@ final class Messages
         for ($i = 0; $i < count($guids); $i++) {
             $list[] = ['guid' => $guids[$i], 'msg_id' => $last_message_ids[$i]];
         }
-        return $this->req->SendRequest('seenChats', [
+        return $this->req->sendRequest('seenChats', [
             'seen_list' => $list
         ], $this->session)['data'];
     }
@@ -217,9 +218,10 @@ final class Messages
      * @param boolean $isLink is $path a link or not
      * @param string $caption
      * @param string $thumbnail base64 encoded picture
+     * @param string $reply_to_message_id
      * @return array API result
      */
-    public function SendPhoto(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
+    public function sendPhoto(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
     {
         $fn = basename($path);
         if ($isLink) {
@@ -262,15 +264,13 @@ final class Messages
             }
             $d['text'] = ($m == false) ? $caption : $m[1];
         }
-        if ($reply_to_message_id != '') {
-            $d['reply_to_message_id'] = $reply_to_message_id;
-        }
+        if ($reply_to_message_id != '') $d['reply_to_message_id'] = $reply_to_message_id;
 
-        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
-     * Send Document To Chat
+     * send Document To Chat
      *
      * @param string $guid
      * @param string $path file path or link
@@ -279,7 +279,7 @@ final class Messages
      * @param string $reply_to_message_id
      * @return array API result
      */
-    public function SendDocument(string $guid, string $path, bool $isLink = false, string $caption = '', string $reply_to_message_id = ''): array
+    public function sendDocument(string $guid, string $path, bool $isLink = false, string $caption = '', string $reply_to_message_id = ''): array
     {
         $fn = basename($path);
         if ($isLink) {
@@ -318,11 +318,9 @@ final class Messages
             }
             $d['text'] = ($m == false) ? $caption : $m[1];
         }
-        if ($reply_to_message_id != '') {
-            $d['reply_to_message_id'] = $reply_to_message_id;
-        }
+        if ($reply_to_message_id != '') $d['reply_to_message_id'] = $reply_to_message_id;
 
-        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -333,9 +331,10 @@ final class Messages
      * @param boolean $isLink is $path a URL or not
      * @param string $caption
      * @param string $thumbnail base64 encoded thumbnail picture
+     * @param string $reply_to_message_id
      * @return array API result
      */
-    public function SendVideo(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
+    public function sendVideo(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
     {
         $fn = basename($path);
         if ($isLink) {
@@ -352,8 +351,7 @@ final class Messages
             $path = "{$this->settings->Base}$fn";
         }
 
-        $getID3 = new getID3;
-        $file = $getID3->analyze($path);
+        $file = (new getID3)->analyze($path);
         if (isset($file['error'])) {
             throw new Failure("Error: " . implode("\n", $file['error']));
         }
@@ -385,11 +383,9 @@ final class Messages
             }
             $d['text'] = ($m == false) ? $caption : $m[1];
         }
-        if ($reply_to_message_id != '') {
-            $d['reply_to_message_id'] = $reply_to_message_id;
-        }
+        if ($reply_to_message_id != '') $d['reply_to_message_id'] = $reply_to_message_id;
 
-        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -399,7 +395,7 @@ final class Messages
      */
     public function getMyGifSet(): Generator
     {
-        $data = $this->req->SendRequest('getMyGifSet', array(), $this->session)['data'];
+        $data = $this->req->sendRequest('getMyGifSet', array(), $this->session)['data'];
 
         foreach ($data['gifs'] as $gif) {
             yield new Gif((string)$gif['file_id'], $gif['dc_id'], $gif['access_hash_rec'], $gif['file_name'], $gif['width'], $gif['height'], $gif['time'], $gif['size'], $gif['thumb_inline']);
@@ -410,8 +406,8 @@ final class Messages
      * send gif to guid
      *
      * @param string $guid
-     * @param string $path file path or url
      * @param Gif $gif if you want to send an uploaded gif
+     * @param string $path file path or url
      * @param boolean $isLink is $path a URL or not
      * @param string $caption
      * @param string $thumbnail base64 encoded thumbnail picture
@@ -435,8 +431,7 @@ final class Messages
                 $path = "{$this->settings->Base}$fn";
             }
 
-            $getID3 = new getID3;
-            $file = $getID3->analyze($path);
+            $file = (new getID3)->analyze($path);
             if (isset($file['error'])) {
                 throw new Failure("Error: " . implode("\n", $file['error']));
             }
@@ -492,11 +487,9 @@ final class Messages
             }
             $d['text'] = ($m == false) ? $caption : $m[1];
         }
-        if ($reply_to_message_id != '') {
-            $d['reply_to_message_id'] = $reply_to_message_id;
-        }
+        if ($reply_to_message_id != '') $d['reply_to_message_id'] = $reply_to_message_id;
 
-        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -504,13 +497,14 @@ final class Messages
      *
      * @param string $guid
      * @param string $path path or link
+     * @param MusicFile|null $options
      * @param boolean $isLink if $path is a link
      * @param string $caption
      * @param string $thumbnail
      * @param string $reply_to_message_id
      * @return array API result
      */
-    public function sendMusic(string $guid, string $path, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
+    public function sendMusic(string $guid, string $path, MusicFile|null $options = null, bool $isLink = false, string $caption = '', string $thumbnail = '', string $reply_to_message_id = ''): array
     {
         $fn = basename($path);
         if ($isLink) {
@@ -527,13 +521,14 @@ final class Messages
             $path = "{$this->settings->Base}$fn";
         }
 
-        $getID3 = new getID3;
-        $file = $getID3->analyze($path);
+        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+        $file = (new getID3)->analyze($path);
         if (isset($file['error'])) {
             throw new Failure("Error: " . implode("\n", $file['error']));
         }
-
-        list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($path);
+        if ($options !=  null) $fn = $options->file_name != 'default' ? $options->file_name : (isset($file['tags']['id3v2']['title'][0]) ? $file['tags']['id3v2']['title'][0] : $fn);
+        $singer = $file['tags_html']['id3v2']['artist'][0];
+        if ($options !=  null) $singer = $options->singer != 'default' ? $options->singer : $singer;
 
         $d = [
             'object_guid' => $guid,
@@ -548,7 +543,7 @@ final class Messages
                 'thumb_inline' => $thumbnail != '' ? $thumbnail : base64_encode(file_get_contents(__DIR__ . '/video.png')),
                 'time' => $file['playtime_seconds'],
                 'access_hash_rec' => $access_hash_rec,
-                'music_performer' => $file['tags_html']['id3v2']['artist'][0] ?? 'rubikalib'
+                'music_performer' => $singer ?? 'rubikalib'
             ]
         ];
         if ($caption != '') {
@@ -558,15 +553,13 @@ final class Messages
             }
             $d['text'] = ($m == false) ? $caption : $m[1];
         }
-        if ($reply_to_message_id != '') {
-            $d['reply_to_message_id'] = $reply_to_message_id;
-        }
+        if ($reply_to_message_id != '') $d['reply_to_message_id'] = $reply_to_message_id;
 
-        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
-     * send message Raction
+     * send message re-action
      *
      * @param string $guid
      * @param string $message_id
@@ -575,7 +568,7 @@ final class Messages
      */
     public function addMessageReaction(string $guid, string $message_id, ReactionsEmoji|ReactionsString $reaction): array
     {
-        return $this->req->SendRequest('actionOnMessageReaction', [
+        return $this->req->sendRequest('actionOnMessageReaction', [
             'action' => 'Add',
             'reaction_id' => $reaction->value,
             'message_id' => $message_id,
@@ -584,7 +577,7 @@ final class Messages
     }
 
     /**
-     * remove message Raction
+     * remove message re-action
      *
      * @param string $guid
      * @param string $message_id
@@ -592,7 +585,7 @@ final class Messages
      */
     public function removeMessageReaction(string $guid, string $message_id): array
     {
-        return $this->req->SendRequest('actionOnMessageReaction', [
+        return $this->req->sendRequest('actionOnMessageReaction', [
             'action' => 'Remove',
             'message_id' => $message_id,
             'object_guid' => $guid
@@ -641,10 +634,8 @@ final class Messages
             }
             $d['correct_option_index'] = $correct_option_index;
         }
-        if ($reply_to_message_id != '') {
-            $d['reply_to_message_id'] = $reply_to_message_id;
-        }
-        return $this->req->SendRequest('createPoll', $d, $this->session)['data'];
+        if ($reply_to_message_id != '') $d['reply_to_message_id'] = $reply_to_message_id;
+        return $this->req->sendRequest('createPoll', $d, $this->session)['data'];
     }
 
     /**
@@ -655,7 +646,7 @@ final class Messages
      */
     public function getPollStatus(string $poll_id): array
     {
-        return $this->req->SendRequest('createPoll', [
+        return $this->req->sendRequest('createPoll', [
             'poll_id' => $poll_id
         ], $this->session)['data'];
     }
@@ -669,7 +660,7 @@ final class Messages
      */
     public function getPollOptionVoters(string $poll_id, int $selection_index): array
     {
-        return $this->req->SendRequest('getPollOptionVoters', [
+        return $this->req->sendRequest('getPollOptionVoters', [
             'poll_id' => $poll_id,
             'selection_index' => $selection_index
         ], $this->session)['data'];
@@ -685,7 +676,7 @@ final class Messages
      */
     public function sendLocation(string $guid, float $latitude, float $longitude): array
     {
-        return $this->req->SendRequest('sendmessage', [
+        return $this->req->sendRequest('sendmessage', [
             'object_guid' => $guid,
             'rnd' => (string)mt_rand(10000000, 999999999),
             'location' => [
@@ -706,7 +697,7 @@ final class Messages
      * @param string $reply_to_message_id
      * @return array API result
      */
-    public function SendContact(string $guid, string $first_name, int $phone_number, string $contact_guid = '', string $last_name = '', string $reply_to_message_id = '0'): array
+    public function sendContact(string $guid, string $first_name, int $phone_number, string $contact_guid = '', string $last_name = '', string $reply_to_message_id = '0'): array
     {
         $d = [
             'object_guid' => $guid,
@@ -723,7 +714,7 @@ final class Messages
         if ($reply_to_message_id != '0') {
             $d['reply_to_message_id'] = $reply_to_message_id;
         }
-        return $this->req->SendRequest('sendMessage', $d, $this->session)['data'];
+        return $this->req->sendRequest('sendMessage', $d, $this->session)['data'];
     }
 
     /**
@@ -742,7 +733,7 @@ final class Messages
         foreach ($selection_indexs as $selection) {
             $list .= ',' . (string)$selection;
         }
-        return $this->req->SendRequest('votePoll', [
+        return $this->req->sendRequest('votePoll', [
             'poll_id' => $poll_id,
             'selection_index' => $list
         ], $this->session)['data'];
@@ -844,7 +835,7 @@ final class Messages
         $ex = explode('.', $fn);
         $data = $this->RequestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
 
-        return [$data['id'], $data['dc_id'], $this->req->SendFileToAPI($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
+        return [$data['id'], $data['dc_id'], $this->req->sendFileToAPI($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
     }
 
     /**
@@ -857,7 +848,7 @@ final class Messages
      */
     private function RequestSendFile(string $file_name, int $size, string $mime): array
     {
-        return $this->req->SendRequest('requestSendFile', [
+        return $this->req->sendRequest('requestsendFile', [
             'file_name' => $file_name,
             'size' => $size,
             'mime' => $mime

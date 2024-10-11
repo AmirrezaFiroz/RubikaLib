@@ -28,7 +28,7 @@ final class Folders
      */
     public function getFolders(): array
     {
-        return $this->req->SendRequest('getFolders', array(), $this->session)['data'];
+        return $this->req->sendRequest('getFolders', array(), $this->session)['data'];
     }
 
     /**
@@ -39,7 +39,7 @@ final class Folders
      */
     public function DeleteFolder(string $folder_id): array
     {
-        return $this->req->SendRequest('deleteFolder', [
+        return $this->req->sendRequest('deleteFolder', [
             'folder_id' => $folder_id
         ], $this->session)['data'];
     }
@@ -105,7 +105,7 @@ final class Folders
             }
         }*/
 
-        return $this->req->SendRequest('addFolder', [
+        return $this->req->sendRequest('addFolder', [
             'name' => $name,
             'include_chat_types' => $included,
             'exclude_chat_types' => $exclude_chat_types,

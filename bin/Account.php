@@ -41,7 +41,7 @@ final class Account
         unset($d[basename($_SERVER['SCRIPT_FILENAME'])]);
         file_put_contents($this->settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $this->settings->Base));
 
-        return $this->req->SendRequest('logout', array(), $this->session)['data'];
+        return $this->req->sendRequest('logout', array(), $this->session)['data'];
     }
 
     /**
@@ -51,7 +51,7 @@ final class Account
      */
     public function getMySessions(): array
     {
-        return $this->req->SendRequest('getMySessions', array(), $this->session)['data'];
+        return $this->req->sendRequest('getMySessions', array(), $this->session)['data'];
     }
 
     /**
@@ -65,7 +65,7 @@ final class Account
     {
         if (mb_strlen($session_key) != 64) throw new Failure('session key must be 64 characters');
 
-        return $this->req->SendRequest('terminateSession', [
+        return $this->req->sendRequest('terminateSession', [
             'session_key' => $session_key
         ], $this->session)['data'];
     }
@@ -78,7 +78,7 @@ final class Account
      */
     public function ChangeUsername(string $newUserName): array
     {
-        $d = $this->req->SendRequest('updateUsername', [
+        $d = $this->req->sendRequest('updateUsername', [
             'username' => str_replace('@', '', $newUserName)
         ], $this->session)['data'];
 
@@ -119,7 +119,7 @@ final class Account
 
         if ($first_name == '' && $last_name == '' && $bio == '') throw new Failure('edit what??');
 
-        $d = $this->req->SendRequest('updateProfile', $d, $this->session)['data'];
+        $d = $this->req->sendRequest('updateProfile', $d, $this->session)['data'];
 
         if (isset($d['chat_update'])) {
             $this->session->ChangeData('user', $d['user']);
@@ -135,7 +135,7 @@ final class Account
      */
     public function RequestDeleteAccount(): array
     {
-        return $this->req->SendRequest('requestDeleteAccount', array(), $this->session)['data'];
+        return $this->req->sendRequest('requestDeleteAccount', array(), $this->session)['data'];
     }
 
     /**
@@ -164,7 +164,7 @@ final class Account
 
         list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
 
-        return $this->req->SendRequest('uploadAvatar', [
+        return $this->req->sendRequest('uploadAvatar', [
             'thumbnail_file_id' => $file_id,
             'main_file_id' => $file_id
         ], $this->session)['data'];
@@ -178,7 +178,7 @@ final class Account
      */
     public function DeleteMyAvatar(string $avatar_id): array
     {
-        return $this->req->SendRequest('deleteAvatar', [
+        return $this->req->sendRequest('deleteAvatar', [
             'object_guid' => $this->getMySelf()['user_guid'],
             'avatar_id' => $avatar_id
         ], $this->session)['data'];
@@ -192,7 +192,7 @@ final class Account
      */
     private function checkTwoStepPasscode(string $password): array
     {
-        return $this->req->SendRequest('checkTwoStepPasscode', [
+        return $this->req->sendRequest('checkTwoStepPasscode', [
             'password' => $password
         ], $this->session)['data'];
     }
@@ -210,7 +210,7 @@ final class Account
     {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Failure('not valid email address');
 
-        return $this->req->SendRequest('requestRecoveryEmail', [
+        return $this->req->sendRequest('requestRecoveryEmail', [
             'password' => $password
         ], $this->session)['data'];
     }
@@ -224,7 +224,7 @@ final class Account
      */
     private function verifyRecoveryEmail(string $password, int $code): array
     {
-        return $this->req->SendRequest('verifyRecoveryEmail', [
+        return $this->req->sendRequest('verifyRecoveryEmail', [
             'password' => $password,
             'code' => (string)$code
         ], $this->session)['data'];
@@ -241,7 +241,7 @@ final class Account
      */
     private function changePassword(string $current_password, string $new_password, string $hint = 'password hint'): array
     {
-        return $this->req->SendRequest('changePassword', [
+        return $this->req->sendRequest('changePassword', [
             'password' => $current_password,
             'new_password' => $new_password,
             'hint' => $hint
@@ -255,7 +255,7 @@ final class Account
      */
     public function turnOffTwoStep(): array
     {
-        return $this->req->SendRequest('turnOffTwoStep', array(), $this->session)['data'];
+        return $this->req->sendRequest('turnOffTwoStep', array(), $this->session)['data'];
     }
 
     /**
@@ -270,7 +270,7 @@ final class Account
         $ex = explode('.', $fn);
         $data = $this->RequestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
 
-        return [$data['id'], $data['dc_id'], $this->req->SendFileToAPI($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
+        return [$data['id'], $data['dc_id'], $this->req->sendFileToAPI($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
     }
 
     /**
@@ -283,7 +283,7 @@ final class Account
      */
     private function RequestSendFile(string $file_name, int $size, string $mime): array
     {
-        return $this->req->SendRequest('requestSendFile', [
+        return $this->req->sendRequest('requestsendFile', [
             'file_name' => $file_name,
             'size' => $size,
             'mime' => $mime

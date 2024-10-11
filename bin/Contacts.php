@@ -25,12 +25,12 @@ final class Contacts
     public function getContacts(string $start_id = ''): array
     {
         if ($start_id != '') {
-            return $this->req->SendRequest('getContacts', [
+            return $this->req->sendRequest('getContacts', [
                 'start_id' => $start_id
             ], $this->session)['data'];
         }
 
-        return $this->req->SendRequest('getContacts', array(), $this->session)['data'];
+        return $this->req->sendRequest('getContacts', array(), $this->session)['data'];
     }
 
     /**
@@ -43,7 +43,7 @@ final class Contacts
      */
     public function AddContact(int $phone_number, string $first_name, string $last_name = ''): array
     {
-        return $this->req->SendRequest('addAddressBook', [
+        return $this->req->sendRequest('addAddressBook', [
             'phone' => '+' . Tools::ReplaceTruePhoneNumber($phone_number),
             'first_name' => $first_name,
             'last_name' => $last_name
@@ -58,7 +58,7 @@ final class Contacts
      */
     public function DeleteContact(string $user_guid): array
     {
-        return $this->req->SendRequest('deleteContact', [
+        return $this->req->sendRequest('deleteContact', [
             'user_guid' => $user_guid
         ], $this->session)['data'];
     }

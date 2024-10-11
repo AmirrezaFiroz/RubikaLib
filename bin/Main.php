@@ -24,13 +24,14 @@ final class Main
     private ?Session $session;
     private ?Cryption $crypto;
 
-    public static $VERSION = '2.0.1';
+    public static $VERSION = '2.1.0';
 
     public ?Folders $Folders;
     public ?Account $Account;
     public ?Messages $Messages;
     public ?Contacts $Contacts;
     public ?Chats $Chats;
+    public ?Stream $Stream;
 
     /**
      * @param integer $phone_number 989123456789 or 9123456789 or leave empty to get in CLI
@@ -317,6 +318,7 @@ final class Main
             $this->crypto = new Cryption(Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), $this->session->data['private_key']);
             $this->Messages = new Messages($this->session, $this->req, $settings);
             $this->Contacts = new Contacts($this->session, $this->req);
+            $this->Stream = new Stream($this->session, $this->req, $settings);
         } else {
             while (!in_array(strlen((string)$phone_number), [10, 12]) && (!file_exists($settings->Base . 'sessions.rub') or !isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])]))) {
                 $phone_number = (int)readline("Enter Phone Number: ");
@@ -502,6 +504,7 @@ final class Main
             $this->crypto = new Cryption(Cryption::Decode($this->req->getPartOfSessionKey()[0], $this->req->getPartOfSessionKey()[1]), $this->session->data['private_key']);
             $this->Messages = new Messages($this->session, $this->req, $settings);
             $this->Contacts = new Contacts($this->session, $this->req);
+            $this->Stream = new Stream($this->session, $this->req, $settings);
         }
     }
 
@@ -522,7 +525,7 @@ final class Main
             $d['pass_key'] = $pass_key;
         }
 
-        $r = $this->req->SendRequest('sendCode', $d, $this->session, true)['data'];
+        $r = $this->req->sendRequest('sendCode', $d, $this->session, true)['data'];
 
         if (!in_array($r['status'], ['OK', 'SendPassKey'])) {
             throw new Failure('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
@@ -543,7 +546,7 @@ final class Main
     {
         list($publicKey, $privateKey) = cryption::Generate_RSAkey();
 
-        $r = $this->req->SendRequest('signIn', [
+        $r = $this->req->sendRequest('signIn', [
             "phone_number" => (string)$this->phone_number,
             "phone_code_hash" => $phone_code_hash,
             "phone_code" => $code,
@@ -578,7 +581,7 @@ final class Main
             'device_model' => ($app_name != '' ? "Rubika-lib($app_name) " . self::$VERSION : 'Rubika-lib ' . self::$VERSION),
             'device_hash' => Tools::GenerateDeviceHash($this->req->useragent)
         ];
-        $r = $this->req->SendRequest('registerDevice', $d, $this->session);
+        $r = $this->req->sendRequest('registerDevice', $d, $this->session);
 
         if ($r['status'] != 'OK') {
             throw new Failure('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));

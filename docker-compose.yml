@@ -1,0 +1,8 @@
+version: '3'
+services:
+  ubuntu:
+    image: ubuntu:latest
+    volumes:
+      - ./:/lab
+    tty: true
+    container_name: labratory
