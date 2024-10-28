@@ -181,7 +181,7 @@ final class Messages
      * @param string $last_message_id
      * @return array API result
      */
-    public function seenChats(string $guid, string $last_message_id): array
+    public function seenChat(string $guid, string $last_message_id): array
     {
         return $this->req->sendRequest('seenChats', [
             'seen_list' => [
@@ -193,20 +193,15 @@ final class Messages
     /**
      * seen chat
      *
-     * @param array $guids
-     * @param array $last_message_ids
+     * @param array $seen_list
      * @example . here is an example:
-     * seenChatsArray(['u0UBF88...', 'g0UKLD66...'],   ['91729830180', '9798103900']);
+     * seenChatsArray(['u0UBF88...' => '91729830180', 'g0UKLD66...' => '9798103900']);
      * @return array API result
      */
-    public function seenChatsArray(array $guids, array $last_message_ids): array
+    public function seenChatsArray(array $seen_list): array
     {
-        $list = [];
-        for ($i = 0; $i < count($guids); $i++) {
-            $list[] = ['guid' => $guids[$i], 'msg_id' => $last_message_ids[$i]];
-        }
         return $this->req->sendRequest('seenChats', [
-            'seen_list' => $list
+            'seen_list' => $seen_list
         ], $this->session)['data'];
     }
 
@@ -391,14 +386,28 @@ final class Messages
     /**
      * get account gifs list
      *
-     * @return Generator Gifs as Generator function(in Rubikalib\Interfaces\Gif types)
+     * @return Generator|array Gifs as Generator function(in Rubikalib\Interfaces\Gif types) or all in one array(if library isn't Optimal)
      */
-    public function getMyGifSet(): Generator
+    public function getMyGifSet(): Generator|array
     {
         $data = $this->req->sendRequest('getMyGifSet', array(), $this->session)['data'];
 
-        foreach ($data['gifs'] as $gif) {
-            yield new Gif((string)$gif['file_id'], $gif['dc_id'], $gif['access_hash_rec'], $gif['file_name'], $gif['width'], $gif['height'], $gif['time'], $gif['size'], $gif['thumb_inline']);
+        if ($this->settings->Optimal) {
+            foreach ($data['gifs'] as $gif) {
+                yield new Gif(
+                    (string)$gif['file_id'],
+                    $gif['dc_id'],
+                    $gif['access_hash_rec'],
+                    $gif['file_name'],
+                    $gif['width'],
+                    $gif['height'],
+                    $gif['time'],
+                    $gif['size'],
+                    $gif['thumb_inline']
+                );
+            }
+        } else {
+            return $data['gifs'];
         }
     }
 

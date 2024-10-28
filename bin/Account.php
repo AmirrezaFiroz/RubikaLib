@@ -90,6 +90,19 @@ final class Account
     }
 
     /**
+     * Set Account Username
+     *
+     * @param string $newUserName example: @rubika_lib or rubika_lib
+     * @return bool username can be set on profile
+     */
+    public function CheckUsername(string $username): bool
+    {
+        return $this->req->sendRequest('checkUserUsername', [
+            'username' => $username
+        ], $this->session)['data']['exist'];
+    }
+
+    /**
      * Edit Account Info
      *
      * @param string $first_name new first name (if want to change)
