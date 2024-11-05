@@ -1,6 +1,0 @@
-update*.*
-lib/
-.rnd
-todo/
-.phpunit.result.cache
-*docker*

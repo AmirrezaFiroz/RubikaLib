@@ -90,15 +90,15 @@ final class Account
     }
 
     /**
-     * Set Account Username
+     * checks that an username can be used or not
      *
-     * @param string $newUserName example: @rubika_lib or rubika_lib
+     * @param string $userName example: @rubika_lib or rubika_lib
      * @return bool username can be set on profile
      */
     public function CheckUsername(string $username): bool
     {
-        return $this->req->sendRequest('checkUserUsername', [
-            'username' => $username
+        return !$this->req->sendRequest('checkUserUsername', [
+            'username' => str_replace('@', '', $username)
         ], $this->session)['data']['exist'];
     }
 
@@ -113,10 +113,7 @@ final class Account
      */
     public function EditProfile(string $first_name = '', string $last_name = '', string $bio = ''): array
     {
-        $d = [
-            'updated_parameters' => []
-        ];
-
+        $d = array('updated_parameters' => []);
         if ($first_name != '') {
             $d['first_name'] = mb_substr($first_name, 0, 32);
             $d['updated_parameters'][] = 'first_name';
@@ -129,14 +126,10 @@ final class Account
             $d['bio'] = $bio;
             $d['updated_parameters'][] = 'bio';
         }
-
+        
         if ($first_name == '' && $last_name == '' && $bio == '') throw new Failure('edit what??');
-
         $d = $this->req->sendRequest('updateProfile', $d, $this->session)['data'];
-
-        if (isset($d['chat_update'])) {
-            $this->session->ChangeData('user', $d['user']);
-        }
+        if (isset($d['chat_update'])) $this->session->ChangeData('user', $d['user']);
 
         return $d;
     }
@@ -158,7 +151,7 @@ final class Account
      * @param bool $isLink
      * @return array API result
      */
-    public function UploadNewProfileAvatar(string $file_path, bool $isLink): array
+    public function UploadNewProfileAvatar(string $file_path, bool $isLink = false): array
     {
         $fn = basename($file_path);
         if ($isLink) {
