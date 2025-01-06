@@ -16,23 +16,20 @@ final class Tools
      * @throws Failure throws an error when phone number is incorrect
      * @return int true phone number in this format: 989123456789
      */
-    public static function ReplaceTruePhoneNumber(int $phoneNumber): int
+    public static function GenerateTruePhoneNumber(int $phoneNumber): int
     {
         $phoneNumber = preg_replace('/[^\d+]/', '', (string)$phoneNumber);
-
         $length = strlen($phoneNumber);
-        if ($length < 10 || $length > 13) {
-            throw new Failure("there is an error with phone number format: " . $phoneNumber);
-        }
+        if ($length < 10 || $length > 13) throw new Failure("there is an error with phone number format: " . $phoneNumber);
 
-        $patterns = [
-            // '/^0[9]\d{9}$/',    // 09123456789 =====> not needed for now
-            '/^\+98[9]\d{9}$/', // +989123456789
-            '/^98[9]\d{9}$/',   // 989123456789
-            '/^[9]\d{9}$/'      // 9123456789
-        ];
-
-        foreach ($patterns as $pattern) {
+        foreach (
+            [
+                // '/^0[9]\d{9}$/',    // 09123456789 =====> not needen for now
+                '/^\+98[9]\d{9}$/', // +989123456789
+                '/^98[9]\d{9}$/',   // 989123456789
+                '/^[9]\d{9}$/'      // 9123456789
+            ] as $pattern
+        ) {
             if (preg_match($pattern, $phoneNumber)) {
                 $phoneNumber = preg_replace('/^0|^98|\+98/', '', $phoneNumber);
                 return (int)('98' . $phoneNumber);

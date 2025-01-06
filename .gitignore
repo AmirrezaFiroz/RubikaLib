@@ -6,3 +6,4 @@ file.php
 .rnd
 todo/
 .phpunit.result.cache
+*docker*

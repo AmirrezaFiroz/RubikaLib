@@ -23,7 +23,7 @@ final class Session
     public ?string $hash;
     public array $data = [];
     private static string $workDirStatic = 'lib/';
-    private ?string $k;
+    private ?string $key;
 
     /**
      * construct the object
@@ -40,7 +40,7 @@ final class Session
         if ($workDir != 'lib/') self::$workDirStatic = $workDir;
 
         $this->hash = self::GeneratePhoneHash($phone_number);
-        $this->k = md5(sha1(Cryption::GenerateRandom_tmp_session(5)));
+        $this->key = md5(sha1(Cryption::GenerateRandom_tmp_session(5)));
         $this->GenerateSession();
     }
 
@@ -104,7 +104,7 @@ final class Session
 
     public function getPartOfSessionKey(): array
     {
-        return [Cryption::Encode($this->auth, $this->k), $this->k];
+        return [Cryption::Encode($this->auth, $this->key), $this->key];
     }
 
     /**

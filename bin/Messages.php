@@ -714,7 +714,7 @@ final class Messages
             'message_contact' => [
                 'first_name' => $first_name,
                 'last_name' => $last_name,
-                'phone_number' => Tools::ReplaceTruePhoneNumber($phone_number)
+                'phone_number' => Tools::GenerateTruePhoneNumber($phone_number)
             ]
         ];
         if ($contact_guid != '') {

@@ -44,7 +44,7 @@ final class Contacts
     public function AddContact(int $phone_number, string $first_name, string $last_name = ''): array
     {
         return $this->req->sendRequest('addAddressBook', [
-            'phone' => '+' . Tools::ReplaceTruePhoneNumber($phone_number),
+            'phone' => '+' . Tools::GenerateTruePhoneNumber($phone_number),
             'first_name' => $first_name,
             'last_name' => $last_name
         ], $this->session)['data'];
