@@ -27,7 +27,7 @@ final class Main
     private ?Session $session;
     private ?Cryption $crypto;
 
-    public static $VERSION = 'pre-2.3.5';
+    public static $VERSION = 'v2.3.5';
 
     public ?Folders $Folders;
     public ?Account $Account;
