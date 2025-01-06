@@ -114,7 +114,7 @@ final class Requests
      *  }
      * @return array API result
      */
-    public function SendRequest(string $method, array $data, Session $session, bool $tmp_session = false): array
+    public function sendRequest(string $method, array $data, Session $session, bool $tmp_session = false): array
     {
         // TODO
         /*if (isset($session->data['private_key'])) {
@@ -125,7 +125,7 @@ final class Requests
             }
 
             if ((time() - $gen_time) >= 86400) {
-                $session->ChangeData('user', $this->SendRequest('getUserInfo', ['user_guid' => $session->data['user']['user_guid']], $session)['data']['user']);
+                $session->ChangeData('user', $this->sendRequest('getUserInfo', ['user_guid' => $session->data['user']['user_guid']], $session)['data']['user']);
                 $this->links = json_decode(file_get_contents("{$this->MainSettings->Base}api-links.json"), true);
                 $this->MainSettings->KeepUpdated ? file_put_contents(($this->MainSettings->AppType == AppType::Shad) ? "{$this->MainSettings->Base}api-links-shad.json" : "{$this->MainSettings->Base}api-links-rubika.json", json_encode($this->getDCMess())) : null;
             }
@@ -317,7 +317,7 @@ final class Requests
      * @param string $url
      * @return array API result
      */
-    public function SendFileToAPI(string $path, string $file_id, string $access_hash_send, string $url): array
+    public function sendFileToAPI(string $path, string $file_id, string $access_hash_send, string $url): array
     {
         $chunkSize = 131072; // 128 KB
         $fileHandle = fopen($path, 'rb');
@@ -371,7 +371,7 @@ final class Requests
      */
     private function showProgress(int $percent): void
     {
-        if (!$this->MainSettings->ShowProgressBar) return;
+        if (!$this->MainSettings->ShowProgresses) return;
 
         $bar = str_repeat("=", $percent - ($percent != 0 ? 1 : 0)) . ($percent != 0 ? '>' : '') . str_repeat(" ", (100 - $percent));
         echo "\rUploading... : [{$bar}] {$percent}%";

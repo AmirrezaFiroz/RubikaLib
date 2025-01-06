@@ -1,7 +1,7 @@
 {
     "name": "rubikalib/rubikalib",
     "description": "A library for working with rubika API from PHP source code",
-    "version": "v2.0.1",
+    "version": "v2.3.5-pre",
     "keywords": [
         "rubika",
         "rubikalib",
@@ -38,6 +38,7 @@
         "paragonie/sodium_compat": "^2.0.1"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.3"
+        "phpunit/phpunit": "^11.3",
+        "php-ffmpeg/php-ffmpeg": "^1.2"
     }
 }

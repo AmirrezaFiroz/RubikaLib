@@ -42,7 +42,7 @@ final class chats
             $method = 'joinChannelAction';
         }
         $t = explode('/', $enterKey);
-        return $this->req->SendRequest($method, filter_var($enterKey, FILTER_VALIDATE_URL) ? [
+        return $this->req->sendRequest($method, filter_var($enterKey, FILTER_VALIDATE_URL) ? [
             'hash_link' => $t[count($t) - 1]
         ] : [
             'channel_guid' => $enterKey,
@@ -65,7 +65,7 @@ final class chats
         if ($chatType == 'Channel') {
             $d['action'] = 'Leave';
         }
-        return $this->req->SendRequest($chatType == 'group' ? 'leaveGroup' : 'joinChannelAction', $d, $this->session)['data'];
+        return $this->req->sendRequest($chatType == 'group' ? 'leaveGroup' : 'joinChannelAction', $d, $this->session)['data'];
     }
 
     /**
@@ -76,7 +76,7 @@ final class chats
      */
     public function deleteGroup(string $group_guid): array
     {
-        return $this->req->SendRequest('removeGroup', [
+        return $this->req->sendRequest('removeGroup', [
             'group_guid' => $group_guid
         ], $this->session)['data'];
     }
@@ -90,7 +90,7 @@ final class chats
      */
     public function createGroup(string $title, array $members): array
     {
-        return $this->req->SendRequest('addGroup', [
+        return $this->req->sendRequest('addGroup', [
             'title' => $title,
             'member_guids' => $members
         ], $this->session)['data'];
@@ -112,7 +112,7 @@ final class chats
      */
     public function addGroupMembers(string $group_guid, array $members): array
     {
-        return $this->req->SendRequest('addGroupMembers', [
+        return $this->req->sendRequest('addGroupMembers', [
             'group_guid' => $group_guid,
             'member_guids' => $members
         ], $this->session)['data'];
@@ -126,7 +126,7 @@ final class chats
      */
     public function getGroupOnlineCount(string $group_guid): array
     {
-        return $this->req->SendRequest('getGroupOnlineCount', [
+        return $this->req->sendRequest('getGroupOnlineCount', [
             'group_guid' => $group_guid
         ], $this->session)['data'];
     }
@@ -149,7 +149,7 @@ final class chats
         if ($start_id != 0) {
             $d['start$start_id'] = $start_id;
         }
-        return $this->req->SendRequest('getGroupAllMembers', $d, $this->session)['data'];
+        return $this->req->sendRequest('getGroupAllMembers', $d, $this->session)['data'];
     }
 
     /**
@@ -162,7 +162,7 @@ final class chats
     public function uploadNewGroupAvatar(string $group_guid, string $file_path): array
     {
         list($file_id, $dc_id, $access_hash_rec) = $this->sendFileToAPI($file_path);
-        return $this->req->SendRequest('uploadAvatar', [
+        return $this->req->sendRequest('uploadAvatar', [
             'object_guid' => $group_guid,
             'thumbnail_file_id' => $file_id,
             'main_file_id' => $file_id
@@ -198,7 +198,7 @@ final class chats
      */
     public function deleteGroupAvatar(string $group_guid, string $avatar_id): array
     {
-        return $this->req->SendRequest('deleteAvatar', [
+        return $this->req->sendRequest('deleteAvatar', [
             'object_guid' => $group_guid,
             'avatar_id' => $avatar_id
         ], $this->session)['data'];
@@ -212,7 +212,7 @@ final class chats
      */
     public function getGroupLink(string $group_guid): array
     {
-        return $this->req->SendRequest('getGroupLink', [
+        return $this->req->sendRequest('getGroupLink', [
             'object_guid' => $group_guid,
         ], $this->session)['data'];
     }
@@ -225,7 +225,7 @@ final class chats
      */
     public function getNewGroupLink(string $group_guid): array
     {
-        return $this->req->SendRequest('setGroupLink', [
+        return $this->req->sendRequest('setGroupLink', [
             'object_guid' => $group_guid,
         ], $this->session)['data'];
     }
@@ -238,7 +238,7 @@ final class chats
      */
     public function getGroupAdminMembers(string $group_guid): array
     {
-        return $this->req->SendRequest('getGroupAdminMembers', [
+        return $this->req->sendRequest('getGroupAdminMembers', [
             'object_guid' => $group_guid,
         ], $this->session)['data'];
     }
@@ -252,7 +252,7 @@ final class chats
      */
     public function editGroupHistoryForNewMembers(string $group_guid, HistoryForNewMembers $chat_history_for_new_members): array
     {
-        return $this->req->SendRequest('setGroupLink', [
+        return $this->req->sendRequest('setGroupLink', [
             'object_guid' => $group_guid,
             'chat_history_for_new_members' => $chat_history_for_new_members->value,
             'updated_parameters' => ['chat_history_for_new_members']
@@ -268,7 +268,7 @@ final class chats
      */
     public function setGroupEventMessages(string $group_guid, bool $EventMssages): array
     {
-        return $this->req->SendRequest('setGroupLink', [
+        return $this->req->sendRequest('setGroupLink', [
             'object_guid' => $group_guid,
             'event_messages' => $EventMssages,
             'updated_parameters' => ['event_messages']
@@ -299,7 +299,7 @@ final class chats
             "description"
         ];
 
-        $d = $this->req->SendRequest('editGroupInfo', $d, $this->session)['data'];
+        $d = $this->req->sendRequest('editGroupInfo', $d, $this->session)['data'];
 
         return $d;
     }
@@ -313,7 +313,7 @@ final class chats
      */
     public function banGroupMember(string $group_guid, string $member_guid): array
     {
-        return $this->req->SendRequest('banGroupMember', [
+        return $this->req->sendRequest('banGroupMember', [
             'group_guid' => $group_guid,
             'member_guid' => $member_guid,
             'action' => 'Set'
@@ -329,7 +329,7 @@ final class chats
      */
     public function unBanGroupMember(string $group_guid, string $member_guid): array
     {
-        return $this->req->SendRequest('banGroupMember', [
+        return $this->req->sendRequest('banGroupMember', [
             'group_guid' => $group_guid,
             'member_guid' => $member_guid,
             'action' => 'Unset'
@@ -357,7 +357,7 @@ final class chats
                 $d['access_list'][] = (string)$access->value;
             }
         }
-        return $this->req->SendRequest('setGroupAdmin', $d, $this->session)['data'];
+        return $this->req->sendRequest('setGroupAdmin', $d, $this->session)['data'];
     }
 
     /**
@@ -369,7 +369,7 @@ final class chats
      */
     public function removeGroupAdmin(string $group_guid, string $member_guid): array
     {
-        return $this->req->SendRequest('setGroupAdmin', [
+        return $this->req->sendRequest('setGroupAdmin', [
             'group_guid' => $group_guid,
             'member_guid' => $member_guid,
             'action' => 'UnsetAdmin'
@@ -385,7 +385,7 @@ final class chats
      */
     public function getGroupAdminAccessList(string $group_guid, string $admin_guid): array
     {
-        return $this->req->SendRequest('getGroupAdminAccessList', [
+        return $this->req->sendRequest('getGroupAdminAccessList', [
             'group_guid' => $group_guid,
             'member_guid' => $admin_guid,
         ], $this->session)['data'];
@@ -400,7 +400,7 @@ final class chats
      */
     public function setGroupSlowModeTime(string $group_guid, int $time): array
     {
-        return $this->req->SendRequest('editGroupInfo', [
+        return $this->req->sendRequest('editGroupInfo', [
             'group_guid' => $group_guid,
             'slow_mode' => $time,
             'updated_parameters' => ['slow_mode']
@@ -415,7 +415,7 @@ final class chats
      */
     public function getBannedGroupMembers(string $group_guid): array
     {
-        return $this->req->SendRequest('getBannedGroupMembers', [
+        return $this->req->sendRequest('getBannedGroupMembers', [
             'group_guid' => $group_guid
         ], $this->session)['data'];
     }
@@ -445,7 +445,7 @@ final class chats
                 }
             }
         }
-        return $this->req->SendRequest('editGroupInfo', $d, $this->session)['data'];
+        return $this->req->sendRequest('editGroupInfo', $d, $this->session)['data'];
     }
 
 
@@ -463,7 +463,7 @@ final class chats
      */
     public function requestChangeObjectOwner(string $group_guid, string $new_owner_user_guid): array
     {
-        return $this->req->SendRequest('editGroupInfo', [
+        return $this->req->sendRequest('editGroupInfo', [
             'group_guid' => $group_guid,
             'new_owner_user_guid' => $new_owner_user_guid
         ], $this->session)['data'];
@@ -477,7 +477,7 @@ final class chats
      */
     public function AcceptRequestObjectOwning(string $object_guid): array
     {
-        return $this->req->SendRequest('editGroupInfo', [
+        return $this->req->sendRequest('editGroupInfo', [
             'object_guid' => $object_guid,
             'action' => 'Accept'
         ], $this->session)['data'];
@@ -491,7 +491,7 @@ final class chats
      */
     public function RejectRequestObjectOwning(string $object_guid): array
     {
-        return $this->req->SendRequest('editGroupInfo', [
+        return $this->req->sendRequest('editGroupInfo', [
             'object_guid' => $object_guid,
             'action' => 'Reject'
         ], $this->session)['data'];
@@ -505,7 +505,7 @@ final class chats
      */
     public function getChats(int $start_id = 0): array
     {
-        return $this->req->SendRequest('getChats', [
+        return $this->req->sendRequest('getChats', [
             'start_id' => $start_id
         ], $this->session)['data'];
     }
@@ -518,7 +518,7 @@ final class chats
      */
     public function getChatsUpdates(int $state = 0): array
     {
-        return $this->req->SendRequest('getChatsUpdates', [
+        return $this->req->sendRequest('getChatsUpdates', [
             'state' => $state
         ], $this->session)['data'];
     }
@@ -532,7 +532,7 @@ final class chats
      */
     public function getMessagesInterval(string $guid, int $middle_message_id): array
     {
-        return $this->req->SendRequest('getMessagesInterval', [
+        return $this->req->sendRequest('getMessagesInterval', [
             'object_guid' => $guid,
             'middle_message_id' => $middle_message_id
         ], $this->session)['data'];
@@ -546,7 +546,7 @@ final class chats
      */
     public function getMessages(string $guid, int $message_id, Sort $sort = Sort::FromMax): array
     {
-        return $this->req->SendRequest('getMessages', [
+        return $this->req->sendRequest('getMessages', [
             'object_guid' => $guid,
             'sort' => $sort->value,
             str_replace('from', '', strtolower($sort->value)) . '_id' => $message_id
@@ -565,7 +565,7 @@ final class chats
         $ex = explode('.', $fn);
         $data = $this->RequestSendFile($fn, filesize($path), $ex[count($ex) - 1]);
 
-        return [$data['id'], $data['dc_id'], $this->req->SendFileToAPI($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
+        return [$data['id'], $data['dc_id'], $this->req->sendFileToAPI($path, $data['id'], $data['access_hash_send'], $data['upload_url'])['data']['access_hash_rec']];
     }
 
     /**
@@ -578,7 +578,7 @@ final class chats
      */
     private function RequestSendFile(string $file_name, int $size, string $mime): array
     {
-        return $this->req->SendRequest('requestSendFile', [
+        return $this->req->sendRequest('requestsendFile', [
             'file_name' => $file_name,
             'size' => $size,
             'mime' => $mime
@@ -593,7 +593,7 @@ final class chats
      */
     public function getChatInfo(string $guid): array
     {
-        return $this->req->SendRequest('get' . Tools::ChatTypeByGuid($guid)->value . 'Info', [
+        return $this->req->sendRequest('get' . Tools::ChatTypeByGuid($guid)->value . 'Info', [
             strtolower(Tools::ChatTypeByGuid($guid)->value) . '_guid' => $guid
         ], $this->session)['data'];
     }
@@ -606,7 +606,7 @@ final class chats
      */
     public function getChatInfoByUsername(string $username): array
     {
-        return $this->req->SendRequest('getObjectInfoByUsername', [
+        return $this->req->sendRequest('getObjectInfoByUsername', [
             'username' => str_replace('@', '', $username)
         ], $this->session)['data'];
     }
@@ -619,7 +619,7 @@ final class chats
      */
     public function getAvatars(string $object_guid): array
     {
-        return $this->req->SendRequest('getAvatars', [
+        return $this->req->sendRequest('getAvatars', [
             'object_guid' => $object_guid
         ], $this->session)['data'];
     }

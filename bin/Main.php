@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
+use Generator;
 use Ratchet\Client\WebSocket;
 use React\EventLoop\Loop;
+
 use RubikaLib\Utils\Tools;
 use RubikaLib\Enums\ChatActivities;
+use RubikaLib\Enums\DevModeStatus;
 use RubikaLib\Interfaces\{
     MainSettings,
     Runner
@@ -24,60 +27,255 @@ final class Main
     private ?Session $session;
     private ?Cryption $crypto;
 
-    public static $VERSION = '2.0.1';
+    public static $VERSION = 'pre-2.3.5';
 
     public ?Folders $Folders;
     public ?Account $Account;
     public ?Messages $Messages;
     public ?Contacts $Contacts;
     public ?Chats $Chats;
+    public ?Stream $Stream;
+
+    public ?DevModeStatus $LoginStatus;
+
+    private bool $allow_send_code = false;
+    private bool $allow_send_code_with_passkey = false;
+    private bool $allow_register = false;
+    private bool $allow_signin = false;
 
     /**
      * @param integer $phone_number 989123456789 or 9123456789 or leave empty to get in CLI
      * @param string $app_name (it just need in login)
      * @param MainSettings $settings
+     * @param bool $dev_mode prevents auto-login
+     * @throws Failure Error handler
      */
     public function __construct(
         int $phone_number = 0,
         string $app_name = '',
-        private MainSettings $settings = new MainSettings
+        private MainSettings $settings = new MainSettings,
+        private bool $dev_mode = false
     ) {
-        if (isset($_SERVER['SERVER_PROTOCOL'])) {
-            if (!file_exists($settings->Base . 'sessions.rub') or !isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])])) {
+        if (!$dev_mode) {
+            if (isset($_SERVER['SERVER_PROTOCOL'])) {
+                if (!file_exists($settings->Base . 'sessions.rub') or !isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])])) {
 ?>
-                <!DOCTYPE html>
-                <?php
-                if (!in_array(strlen((string)$phone_number), [10, 12]) && count($_POST) == 0) {
-                ?>
-                    <form method="post">
-                        <span style="color: green;">Enter Phone Number:</span>
-                        <br><br>
-                        <input type="text" name="phone" placeholder="9123456789" required minlength="10" maxlength="12"> <button type="submit">Go</button>
-                    </form>
+                    <!DOCTYPE html>
                     <?php
-                    exit;
-                }
+                    if (!in_array(strlen((string)$phone_number), [10, 12]) && count($_POST) == 0) {
+                    ?>
+                        <form method="post">
+                            <span style="color: green;">Enter Phone Number:</span>
+                            <br><br>
+                            <input type="text" name="phone" placeholder="9123456789" required minlength="10" maxlength="12"> <button type="submit">Go</button>
+                        </form>
+                        <?php
+                        exit;
+                    }
 
-                if (!in_array(strlen((string)$phone_number), [10, 12]) && count($_POST) != 0) {
-                    if (isset($_POST['phone'])) {
-                        if (in_array(strlen((string)((int)$_POST['phone'])), [10, 12])) {
-                            $this->phone_number = Tools::ReplaceTruePhoneNumber((int)$_POST['phone']);
+                    if (!in_array(strlen((string)$phone_number), [10, 12]) && count($_POST) != 0) {
+                        if (isset($_POST['phone'])) {
+                            if (in_array(strlen((string)((int)$_POST['phone'])), [10, 12])) {
+                                $this->phone_number = Tools::GenerateTruePhoneNumber((int)$_POST['phone']);
 
-                            $d = file_exists($settings->Base . 'sessions.rub') ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true) : array();
-                            @$d[basename($_SERVER['SCRIPT_FILENAME'])] = $this->phone_number;
-                            file_put_contents($settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $settings->Base));
+                                $d = file_exists($settings->Base . 'sessions.rub') ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true) : array();
+                                @$d[basename($_SERVER['SCRIPT_FILENAME'])] = $this->phone_number;
+                                file_put_contents($settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $settings->Base));
 
-                            if (!Session::is_session($this->phone_number, $settings->AppType)) {
-                                $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], $settings->tmp_session, MainSettings: $settings);
-                                $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base, $settings);
-                                $this->session
-                                    ->ChangeData('useragent', $this->req->useragent)
-                                    ->ChangeData('step', 'setup');
+                                if (!Session::is_session($this->phone_number, $settings->AppType)) {
+                                    $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], $settings->tmp_session, MainSettings: $settings);
+                                    $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base, $settings);
+                                    $this->session
+                                        ->ChangeData('useragent', $this->req->useragent)
+                                        ->ChangeData('step', 'setup');
 
+                                    $send_code = $this->sendCode();
+
+                                    if ($send_code['status'] == 'SendPassKey') {
+                        ?>
+                                        <form method="post">
+                                            <span style="color: yellow;">Enter Password:</span>
+                                            <br><br>
+                                            <input type="text" name="PassKey" placeholder="<?= $send_code['hint_pass_key'] ?>" required> <button type="submit">Go</button>
+                                        </form>
+                                    <?php
+                                        $this->session
+                                            ->ChangeData('step', 'getPassKey')
+                                            ->ChangeData('hint_pass_key', $send_code['hint_pass_key']);
+                                        exit;
+                                    } else {
+                                    ?>
+                                        <form method="post">
+                                            <span style="color: green;">Enter Code:</span>
+                                            <br><br>
+                                            <input type="text" name="code" placeholder="<?= $send_code['code_digits_count'] ?>-digits" required minlength="<?= $send_code['code_digits_count'] ?>" maxlength="<?= $send_code['code_digits_count'] ?>"> <button type="submit">Go</button>
+                                        </form>
+                                        <?php
+                                        $this->session
+                                            ->ChangeData('step', 'getCode')
+                                            ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
+                                            ->ChangeData('code_digits_count', $send_code['code_digits_count']);
+                                        exit;
+                                    }
+                                } else {
+                                    $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
+                                    $this->req = new Requests(
+                                        auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
+                                        private_key: $this->session->data['private_key'] ?? '',
+                                        useragent: $this->session->data['useragent'],
+                                        MainSettings: $settings
+                                    );
+
+                                    switch ($this->session->data['step']) {
+                                        case 'getCode':
+                                        ?>
+                                            <form method="post">
+                                                <span style="color: green;">Enter Code:</span>
+                                                <br><br>
+                                                <input type="text" name="code" placeholder="<?= $this->session->data['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
+                                            </form>
+                                        <?php
+                                            exit;
+                                            break;
+                                        case 'getPassKey':
+                                        ?>
+                                            <form method="post">
+                                                <span style="color: yellow;">Enter Password:</span>
+                                                <br><br>
+                                                <input type="text" name="PassKey" placeholder="<?= $this->session->data['hint_pass_key'] ?>" required> <button type="submit">Go</button>
+                                            </form>
+                                            <?php
+                                            exit;
+                                            break;
+                                        case 'setup':
+                                            $send_code = $this->sendCode();
+
+                                            if ($send_code['status'] == 'SendPassKey') {
+                                            ?>
+                                                <form method="post">
+                                                    <span style="color: yellow;">Enter Password:</span>
+                                                    <br><br>
+                                                    <input type="text" name="PassKey" placeholder="<?= $send_code['hint_pass_key'] ?>" required> <button type="submit">Go</button>
+                                                </form>
+                                            <?php
+                                                $this->session
+                                                    ->ChangeData('step', 'getPassKey')
+                                                    ->ChangeData('hint_pass_key', $send_code['hint_pass_key']);
+                                                exit;
+                                            } else {
+                                            ?>
+                                                <form method="post">
+                                                    <span style="color: green;">Enter Code:</span>
+                                                    <br><br>
+                                                    <input type="text" name="code" placeholder="<?= $send_code['code_digits_count'] ?>-digits" required minlength="<?= $send_code['code_digits_count'] ?>" maxlength="<?= $send_code['code_digits_count'] ?>"> <button type="submit">Go</button>
+                                                </form>
+                                <?php
+                                                $this->session
+                                                    ->ChangeData('step', 'getCode')
+                                                    ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
+                                                    ->ChangeData('code_digits_count', $send_code['code_digits_count']);
+                                                exit;
+                                            }
+                                            exit;
+                                            break;
+                                    }
+                                }
+                            } else {
+                                ?>
+                                <span style="color: red;">Invalid Phone</span>
+                                <br>
+                                <span style="color: green;">Enter Phone:</span>
+                                <br><br>
+                                <form method="post">
+                                    <input type="text" name="phone" placeholder="9123456789" required minlength="10" maxlength="12"> <button type="submit">Go</button>
+                                </form>
+                            <?php
+                                exit;
+                            }
+                        }
+                    }
+                } elseif (isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])])) {
+                    $this->phone_number = Tools::GenerateTruePhoneNumber(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])]);
+                    $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
+
+                    if (isset($_POST['PassKey']) && $this->session->data['step'] == 'getPassKey') {
+                        $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), MainSettings: $settings);
+
+                        $send_code = $this->sendCode($_POST['PassKey']);
+
+                        if ($send_code['status'] == 'OK') {
+                            $this->session
+                                ->ChangeData('step', 'getCode')
+                                ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
+                                ->ChangeData('code_digits_count', $send_code['code_digits_count']);
+                            ?>
+                            <form method="post">
+                                <span style="color: green;">Enter Code:</span>
+                                <br><br>
+                                <input type="text" name="code" placeholder="<?= $send_code['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
+                            </form>
+                        <?php
+                            $this->session->ChangeData('step', 'getCode');
+                            exit;
+                        }
+                    } elseif (isset($_POST['code']) && $this->session->data['step'] == 'getCode') {
+                        if (strlen((string)((int)$_POST['code'])) == $this->session->data['code_digits_count']) {
+                            $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), MainSettings: $settings);
+
+                            list($signIn, $private_key) = $this->signIn($this->session->data['phone_code_hash'], (int)$_POST['code']);
+
+                            $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
+                            unset($signIn['user']['online_time']);
+                            $this->session->ReGenerateSession();
+                            $this->session
+                                ->ChangeData('auth', $auth)
+                                ->ChangeData('user', $signIn['user'])
+                                ->ChangeData('private_key', $private_key)
+                                ->ChangeData('useragent', $this->req->useragent)
+                                ->ChangeData('step', 'logged-in')
+                                ->setAuth($auth);
+                            $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
+
+                            $this->RegisterDevice($app_name);
+                        } else {
+                        ?>
+                            <form method="post">
+                                <span style="color: red;">Invalid Code!</span>
+                                <br>
+                                <span style="color: green;">Enter Code:</span>
+                                <br><br>
+                                <input type="text" name="code" placeholder="<?= $this->session->data['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
+                            </form>
+                            <?php
+                            exit;
+                        }
+                    } else {
+                        switch ($this->session->data['step']) {
+                            case 'getCode':
+                            ?>
+                                <form method="post">
+                                    <span style="color: green;">Enter Code:</span>
+                                    <br><br>
+                                    <input type="text" name="code" placeholder="<?= $this->session->data['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
+                                </form>
+                            <?php
+                                exit;
+                                break;
+                            case 'getPassKey':
+                            ?>
+                                <form method="post">
+                                    <span style="color: yellow;">Enter Password:</span>
+                                    <br><br>
+                                    <input type="text" name="PassKey" placeholder="<?= $this->session->data['hint_pass_key'] ?>" required> <button type="submit">Go</button>
+                                </form>
+                                <?php
+                                exit;
+                                break;
+                            case 'setup':
                                 $send_code = $this->sendCode();
 
                                 if ($send_code['status'] == 'SendPassKey') {
-                    ?>
+                                ?>
                                     <form method="post">
                                         <span style="color: yellow;">Enter Password:</span>
                                         <br><br>
@@ -95,413 +293,381 @@ final class Main
                                         <br><br>
                                         <input type="text" name="code" placeholder="<?= $send_code['code_digits_count'] ?>-digits" required minlength="<?= $send_code['code_digits_count'] ?>" maxlength="<?= $send_code['code_digits_count'] ?>"> <button type="submit">Go</button>
                                     </form>
-                                    <?php
+                    <?php
                                     $this->session
                                         ->ChangeData('step', 'getCode')
                                         ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
                                         ->ChangeData('code_digits_count', $send_code['code_digits_count']);
                                     exit;
                                 }
-                            } else {
-                                $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
-                                $this->req = new Requests(
-                                    auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
-                                    private_key: $this->session->data['private_key'] ?? '',
-                                    useragent: $this->session->data['useragent'],
-                                    MainSettings: $settings
-                                );
-
-                                switch ($this->session->data['step']) {
-                                    case 'getCode':
-                                    ?>
-                                        <form method="post">
-                                            <span style="color: green;">Enter Code:</span>
-                                            <br><br>
-                                            <input type="text" name="code" placeholder="<?= $this->session->data['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
-                                        </form>
-                                    <?php
-                                        exit;
-                                        break;
-                                    case 'getPassKey':
-                                    ?>
-                                        <form method="post">
-                                            <span style="color: yellow;">Enter Password:</span>
-                                            <br><br>
-                                            <input type="text" name="PassKey" placeholder="<?= $this->session->data['hint_pass_key'] ?>" required> <button type="submit">Go</button>
-                                        </form>
-                                        <?php
-                                        exit;
-                                        break;
-                                    case 'setup':
-                                        $send_code = $this->sendCode();
-
-                                        if ($send_code['status'] == 'SendPassKey') {
-                                        ?>
-                                            <form method="post">
-                                                <span style="color: yellow;">Enter Password:</span>
-                                                <br><br>
-                                                <input type="text" name="PassKey" placeholder="<?= $send_code['hint_pass_key'] ?>" required> <button type="submit">Go</button>
-                                            </form>
-                                        <?php
-                                            $this->session
-                                                ->ChangeData('step', 'getPassKey')
-                                                ->ChangeData('hint_pass_key', $send_code['hint_pass_key']);
-                                            exit;
-                                        } else {
-                                        ?>
-                                            <form method="post">
-                                                <span style="color: green;">Enter Code:</span>
-                                                <br><br>
-                                                <input type="text" name="code" placeholder="<?= $send_code['code_digits_count'] ?>-digits" required minlength="<?= $send_code['code_digits_count'] ?>" maxlength="<?= $send_code['code_digits_count'] ?>"> <button type="submit">Go</button>
-                                            </form>
-                            <?php
-                                            $this->session
-                                                ->ChangeData('step', 'getCode')
-                                                ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
-                                                ->ChangeData('code_digits_count', $send_code['code_digits_count']);
-                                            exit;
-                                        }
-                                        exit;
-                                        break;
-                                }
-                            }
-                        } else {
-                            ?>
-                            <span style="color: red;">Invalid Phone</span>
-                            <br>
-                            <span style="color: green;">Enter Phone:</span>
-                            <br><br>
-                            <form method="post">
-                                <input type="text" name="phone" placeholder="9123456789" required minlength="10" maxlength="12"> <button type="submit">Go</button>
-                            </form>
-                        <?php
-                            exit;
+                                exit;
+                                break;
                         }
                     }
                 }
-            } elseif (isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])])) {
-                $this->phone_number = Tools::ReplaceTruePhoneNumber(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])]);
-                $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
 
-                if (isset($_POST['PassKey']) && $this->session->data['step'] == 'getPassKey') {
-                    $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), MainSettings: $settings);
-
-                    $send_code = $this->sendCode($_POST['PassKey']);
-
-                    if ($send_code['status'] == 'OK') {
-                        $this->session
-                            ->ChangeData('step', 'getCode')
-                            ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
-                            ->ChangeData('code_digits_count', $send_code['code_digits_count']);
-                        ?>
-                        <form method="post">
-                            <span style="color: green;">Enter Code:</span>
-                            <br><br>
-                            <input type="text" name="code" placeholder="<?= $send_code['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
-                        </form>
-                    <?php
-                        $this->session->ChangeData('step', 'getCode');
-                        exit;
-                    }
-                } elseif (isset($_POST['code']) && $this->session->data['step'] == 'getCode') {
-                    if (strlen((string)((int)$_POST['code'])) == $this->session->data['code_digits_count']) {
-                        $this->req = new Requests($_SERVER['HTTP_USER_AGENT'], Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), MainSettings: $settings);
-
-                        list($signIn, $private_key) = $this->signIn($this->session->data['phone_code_hash'], (int)$_POST['code']);
-
-                        $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
-                        unset($signIn['user']['online_time']);
-                        $this->session->ReGenerateSession();
-                        $this->session
-                            ->ChangeData('auth', $auth)
-                            ->ChangeData('user', $signIn['user'])
-                            ->ChangeData('private_key', $private_key)
-                            ->ChangeData('useragent', $this->req->useragent)
-                            ->setAuth($auth);
-                        $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
-
-                        $this->RegisterDevice($app_name);
-                    } else {
+                if (!isset($this->phone_number)) {
                     ?>
-                        <form method="post">
-                            <span style="color: red;">Invalid Code!</span>
-                            <br>
-                            <span style="color: green;">Enter Code:</span>
-                            <br><br>
-                            <input type="text" name="code" placeholder="<?= $this->session->data['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
-                        </form>
-                        <?php
-                        exit;
+                    <!DOCTYPE html>
+                    <form method="post">
+                        <span style="color: green;">Enter Phone Number:</span>
+                        <br><br>
+                        <input type="text" name="phone" placeholder="9123456789" required minlength="10" maxlength="12"> <button type="submit">Go</button>
+                    </form>
+<?php
+                    exit;
+                }
+
+                $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
+                $this->req = new Requests(
+                    auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
+                    private_key: $this->session->data['private_key'] ?? '',
+                    useragent: $_SERVER['HTTP_USER_AGENT'],
+                    MainSettings: $settings
+                );
+
+                $this->Account = new Account($this->session, $this->req, $settings);
+                $this->Chats = new Chats($this->session, $this->req, $settings);
+                $this->session->ChangeData('user', $this->Chats->getChatInfo($this->Account->getMySelf()['user_guid'])['user']);
+                $this->Folders = new Folders($this->req, $this->session, $this);
+                $this->crypto = new Cryption(Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), $this->session->data['private_key']);
+                $this->Messages = new Messages($this->session, $this->req, $settings);
+                $this->Contacts = new Contacts($this->session, $this->req);
+                $this->Stream = new Stream($this->session, $this->req, $settings);
+            } else {
+                while (!in_array(strlen((string)$phone_number), [10, 12]) && (!file_exists($settings->Base . 'sessions.rub') or !isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])]))) {
+                    $phone_number = (int)readline("Enter Phone Number: ");
+
+                    if (in_array(strlen((string)$phone_number), [10, 12])) {
+                        $d = file_exists($settings->Base . 'sessions.rub') ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true) : array();
+                        @$d[basename($_SERVER['SCRIPT_FILENAME'])] = $phone_number;
+                        if (!is_dir($settings->Base)) mkdir($settings->Base);
+                        file_put_contents($settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $settings->Base));
                     }
+                }
+
+                $this->phone_number = Tools::GenerateTruePhoneNumber($phone_number == 0 ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])] : $phone_number);
+
+                if (!Session::is_session($this->phone_number, $settings->AppType)) {
+                    $this->req = new Requests($settings->UserAgent, $settings->tmp_session, MainSettings: $settings);
+                    $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base, settings: $settings);
+                    $this->session
+                        ->ChangeData('useragent', $this->req->useragent)
+                        ->ChangeData('step', 'setup');
+                    $send_code = $this->sendCode();
+
+                    if ($send_code['status'] == 'SendPassKey') {
+                        while (true) {
+                            $pass_key = readline("enter your passkey ({$send_code['hint_pass_key']}) : ");
+                            $send_code = $this->sendCode($pass_key);
+
+                            if ($send_code['status'] == 'OK') {
+                                break;
+                            } else {
+                                echo "Invalid!\n";
+                            }
+                        }
+                    }
+
+                    $this->session
+                        ->ChangeData('step', 'getCode')
+                        ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
+                        ->ChangeData('code_digits_count', $send_code['code_digits_count']);
+
+                    list($signIn, $private_key) = [[], ''];
+                    while (true) {
+                        $code = (int)readline("enter code ({$send_code['code_digits_count']}-digits) : ");
+
+                        if (strlen((string)$code) == $send_code['code_digits_count']) {
+                            list($signIn, $private_key) = $this->signIn($send_code['phone_code_hash'], $code);
+                            break;
+                        } else {
+                            echo "its isn't {$send_code['code_digits_count']}-digits!\n";
+                        }
+                    }
+
+                    $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
+                    unset($signIn['user']['online_time']);
+                    $this->session->ReGenerateSession();
+                    $this->session
+                        ->ChangeData('auth', $auth)
+                        ->ChangeData('user', $signIn['user'])
+                        ->ChangeData('private_key', $private_key)
+                        ->ChangeData('useragent', $this->req->useragent)
+                        ->ChangeData('step', 'logged-in')
+                        ->setAuth($auth);
+                    $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
+
+                    $this->RegisterDevice($app_name);
                 } else {
+                    $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
+                    $this->req = new Requests(
+                        auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
+                        private_key: $this->session->data['private_key'] ?? '',
+                        useragent: $this->session->data['useragent'],
+                        MainSettings: $settings
+                    );
+
                     switch ($this->session->data['step']) {
                         case 'getCode':
-                        ?>
-                            <form method="post">
-                                <span style="color: green;">Enter Code:</span>
-                                <br><br>
-                                <input type="text" name="code" placeholder="<?= $this->session->data['code_digits_count'] ?>-digits" required> <button type="submit">Go</button>
-                            </form>
-                        <?php
-                            exit;
+                            list($signIn, $private_key) = [[], ''];
+                            while (1) {
+                                $code = (int)readline("enter code ({$this->session->data['code_digits_count']}-digits) : ");
+
+                                if (strlen((string)$code) == $this->session->data['code_digits_count']) {
+                                    list($signIn, $private_key) = $this->signIn($this->session->data['phone_code_hash'], $code);
+                                    break;
+                                }
+                            }
+
+                            $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
+                            unset($signIn['online_time']);
+                            $this->session->ReGenerateSession();
+                            $this->session
+                                ->ChangeData('auth', $auth)
+                                ->ChangeData('user', $signIn['user'])
+                                ->ChangeData('private_key', $private_key)
+                                ->ChangeData('useragent', $this->req->useragent)
+                                ->setAuth($auth);
+                            $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
+
+                            $this->RegisterDevice($app_name);
                             break;
                         case 'getPassKey':
-                        ?>
-                            <form method="post">
-                                <span style="color: yellow;">Enter Password:</span>
-                                <br><br>
-                                <input type="text" name="PassKey" placeholder="<?= $this->session->data['hint_pass_key'] ?>" required> <button type="submit">Go</button>
-                            </form>
-                            <?php
-                            exit;
+                            while (true) {
+                                $pass_key = readline("enter your passkey ({$this->session->data['hint_pass_key']}) : ");
+                                $send_code = $this->sendCode($pass_key);
+
+                                if ($send_code['status'] == 'OK') {
+                                    break;
+                                }
+                            }
+
+                            list($signIn, $private_key) = [[], ''];
+                            while (1) {
+                                $code = (int)readline("enter code ({$this->session->data['code_digits_count']}-digits) : ");
+
+                                if (strlen((string)$code) == $this->session->data['code_digits_count']) {
+                                    list($signIn, $private_key) = $this->signIn($this->session->data['phone_code_hash'], $code);
+                                    break;
+                                }
+                            }
+
+                            $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
+                            unset($signIn['online_time']);
+                            $this->session->ReGenerateSession();
+                            $this->session
+                                ->ChangeData('auth', $auth)
+                                ->ChangeData('user', $signIn['user'])
+                                ->ChangeData('private_key', $private_key)
+                                ->ChangeData('useragent', $this->req->useragent)
+                                ->ChangeData('step', 'logged-in')
+                                ->setAuth($auth);
+                            $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
+
+                            $this->RegisterDevice($app_name);
                             break;
                         case 'setup':
                             $send_code = $this->sendCode();
 
                             if ($send_code['status'] == 'SendPassKey') {
-                            ?>
-                                <form method="post">
-                                    <span style="color: yellow;">Enter Password:</span>
-                                    <br><br>
-                                    <input type="text" name="PassKey" placeholder="<?= $send_code['hint_pass_key'] ?>" required> <button type="submit">Go</button>
-                                </form>
-                            <?php
-                                $this->session
-                                    ->ChangeData('step', 'getPassKey')
-                                    ->ChangeData('hint_pass_key', $send_code['hint_pass_key']);
-                                exit;
-                            } else {
-                            ?>
-                                <form method="post">
-                                    <span style="color: green;">Enter Code:</span>
-                                    <br><br>
-                                    <input type="text" name="code" placeholder="<?= $send_code['code_digits_count'] ?>-digits" required minlength="<?= $send_code['code_digits_count'] ?>" maxlength="<?= $send_code['code_digits_count'] ?>"> <button type="submit">Go</button>
-                                </form>
-                <?php
-                                $this->session
-                                    ->ChangeData('step', 'getCode')
-                                    ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
-                                    ->ChangeData('code_digits_count', $send_code['code_digits_count']);
-                                exit;
-                            }
-                            exit;
-                            break;
-                    }
-                }
-            }
+                                while (true) {
+                                    $pass_key = readline("enter your passkey ({$send_code['hint_pass_key']}) : ");
+                                    $send_code = $this->sendCode($pass_key);
 
-            if (!isset($this->phone_number)) {
-                ?>
-                <!DOCTYPE html>
-                <form method="post">
-                    <span style="color: green;">Enter Phone Number:</span>
-                    <br><br>
-                    <input type="text" name="phone" placeholder="9123456789" required minlength="10" maxlength="12"> <button type="submit">Go</button>
-                </form>
-<?php
-                exit;
-            }
-
-            $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
-            $this->req = new Requests(
-                auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
-                private_key: $this->session->data['private_key'] ?? '',
-                useragent: $_SERVER['HTTP_USER_AGENT'],
-                MainSettings: $settings
-            );
-
-            $this->Account = new Account($this->session, $this->req, $settings);
-            $this->Chats = new Chats($this->session, $this->req, $settings);
-            $this->session->ChangeData('user', $this->Chats->getChatInfo($this->Account->getMySelf()['user_guid'])['user']);
-            $this->Folders = new Folders($this->req, $this->session, $this);
-            $this->crypto = new Cryption(Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]), $this->session->data['private_key']);
-            $this->Messages = new Messages($this->session, $this->req, $settings);
-            $this->Contacts = new Contacts($this->session, $this->req);
-        } else {
-            while (!in_array(strlen((string)$phone_number), [10, 12]) && (!file_exists($settings->Base . 'sessions.rub') or !isset(json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])]))) {
-                $phone_number = (int)readline("Enter Phone Number: ");
-
-                if (in_array(strlen((string)$phone_number), [10, 12])) {
-                    $d = file_exists($settings->Base . 'sessions.rub') ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true) : array();
-                    @$d[basename($_SERVER['SCRIPT_FILENAME'])] = $phone_number;
-                    if (!is_dir($settings->Base)) mkdir($settings->Base);
-                    file_put_contents($settings->Base . 'sessions.rub', Cryption::Encode(json_encode($d), $settings->Base));
-                }
-            }
-
-            $this->phone_number = Tools::ReplaceTruePhoneNumber($phone_number == 0 ? json_decode(Cryption::Decode(file_get_contents($settings->Base . 'sessions.rub'), $settings->Base), true)[basename($_SERVER['SCRIPT_FILENAME'])] : $phone_number);
-
-            if (!Session::is_session($this->phone_number, $settings->AppType)) {
-                $this->req = new Requests($settings->UserAgent, $settings->tmp_session, MainSettings: $settings);
-                $this->session = new Session($this->phone_number, $settings->tmp_session, $settings->Base, settings: $settings);
-                $this->session
-                    ->ChangeData('useragent', $this->req->useragent)
-                    ->ChangeData('step', 'setup');
-                $send_code = $this->sendCode();
-
-                if ($send_code['status'] == 'SendPassKey') {
-                    while (true) {
-                        $pass_key = readline("enter your passkey ({$send_code['hint_pass_key']}) : ");
-                        $send_code = $this->sendCode($pass_key);
-
-                        if ($send_code['status'] == 'OK') {
-                            break;
-                        } else {
-                            echo "Invalid!\n";
-                        }
-                    }
-                }
-
-                $this->session
-                    ->ChangeData('step', 'getCode')
-                    ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
-                    ->ChangeData('code_digits_count', $send_code['code_digits_count']);
-
-                list($signIn, $private_key) = [[], ''];
-                while (true) {
-                    $code = (int)readline("enter code ({$send_code['code_digits_count']}-digits) : ");
-
-                    if (strlen((string)$code) == $send_code['code_digits_count']) {
-                        list($signIn, $private_key) = $this->signIn($send_code['phone_code_hash'], $code);
-                        break;
-                    } else {
-                        echo "its isn't {$send_code['code_digits_count']}-digits!\n";
-                    }
-                }
-
-                $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
-                unset($signIn['user']['online_time']);
-                $this->session->ReGenerateSession();
-                $this->session
-                    ->ChangeData('auth', $auth)
-                    ->ChangeData('user', $signIn['user'])
-                    ->ChangeData('private_key', $private_key)
-                    ->ChangeData('useragent', $this->req->useragent)
-                    ->setAuth($auth);
-                $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
-
-                $this->RegisterDevice($app_name);
-            } else {
-                $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
-                $this->req = new Requests(
-                    auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
-                    private_key: $this->session->data['private_key'] ?? '',
-                    useragent: $this->session->data['useragent'],
-                    MainSettings: $settings
-                );
-
-                switch ($this->session->data['step']) {
-                    case 'getCode':
-                        list($signIn, $private_key) = [[], ''];
-                        while (1) {
-                            $code = (int)readline("enter code ({$this->session->data['code_digits_count']}-digits) : ");
-
-                            if (strlen((string)$code) == $this->session->data['code_digits_count']) {
-                                list($signIn, $private_key) = $this->signIn($this->session->data['phone_code_hash'], $code);
-                                break;
-                            }
-                        }
-
-                        $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
-                        unset($signIn['online_time']);
-                        $this->session->ReGenerateSession();
-                        $this->session
-                            ->ChangeData('auth', $auth)
-                            ->ChangeData('user', $signIn['user'])
-                            ->ChangeData('private_key', $private_key)
-                            ->ChangeData('useragent', $this->req->useragent)
-                            ->setAuth($auth);
-                        $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
-
-                        $this->RegisterDevice($app_name);
-                        break;
-                    case 'getPassKey':
-                        while (true) {
-                            $pass_key = readline("enter your passkey ({$this->session->data['hint_pass_key']}) : ");
-                            $send_code = $this->sendCode($pass_key);
-
-                            if ($send_code['status'] == 'OK') {
-                                break;
-                            }
-                        }
-
-                        list($signIn, $private_key) = [[], ''];
-                        while (1) {
-                            $code = (int)readline("enter code ({$this->session->data['code_digits_count']}-digits) : ");
-
-                            if (strlen((string)$code) == $this->session->data['code_digits_count']) {
-                                list($signIn, $private_key) = $this->signIn($this->session->data['phone_code_hash'], $code);
-                                break;
-                            }
-                        }
-
-                        $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
-                        unset($signIn['online_time']);
-                        $this->session->ReGenerateSession();
-                        $this->session
-                            ->ChangeData('auth', $auth)
-                            ->ChangeData('user', $signIn['user'])
-                            ->ChangeData('private_key', $private_key)
-                            ->ChangeData('useragent', $this->req->useragent)
-                            ->setAuth($auth);
-                        $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
-
-                        $this->RegisterDevice($app_name);
-                        break;
-                    case 'setup':
-                        $send_code = $this->sendCode();
-
-                        if ($send_code['status'] == 'SendPassKey') {
-                            while (true) {
-                                $pass_key = readline("enter your passkey ({$send_code['hint_pass_key']}) : ");
-                                $send_code = $this->sendCode($pass_key);
-
-                                if ($send_code['status'] == 'OK') {
-                                    break;
-                                } else {
-                                    echo "Invalid!\n";
+                                    if ($send_code['status'] == 'OK') {
+                                        break;
+                                    } else {
+                                        echo "Invalid!\n";
+                                    }
                                 }
                             }
-                        }
 
-                        $this->session
-                            ->ChangeData('step', 'getCode')
-                            ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
-                            ->ChangeData('code_digits_count', $send_code['code_digits_count']);
+                            $this->session
+                                ->ChangeData('step', 'getCode')
+                                ->ChangeData('phone_code_hash', $send_code['phone_code_hash'])
+                                ->ChangeData('code_digits_count', $send_code['code_digits_count']);
 
-                        list($signIn, $private_key) = [[], ''];
-                        while (true) {
-                            $code = (int)readline("enter code ({$send_code['code_digits_count']}-digits) : ");
+                            list($signIn, $private_key) = [[], ''];
+                            while (true) {
+                                $code = (int)readline("enter code ({$send_code['code_digits_count']}-digits) : ");
 
-                            if (strlen((string)$code) == $send_code['code_digits_count']) {
-                                list($signIn, $private_key) = $this->signIn($send_code['phone_code_hash'], $code);
-                                break;
+                                if (strlen((string)$code) == $send_code['code_digits_count']) {
+                                    list($signIn, $private_key) = $this->signIn($send_code['phone_code_hash'], $code);
+                                    break;
+                                }
                             }
+
+                            $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
+                            unset($signIn['user']['online_time']);
+                            $this->session->ReGenerateSession();
+                            $this->session
+                                ->ChangeData('auth', $auth)
+                                ->ChangeData('user', $signIn['user'])
+                                ->ChangeData('private_key', $private_key)
+                                ->ChangeData('useragent', $this->req->useragent)
+                                ->ChangeData('step', 'logged-in')
+                                ->setAuth($auth);
+                            $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
+
+                            $this->RegisterDevice($app_name);
+                            break;
+                    }
+                }
+
+                $this->Account = new Account($this->session, $this->req, $settings);
+                $this->Chats = new Chats($this->session, $this->req, $settings);
+                $this->session->ChangeData('user', $this->Chats->getChatInfo($this->Account->getMySelf()['user_guid'])['user']);
+                $this->Folders = new Folders($this->req, $this->session, $this);
+                $this->crypto = new Cryption(Cryption::Decode($this->req->getPartOfSessionKey()[0], $this->req->getPartOfSessionKey()[1]), $this->session->data['private_key']);
+                $this->Messages = new Messages($this->session, $this->req, $settings);
+                $this->Contacts = new Contacts($this->session, $this->req);
+                $this->Stream = new Stream($this->session, $this->req, $settings);
+            }
+        } else {
+            if (!is_dir($settings->Base)) mkdir($settings->Base);
+            if ($phone_number == 0) {
+                throw new Failure("please input phone number to continue in dev-mode");
+            } else {
+                $this->phone_number = Tools::GenerateTruePhoneNumber($phone_number);
+                if (Session::is_session($this->phone_number, $settings->AppType)) {
+                    $this->session = new Session($this->phone_number, workDir: $settings->Base, settings: $settings);
+                    if ($this->session->data['step'] == 'logged-in') throw new Failure("this number already has a logged-in session");
+                    switch ($this->session->data['step']) {
+                        case 'setup':
+                            $this->LoginStatus = DevModeStatus::SendCode;
+                            break;
+                        case 'getCode':
+                            $this->LoginStatus = DevModeStatus::SignIn;
+                            break;
+                        case 'getPassKey':
+                            $this->LoginStatus = DevModeStatus::SendPassKey;
+                            break;
+                    }
+                }
+
+                $db = file_exists($settings->Base . 'TMP_sessions.lock') ? file_get_contents($settings->Base . 'TMP_sessions.lock') : null;
+                if ($db == null) {
+                    file_put_contents($settings->Base . 'TMP_sessions.lock', "# temp file for dev_mode\n\n# sessions\nemp");
+                    $this->make_new_tmp_session_devmode();
+                } else {
+                    $sessions = explode("# sessions\n", $db);
+                    $sessions = !isset($sessions[1]) ? '' : $sessions[1];
+                    if ($sessions == 'emp') {
+                        $this->make_new_tmp_session_devmode();
+                    } else {
+                        if ($sessions != '') {
+                            $sessions = explode("\n", $sessions);
+                            $i = false;
+                            foreach ($sessions as $session) {
+                                $ex = explode(' |====| ', $session);
+                                if ($ex[0] == $this->phone_number) {
+                                    $this->handle_tmp_session();
+                                    $i = true;
+                                    break;
+                                }
+                            }
+                            if (!$i) $this->make_new_tmp_session_devmode();
+                        } else {
+                            $this->make_new_tmp_session_devmode();
                         }
-
-                        $auth = Cryption::Decrypt_RSAEncodedAuth($private_key, $signIn['auth']);
-                        unset($signIn['user']['online_time']);
-                        $this->session->ReGenerateSession();
-                        $this->session
-                            ->ChangeData('auth', $auth)
-                            ->ChangeData('user', $signIn['user'])
-                            ->ChangeData('private_key', $private_key)
-                            ->ChangeData('useragent', $this->req->useragent)
-                            ->setAuth($auth);
-                        $this->req = new Requests(auth: $auth, private_key: $private_key, useragent: $this->req->useragent, MainSettings: $settings);
-
-                        $this->RegisterDevice($app_name);
-                        break;
+                    }
                 }
             }
+        }
+    }
 
-            $this->Account = new Account($this->session, $this->req, $settings);
-            $this->Chats = new Chats($this->session, $this->req, $settings);
-            $this->session->ChangeData('user', $this->Chats->getChatInfo($this->Account->getMySelf()['user_guid'])['user']);
-            $this->Folders = new Folders($this->req, $this->session, $this);
-            $this->crypto = new Cryption(Cryption::Decode($this->req->getPartOfSessionKey()[0], $this->req->getPartOfSessionKey()[1]), $this->session->data['private_key']);
-            $this->Messages = new Messages($this->session, $this->req, $settings);
-            $this->Contacts = new Contacts($this->session, $this->req);
+    /**
+     * remove dev-mode session for phone-number on TMP_sessions.lock file
+     *
+     * @return void
+     */
+    public function RemovePhoneDevMode(): void
+    {
+        if (!$this->dev_mode) throw new Failure("dev-mode isn't active");
+        $db = file_get_contents($this->settings->Base . 'TMP_sessions.lock');
+        if (!str_contains($db, "\n{$this->phone_number} |====| ")) throw new Failure("dev-mode session didn't found for {$this->phone_number} on {$this->settings->Base}TMP_sessions.lock");
+        $t = '';
+        if (count(explode("\n", $db)) <= 4) $t = "\nemp";
+        file_put_contents($this->settings->Base . 'TMP_sessions.lock', str_replace([
+            "\n{$this->phone_number} |====| SendCode",
+            "\n{$this->phone_number} |====| getCode",
+            "\n{$this->phone_number} |====| getPassKey"
+        ], $t, $db));
+    }
+
+    /**
+     * re-generate dev-mode session for phone-number on TMP_sessions.lock file
+     *
+     * @return void
+     */
+    public function ReGeneratePhoneDevMode(): void
+    {
+        if (!$this->dev_mode) throw new Failure("dev-mode isn't active");
+        $db = file_get_contents($this->settings->Base . 'TMP_sessions.lock');
+        if (!str_contains($db, "\n{$this->phone_number} |====| ")) throw new Failure("dev-mode session didn't found for {$this->phone_number} on {$this->settings->Base}TMP_sessions.lock");
+        $t = '';
+        if (count(explode("\n", $db)) <= 4) $t = "\nemp";
+        file_put_contents($this->settings->Base . 'TMP_sessions.lock', str_replace([
+            "\n{$this->phone_number} |====| SendCode",
+            "\n{$this->phone_number} |====| getCode",
+            "\n{$this->phone_number} |====| getPassKey"
+        ], $t, $db));
+        $this->make_new_tmp_session_devmode();
+    }
+
+    /**
+     * make new dev mode session
+     *
+     * @return void
+     */
+    private function make_new_tmp_session_devmode(): void
+    {
+        $db = file_get_contents($this->settings->Base . 'TMP_sessions.lock');
+        if (str_contains($db, "\nemp")) file_put_contents($this->settings->Base . 'TMP_sessions.lock', str_replace("\nemp", '', $db));
+        $this->req = new Requests($this->settings->UserAgent, $this->settings->tmp_session, MainSettings: $this->settings);
+        $this->session = new Session($this->phone_number, $this->settings->tmp_session, $this->settings->Base, settings: $this->settings);
+        $this->session
+            ->ChangeData('useragent', $this->req->useragent)
+            ->ChangeData('step', 'setup');
+        $this->LoginStatus = DevModeStatus::SendCode;
+        $f = fopen($this->settings->Base . 'TMP_sessions.lock', 'a');
+        fwrite($f, "\n{$this->phone_number} |====| SendCode");
+        fclose($f);
+        $this->handle_tmp_session();
+    }
+
+    /**
+     * handling dev mode
+     *
+     * @return void
+     */
+    private function handle_tmp_session(): void
+    {
+        $this->allow_send_code = false;
+        $this->allow_send_code_with_passkey = false;
+        $this->allow_register = false;
+        $this->allow_signin = false;
+
+        $this->session = new Session($this->phone_number, workDir: $this->settings->Base, settings: $this->settings);
+        $this->req = new Requests(
+            auth: Cryption::Decode($this->session->getPartOfSessionKey()[0], $this->session->getPartOfSessionKey()[1]),
+            private_key: $this->session->data['private_key'] ?? '',
+            useragent: $this->session->data['useragent'],
+            MainSettings: $this->settings
+        );
+
+        $step = explode("\n", explode("\n{$this->phone_number} |====| ", file_get_contents($this->settings->Base . 'TMP_sessions.lock'))[1])[0];
+
+        if (!in_array($step, ['SendCode', 'SendPassKey', 'SignIn'])) throw new Failure("can't validate {$this->settings->Base}TMP_sessions.lock} file");
+        if ($step == 'SendCode' && $this->LoginStatus == DevModeStatus::SendCode) {
+            $this->allow_send_code = true;
+        } elseif ($step == 'SendPassKey' && $this->LoginStatus == DevModeStatus::SendPassKey) {
+            $this->allow_send_code_with_passkey = true;
+        } elseif ($step == 'SignIn' && $this->LoginStatus == DevModeStatus::SignIn) {
+            $this->allow_signin = true;
+        } else {
+            throw new Failure("can't validate {$this->settings->Base}TMP_sessions.lock} file");
         }
     }
 
@@ -512,7 +678,7 @@ final class Main
      * @throws Failure INVALID_INPUT
      * @return array API result
      */
-    private function sendCode(string $pass_key = ''): array
+    public function sendCode(string $pass_key = ''): array
     {
         $d = [
             'phone_number' => (string)$this->phone_number,
@@ -522,7 +688,7 @@ final class Main
             $d['pass_key'] = $pass_key;
         }
 
-        $r = $this->req->SendRequest('sendCode', $d, $this->session, true)['data'];
+        $r = $this->req->sendRequest('sendCode', $d, $this->session, true)['data'];
 
         if (!in_array($r['status'], ['OK', 'SendPassKey'])) {
             throw new Failure('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
@@ -539,11 +705,11 @@ final class Main
      * @throws Failure CodeIsExpired, CodeIsInvalid, CodeIsUsed
      * @return array [API result, private_key]
      */
-    private function signIn(string $phone_code_hash, int $code): array
+    public function signIn(string $phone_code_hash, int $code): array
     {
         list($publicKey, $privateKey) = cryption::Generate_RSAkey();
 
-        $r = $this->req->SendRequest('signIn', [
+        $r = $this->req->sendRequest('signIn', [
             "phone_number" => (string)$this->phone_number,
             "phone_code_hash" => $phone_code_hash,
             "phone_code" => $code,
@@ -578,7 +744,7 @@ final class Main
             'device_model' => ($app_name != '' ? "Rubika-lib($app_name) " . self::$VERSION : 'Rubika-lib ' . self::$VERSION),
             'device_hash' => Tools::GenerateDeviceHash($this->req->useragent)
         ];
-        $r = $this->req->SendRequest('registerDevice', $d, $this->session);
+        $r = $this->req->sendRequest('registerDevice', $d, $this->session);
 
         if ($r['status'] != 'OK') {
             throw new Failure('there is an error in result: ' . json_encode(['status' => 'OK', 'status_det' => $r['status']]));
