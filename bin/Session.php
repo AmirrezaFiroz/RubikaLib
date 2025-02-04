@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use RubikaLib\Cryption;
-use RubikaLib\Enums\AppType;
-use RubikaLib\Helpers\Security;
-use RubikaLib\Interfaces\MainSettings;
-use RubikaLib\Utils\Tools;
+use RubikaLib\enums\AppType;
+use RubikaLib\helpers\Security;
+use RubikaLib\interfaces\MainSettings;
+use RubikaLib\utils\Tools;
 
 /**
  * session object of phone number

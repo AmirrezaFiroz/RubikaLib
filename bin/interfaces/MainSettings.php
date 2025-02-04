@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Interfaces;
+namespace RubikaLib\interfaces;
 
 use Exception;
 use RubikaLib\Cryption;
-use RubikaLib\Enums\AppType;
+use RubikaLib\enums\AppType;
 use RubikaLib\Failure;
-use RubikaLib\Utils\userAgent;
+use RubikaLib\utils\userAgent;
 
 /**
  * settings for library
@@ -18,7 +18,7 @@ final class MainSettings
     /**
      * Default UserAgent For Library (it just used in login and will save in session for next uses)
      *
-     * @var string you can generate one by using RubikaLib\Utils\userAgent::generate()
+     * @var string you can generate one by using RubikaLib\utils\userAgent::generate()
      */
     private ?string $UserAgent;
 
@@ -77,7 +77,7 @@ final class MainSettings
     /**
      * Set Default UserAgent For Library (just for login)
      *
-     * @param string $UserAgent you can generate one by using RubikaLib\Utils\userAgent::generate()
+     * @param string $UserAgent you can generate one by using RubikaLib\utils\userAgent::generate()
      * @return self
      */
     public function setUserAgent(string $UserAgent): self

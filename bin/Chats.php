@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use RubikaLib\Enums\{
+use RubikaLib\enums\{
     HistoryForNewMembers,
     GroupAdminAccessList,
     SetGroupReactions,
@@ -12,8 +12,8 @@ use RubikaLib\Enums\{
     ReactionsEmoji,
     Sort
 };
-use RubikaLib\Interfaces\GroupDefaultAccesses;
-use RubikaLib\Utils\Tools;
+use RubikaLib\interfaces\GroupDefaultAccesses;
+use RubikaLib\utils\Tools;
 
 final class chats
 {

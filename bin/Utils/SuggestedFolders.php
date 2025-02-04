@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Utils;
+namespace RubikaLib\utils;
 
-use RubikaLib\Enums\ChatTypes, RubikaLib\Folders;
+use RubikaLib\enums\ChatTypes, RubikaLib\Folders;
 
 /**
  * suggested folders for rubika or shad

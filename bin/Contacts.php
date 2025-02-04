@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use RubikaLib\Utils\Tools;
+use RubikaLib\utils\Tools;
 
 /**
  * contacts object

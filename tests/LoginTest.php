@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use RubikaLib\Enums\AppType;
-use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\enums\AppType;
+use RubikaLib\interfaces\MainSettings;
 use RubikaLib\Main;
 use RubikaLib\Session;
 

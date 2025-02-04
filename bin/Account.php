@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use RubikaLib\Helpers\Optimal;
-use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\helpers\Optimal;
+use RubikaLib\interfaces\MainSettings;
 
 /**
  * account object
@@ -126,7 +126,7 @@ final class Account
             $d['bio'] = $bio;
             $d['updated_parameters'][] = 'bio';
         }
-        
+
         if ($first_name == '' && $last_name == '' && $bio == '') throw new Failure('edit what??');
         $d = $this->req->sendRequest('updateProfile', $d, $this->session)['data'];
         if (isset($d['chat_update'])) $this->session->ChangeData('user', $d['user']);

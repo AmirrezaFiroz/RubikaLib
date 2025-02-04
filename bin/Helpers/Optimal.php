@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Helpers;
+namespace RubikaLib\helpers;
 
 use Generator;
 

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace RubikaLib;
 
 use Generator;
-use RubikaLib\Enums\AppType;
-use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\enums\AppType;
+use RubikaLib\interfaces\MainSettings;
 
 /**
  * special Exception class

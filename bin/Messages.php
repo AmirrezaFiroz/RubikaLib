@@ -6,18 +6,18 @@ namespace RubikaLib;
 
 use Generator;
 use getID3;
-use RubikaLib\Enums\{
+use RubikaLib\enums\{
     ChatActivities,
     DeleteType,
     PollType,
     ReactionsEmoji,
     ReactionsString
 };
-use RubikaLib\Helpers\Optimal;
-use RubikaLib\Interfaces\Gif;
-use RubikaLib\Interfaces\MainSettings;
-use RubikaLib\Interfaces\MusicFile;
-use RubikaLib\Utils\Tools;
+use RubikaLib\helpers\Optimal;
+use RubikaLib\interfaces\Gif;
+use RubikaLib\interfaces\MainSettings;
+use RubikaLib\interfaces\MusicFile;
+use RubikaLib\utils\Tools;
 
 /**
  * messages object
@@ -386,7 +386,7 @@ final class Messages
     /**
      * get account gifs list
      *
-     * @return Generator|array Gifs as Generator function(in Rubikalib\Interfaces\Gif types) or all in one array(if library isn't Optimal)
+     * @return Generator|array Gifs as Generator function(in Rubikalib\interfaces\Gif types) or all in one array(if library isn't Optimal)
      */
     public function getMyGifSet(): Generator|array
     {

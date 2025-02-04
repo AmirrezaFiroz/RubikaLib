@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\interfaces\MainSettings;
 
 /**
  * Streaming Part Of Library
