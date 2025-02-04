@@ -1,7 +1,7 @@
 {
     "name": "rubikalib/rubikalib",
     "description": "A library for working with rubika API from PHP source code",
-    "version": "v2.3.11",
+    "version": "v2.3.12",
     "keywords": [
         "rubika",
         "rubikalib",
