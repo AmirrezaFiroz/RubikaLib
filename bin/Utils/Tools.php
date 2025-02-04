@@ -66,6 +66,7 @@ final class Tools
         return $res;
     }
 
+
     /**
      * Get Hash From UserAgent For Device Registering
      *

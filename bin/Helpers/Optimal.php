@@ -33,3 +33,4 @@ final class Optimal
         fclose($file);
     }
 }
+
