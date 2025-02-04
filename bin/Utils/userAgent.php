@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Utils;
+namespace RubikaLib\utils;
 
-use RubikaLib\Enums\devices, RubikaLib\Failure;
+use RubikaLib\enums\devices, RubikaLib\Failure;
 
 /**
  * https://github.com/phpfail/UserAgentGenerator/ with some edits

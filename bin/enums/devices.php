@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Enums;
+namespace RubikaLib\enums;
 
 /**
  * for choose userAgents

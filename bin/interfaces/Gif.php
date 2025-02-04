@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Interfaces;
+namespace RubikaLib\interfaces;
 
 final class Gif
 {

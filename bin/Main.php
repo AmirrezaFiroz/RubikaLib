@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace RubikaLib;
 
-use Generator;
 use Ratchet\Client\WebSocket;
 use React\EventLoop\Loop;
-
-use RubikaLib\Utils\Tools;
-use RubikaLib\Enums\ChatActivities;
-use RubikaLib\Enums\DevModeStatus;
-use RubikaLib\Interfaces\{
+use RubikaLib\utils\Tools;
+use RubikaLib\enums\{
+    ChatActivities,
+    DevModeStatus
+};
+use RubikaLib\interfaces\{
     MainSettings,
     Runner
 };
@@ -27,7 +27,7 @@ final class Main
     private ?Session $session;
     private ?Cryption $crypto;
 
-    public static $VERSION = 'v2.3.5';
+    public static $VERSION = 'v2.3.10';
 
     public ?Folders $Folders;
     public ?Account $Account;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RubikaLib\Interfaces;
+namespace RubikaLib\interfaces;
 
 /**
  * settings for group-users-default-accesses

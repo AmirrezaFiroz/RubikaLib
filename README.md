@@ -30,8 +30,8 @@ for getting updates, you must create new class with a name and call it
 ```php
 require_once __DIR__ . '/vendor/autoload.php';
 
-use RubikaLib\Enums\ChatActivities;
-use RubikaLib\Interfaces\Runner;
+use RubikaLib\enums\ChatActivities;
+use RubikaLib\interfaces\Runner;
 use RubikaLib\{
     Failure,
     Main
@@ -153,7 +153,7 @@ try {
 |                                                                                                 getChatsUpdates(int $state = 0)                                                                                                  |                                       get all chat updates from $state time to now                                        |               [getChatsUpdates.json](examples/getChatsUpdates.json)               |
 |                                                                                    getMessagesInterval(string $guid, int $middle_message_id)                                                                                     |                                                    not researched yet                                                     |                                not researched yet                                 |
 |                                                                                             getGroupOnlineCount(string $group_guid)                                                                                              |                                               get group online users count                                                |           [getGroupOnlineCount.json](examples/getGroupOnlineCount.json)           |
-|                                                                                         seenChat(string $guid, string $last_message_id)                                                                                         |                                                    seen chat messages                                                     |                     [seenChat.json](examples/seenChat.json)                     |
+|                                                                                         seenChat(string $guid, string $last_message_id)                                                                                          |                                                    seen chat messages                                                     |                      [seenChat.json](examples/seenChat.json)                      |
 |                                                                                      seenChatsArray(array $guids, array $last_message_ids)                                                                                       |                seen chats -> seenChatsArray(['u0UBF88...', 'g0UKLD66...'], ['91729830180', '9798103900']);                |                     [seenChats.json](examples/seenChats.json)                     |
 |                                                                                                           getContacts                                                                                                            |                                                     get contact list                                                      |                   [getContacts.json](examples/getContacts.json)                   |
 |                                                                            AddContact(int $phone_number, string $first_name, string $last_name = '')                                                                             |                                                      add new contact                                                      |                    [AddContact.json](examples/AddContact.json)                    |
@@ -211,9 +211,9 @@ try {
 you can use library for [Shad](https://shad.ir) API.
 
 ```php
-use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\interfaces\MainSettings;
 use RubikaLib\Main;
-use RubikaLib\Enums\AppType;
+use RubikaLib\enums\AppType;
 
 $settings = new MainSettings();
 $settings->AppType = AppType::Shad;
@@ -234,8 +234,8 @@ here as base of one bot you can run
 declare(strict_types=1);
 require_once 'vendor/autoload.php';
 
-use RubikaLib\Enums\ChatActivities;
-use RubikaLib\Interfaces\Runner;
+use RubikaLib\enums\ChatActivities;
+use RubikaLib\interfaces\Runner;
 use RubikaLib\{
     Failure,
     Main
@@ -326,7 +326,7 @@ we maked an settings class that you can set allowed parameters in and pass it to
 here is an example:
 
 ```php
-use RubikaLib\Interfaces\MainSettings;
+use RubikaLib\interfaces\MainSettings;
 
 $settings = new MainSettings();
 $settings->userAgent = ...;

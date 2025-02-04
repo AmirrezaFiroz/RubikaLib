@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase, RubikaLib\Main;
-use RubikaLib\Enums\ChatTypes;
+use RubikaLib\enums\ChatTypes;
 
 class FoldersTest extends TestCase
 {
