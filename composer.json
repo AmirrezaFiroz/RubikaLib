@@ -34,8 +34,7 @@
         "ext-json": "*",
         "ratchet/pawl": "^0.4.1",
         "james-heinrich/getid3": "^1.9",
-        "phpseclib/phpseclib": "^3.0",
-        "paragonie/sodium_compat": "^2.0.1"
+        "phpseclib/phpseclib": "^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.3",
